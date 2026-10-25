@@ -1,0 +1,313 @@
+{
+  "entities": {
+    "WorkspaceProfile": {
+      "title": "WorkspaceProfile",
+      "description": "Root per-user workspace tracking active CSV training corpus metrics, neural blend alpha, and latest daily audit state.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Authenticated Firebase UID owning this workspace."
+        },
+        "activeCorpusCount": {
+          "type": "integer",
+          "description": "Total historical settled rows in the user's neural training corpus."
+        },
+        "neuralBlendAlpha": {
+          "type": "number",
+          "description": "Current hybrid ensemble blend weight between 0.0 (8-Rule) and 1.0 (Neural MLP)."
+        },
+        "lastAuditDate": {
+          "type": "string",
+          "maxLength": 16,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Most recent YYYY-MM-DD date audited."
+        },
+        "lastValidationAccuracy": {
+          "type": "number",
+          "description": "Latest holdout validation accuracy (0.0 to 1.0)."
+        },
+        "lastBrierScore": {
+          "type": "number",
+          "description": "Latest holdout Brier calibration score (0.0 to 1.0)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when workspace was initialized."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of latest workspace update."
+        }
+      },
+      "required": [
+        "ownerId",
+        "activeCorpusCount",
+        "neuralBlendAlpha",
+        "lastAuditDate",
+        "lastValidationAccuracy",
+        "lastBrierScore",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SettledMatchRecord": {
+      "title": "SettledMatchRecord",
+      "description": "Individual audited and settled multi-sport match appended to the user's neural network training corpus.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Authenticated Firebase UID owning this record."
+        },
+        "workspaceId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Parent workspace document ID matching ownerId."
+        },
+        "date": {
+          "type": "string",
+          "maxLength": 16,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Match date in YYYY-MM-DD format."
+        },
+        "sport": {
+          "type": "string",
+          "maxLength": 20,
+          "enum": ["soccer", "tennis", "basketball", "golf", "cricket", "rugby"],
+          "description": "Sport identifier."
+        },
+        "competition": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "League or tournament name."
+        },
+        "selection": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Favoured team or player backed by the prediction."
+        },
+        "opponent": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Opposing team, player, or field."
+        },
+        "market": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Betting market evaluated."
+        },
+        "isHomeOrFavoredContext": {
+          "type": "boolean",
+          "description": "Whether selection held home venue or preferred surface context."
+        },
+        "decimalOdds": {
+          "type": "number",
+          "description": "Decimal bookmaker odds locked at prediction time."
+        },
+        "r1_motivation_stakes": { "type": "number", "description": "Rule 1 score (0-10)." },
+        "r2_form_momentum": { "type": "number", "description": "Rule 2 score (0-10)." },
+        "r3_h2h_standings_gap": { "type": "number", "description": "Rule 3 score (0-10)." },
+        "r4_tier_classification": { "type": "number", "description": "Rule 4 score (0-10)." },
+        "r5_derby_rivalry": { "type": "number", "description": "Rule 5 score (0-10)." },
+        "r6_squad_value_vs_form": { "type": "number", "description": "Rule 6 score (0-10)." },
+        "r7_continental_fatigue": { "type": "number", "description": "Rule 7 score (0-10)." },
+        "r8_coach_volatility": { "type": "number", "description": "Rule 8 score (0-10)." },
+        "outcomeWon": {
+          "type": "integer",
+          "enum": [0, 1],
+          "description": "Binary settled outcome (1 = won, 0 = lost)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Immutable server timestamp when settled match was recorded."
+        }
+      },
+      "required": [
+        "ownerId",
+        "workspaceId",
+        "date",
+        "sport",
+        "competition",
+        "selection",
+        "opponent",
+        "market",
+        "isHomeOrFavoredContext",
+        "decimalOdds",
+        "r1_motivation_stakes",
+        "r2_form_momentum",
+        "r3_h2h_standings_gap",
+        "r4_tier_classification",
+        "r5_derby_rivalry",
+        "r6_squad_value_vs_form",
+        "r7_continental_fatigue",
+        "r8_coach_volatility",
+        "outcomeWon",
+        "createdAt"
+      ]
+    },
+    "DailyAuditPickDoc": {
+      "title": "DailyAuditPickDoc",
+      "description": "Locked daily Top 10 prediction pick awaiting or completing T+1 settlement audit and neural adaptation.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Authenticated Firebase UID owning this locked prediction."
+        },
+        "workspaceId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Parent workspace ID matching ownerId."
+        },
+        "auditDate": {
+          "type": "string",
+          "maxLength": 16,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Scheduled date of the predicted match (YYYY-MM-DD)."
+        },
+        "sport": {
+          "type": "string",
+          "maxLength": 20,
+          "enum": ["soccer", "tennis", "basketball", "golf", "cricket", "rugby"],
+          "description": "Sport identifier."
+        },
+        "competition": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Competition or tour name."
+        },
+        "selection": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Predicted winning team or player."
+        },
+        "opponent": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Opponent name."
+        },
+        "market": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Predicted market."
+        },
+        "isHomeOrFavoredContext": {
+          "type": "boolean",
+          "description": "Home or surface advantage flag."
+        },
+        "decimalOdds": {
+          "type": "number",
+          "description": "Locked pre-match decimal odds."
+        },
+        "ruleProbability": {
+          "type": "number",
+          "description": "Pre-match 8-Rule probability (0.0 to 1.0)."
+        },
+        "neuralProbability": {
+          "type": "number",
+          "description": "Pre-match MLP probability (0.0 to 1.0)."
+        },
+        "hybridProbability": {
+          "type": "number",
+          "description": "Pre-match hybrid ensemble probability (0.0 to 1.0)."
+        },
+        "r1_motivation_stakes": { "type": "number", "description": "Rule 1 score (0-10)." },
+        "r2_form_momentum": { "type": "number", "description": "Rule 2 score (0-10)." },
+        "r3_h2h_standings_gap": { "type": "number", "description": "Rule 3 score (0-10)." },
+        "r4_tier_classification": { "type": "number", "description": "Rule 4 score (0-10)." },
+        "r5_derby_rivalry": { "type": "number", "description": "Rule 5 score (0-10)." },
+        "r6_squad_value_vs_form": { "type": "number", "description": "Rule 6 score (0-10)." },
+        "r7_continental_fatigue": { "type": "number", "description": "Rule 7 score (0-10)." },
+        "r8_coach_volatility": { "type": "number", "description": "Rule 8 score (0-10)." },
+        "settlementStatus": {
+          "type": "string",
+          "maxLength": 16,
+          "enum": ["pending", "settled", "adapted"],
+          "description": "Lifecycle status; 'adapted' is a locked terminal state."
+        },
+        "actualOutcome": {
+          "type": "integer",
+          "enum": [-1, 0, 1],
+          "description": "-1 while pending/void, 0 when lost, 1 when won."
+        },
+        "scoreSummary": {
+          "type": "string",
+          "maxLength": 160,
+          "description": "Final score or settlement summary note."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Immutable server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of latest settlement or adaptation transition."
+        }
+      },
+      "required": [
+        "ownerId",
+        "workspaceId",
+        "auditDate",
+        "sport",
+        "competition",
+        "selection",
+        "opponent",
+        "market",
+        "isHomeOrFavoredContext",
+        "decimalOdds",
+        "ruleProbability",
+        "neuralProbability",
+        "hybridProbability",
+        "r1_motivation_stakes",
+        "r2_form_momentum",
+        "r3_h2h_standings_gap",
+        "r4_tier_classification",
+        "r5_derby_rivalry",
+        "r6_squad_value_vs_form",
+        "r7_continental_fatigue",
+        "r8_coach_volatility",
+        "settlementStatus",
+        "actualOutcome",
+        "scoreSummary",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/workspaces/{userId}": {
+      "schema": { "$ref": "#/entities/WorkspaceProfile" },
+      "description": "Master gate workspace document owned strictly by userId == request.auth.uid."
+    },
+    "/workspaces/{userId}/settledMatches/{matchId}": {
+      "schema": { "$ref": "#/entities/SettledMatchRecord" },
+      "description": "Append-only audited match outcomes feeding the user's CSV neural training corpus."
+    },
+    "/workspaces/{userId}/auditPicks/{pickId}": {
+      "schema": { "$ref": "#/entities/DailyAuditPickDoc" },
+      "description": "Locked daily Top 10 predictions per sport tracked through settlement and neural adaptation."
+    }
+  }
+}

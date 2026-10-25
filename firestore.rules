@@ -1,0 +1,377 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global Default-Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Global Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidDateIso(val) {
+      return val is string && val.size() == 10 && val.matches('^\\d{4}-\\d{2}-\\d{2}$');
+    }
+
+    function isValidSport(val) {
+      return val is string && val.size() <= 20 &&
+        val in ['soccer', 'tennis', 'basketball', 'golf', 'cricket', 'rugby'];
+    }
+
+    function isValidRuleScore(val) {
+      return val is number && val >= 0 && val <= 10;
+    }
+
+    function isValidProb(val) {
+      return val is number && val >= 0 && val <= 1;
+    }
+
+    function hasValidParentWorkspace(userId) {
+      return exists(/databases/$(database)/documents/workspaces/$(userId)) &&
+        get(/databases/$(database)/documents/workspaces/$(userId)).data.ownerId == request.auth.uid;
+    }
+
+    // Blueprint Validation Helper: WorkspaceProfile
+    function isValidWorkspaceProfile(data) {
+      return data.keys().hasAll([
+          'ownerId',
+          'activeCorpusCount',
+          'neuralBlendAlpha',
+          'lastAuditDate',
+          'lastValidationAccuracy',
+          'lastBrierScore',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId',
+          'activeCorpusCount',
+          'neuralBlendAlpha',
+          'lastAuditDate',
+          'lastValidationAccuracy',
+          'lastBrierScore',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        data.ownerId == request.auth.uid &&
+        data.activeCorpusCount is int &&
+        data.activeCorpusCount >= 0 &&
+        data.activeCorpusCount <= 50000 &&
+        isValidProb(data.neuralBlendAlpha) &&
+        isValidDateIso(data.lastAuditDate) &&
+        isValidProb(data.lastValidationAccuracy) &&
+        isValidProb(data.lastBrierScore) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // Blueprint Validation Helper: SettledMatchRecord
+    function isValidSettledMatchRecord(data, userId) {
+      return data.keys().hasAll([
+          'ownerId',
+          'workspaceId',
+          'date',
+          'sport',
+          'competition',
+          'selection',
+          'opponent',
+          'market',
+          'isHomeOrFavoredContext',
+          'decimalOdds',
+          'r1_motivation_stakes',
+          'r2_form_momentum',
+          'r3_h2h_standings_gap',
+          'r4_tier_classification',
+          'r5_derby_rivalry',
+          'r6_squad_value_vs_form',
+          'r7_continental_fatigue',
+          'r8_coach_volatility',
+          'outcomeWon',
+          'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId',
+          'workspaceId',
+          'date',
+          'sport',
+          'competition',
+          'selection',
+          'opponent',
+          'market',
+          'isHomeOrFavoredContext',
+          'decimalOdds',
+          'r1_motivation_stakes',
+          'r2_form_momentum',
+          'r3_h2h_standings_gap',
+          'r4_tier_classification',
+          'r5_derby_rivalry',
+          'r6_squad_value_vs_form',
+          'r7_continental_fatigue',
+          'r8_coach_volatility',
+          'outcomeWon',
+          'createdAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.workspaceId) &&
+        data.workspaceId == userId &&
+        isValidDateIso(data.date) &&
+        isValidSport(data.sport) &&
+        data.competition is string && data.competition.size() >= 1 && data.competition.size() <= 120 &&
+        data.selection is string && data.selection.size() >= 1 && data.selection.size() <= 120 &&
+        data.opponent is string && data.opponent.size() >= 1 && data.opponent.size() <= 120 &&
+        data.market is string && data.market.size() >= 1 && data.market.size() <= 80 &&
+        data.isHomeOrFavoredContext is bool &&
+        data.decimalOdds is number && data.decimalOdds >= 1.01 && data.decimalOdds <= 100.0 &&
+        isValidRuleScore(data.r1_motivation_stakes) &&
+        isValidRuleScore(data.r2_form_momentum) &&
+        isValidRuleScore(data.r3_h2h_standings_gap) &&
+        isValidRuleScore(data.r4_tier_classification) &&
+        isValidRuleScore(data.r5_derby_rivalry) &&
+        isValidRuleScore(data.r6_squad_value_vs_form) &&
+        isValidRuleScore(data.r7_continental_fatigue) &&
+        isValidRuleScore(data.r8_coach_volatility) &&
+        data.outcomeWon is int && (data.outcomeWon == 0 || data.outcomeWon == 1) &&
+        data.createdAt is timestamp;
+    }
+
+    // Blueprint Validation Helper: DailyAuditPickDoc
+    function isValidDailyAuditPickDoc(data, userId) {
+      return data.keys().hasAll([
+          'ownerId',
+          'workspaceId',
+          'auditDate',
+          'sport',
+          'competition',
+          'selection',
+          'opponent',
+          'market',
+          'isHomeOrFavoredContext',
+          'decimalOdds',
+          'ruleProbability',
+          'neuralProbability',
+          'hybridProbability',
+          'r1_motivation_stakes',
+          'r2_form_momentum',
+          'r3_h2h_standings_gap',
+          'r4_tier_classification',
+          'r5_derby_rivalry',
+          'r6_squad_value_vs_form',
+          'r7_continental_fatigue',
+          'r8_coach_volatility',
+          'settlementStatus',
+          'actualOutcome',
+          'scoreSummary',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId',
+          'workspaceId',
+          'auditDate',
+          'sport',
+          'competition',
+          'selection',
+          'opponent',
+          'market',
+          'isHomeOrFavoredContext',
+          'decimalOdds',
+          'ruleProbability',
+          'neuralProbability',
+          'hybridProbability',
+          'r1_motivation_stakes',
+          'r2_form_momentum',
+          'r3_h2h_standings_gap',
+          'r4_tier_classification',
+          'r5_derby_rivalry',
+          'r6_squad_value_vs_form',
+          'r7_continental_fatigue',
+          'r8_coach_volatility',
+          'settlementStatus',
+          'actualOutcome',
+          'scoreSummary',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.workspaceId) &&
+        data.workspaceId == userId &&
+        isValidDateIso(data.auditDate) &&
+        isValidSport(data.sport) &&
+        data.competition is string && data.competition.size() >= 1 && data.competition.size() <= 120 &&
+        data.selection is string && data.selection.size() >= 1 && data.selection.size() <= 120 &&
+        data.opponent is string && data.opponent.size() >= 1 && data.opponent.size() <= 120 &&
+        data.market is string && data.market.size() >= 1 && data.market.size() <= 80 &&
+        data.isHomeOrFavoredContext is bool &&
+        data.decimalOdds is number && data.decimalOdds >= 1.01 && data.decimalOdds <= 100.0 &&
+        isValidProb(data.ruleProbability) &&
+        isValidProb(data.neuralProbability) &&
+        isValidProb(data.hybridProbability) &&
+        isValidRuleScore(data.r1_motivation_stakes) &&
+        isValidRuleScore(data.r2_form_momentum) &&
+        isValidRuleScore(data.r3_h2h_standings_gap) &&
+        isValidRuleScore(data.r4_tier_classification) &&
+        isValidRuleScore(data.r5_derby_rivalry) &&
+        isValidRuleScore(data.r6_squad_value_vs_form) &&
+        isValidRuleScore(data.r7_continental_fatigue) &&
+        isValidRuleScore(data.r8_coach_volatility) &&
+        data.settlementStatus is string && data.settlementStatus.size() <= 16 &&
+        data.settlementStatus in ['pending', 'settled', 'adapted'] &&
+        data.actualOutcome is int && data.actualOutcome in [-1, 0, 1] &&
+        data.scoreSummary is string && data.scoreSummary.size() <= 160 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // Master Gate Collection: /workspaces/{userId}
+    match /workspaces/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && userId == request.auth.uid && existing().ownerId == request.auth.uid;
+      allow list: if false;
+
+      allow create: if isVerifiedUser() &&
+        isValidId(userId) &&
+        userId == request.auth.uid &&
+        isValidWorkspaceProfile(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedUser() &&
+        isValidId(userId) &&
+        userId == request.auth.uid &&
+        isValidWorkspaceProfile(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'activeCorpusCount',
+          'neuralBlendAlpha',
+          'lastAuditDate',
+          'lastValidationAccuracy',
+          'lastBrierScore',
+          'updatedAt'
+        ]);
+
+      allow delete: if false;
+
+      // Subcollection: Append-only audited training matches
+      match /settledMatches/{matchId} {
+        allow get: if isSignedIn() &&
+          isValidId(userId) &&
+          isValidId(matchId) &&
+          userId == request.auth.uid &&
+          existing().ownerId == request.auth.uid &&
+          hasValidParentWorkspace(userId);
+
+        allow list: if isSignedIn() &&
+          userId == request.auth.uid &&
+          existing().ownerId == request.auth.uid &&
+          existing().workspaceId == userId;
+
+        allow create: if isVerifiedUser() &&
+          isValidId(userId) &&
+          isValidId(matchId) &&
+          userId == request.auth.uid &&
+          isValidSettledMatchRecord(incoming(), userId) &&
+          incoming().createdAt == request.time &&
+          hasValidParentWorkspace(userId);
+
+        allow update: if false;
+
+        allow delete: if isVerifiedUser() &&
+          isValidId(userId) &&
+          isValidId(matchId) &&
+          userId == request.auth.uid &&
+          existing().ownerId == request.auth.uid &&
+          hasValidParentWorkspace(userId);
+      }
+
+      // Subcollection: Locked Daily Top 10 Audit Picks
+      match /auditPicks/{pickId} {
+        allow get: if isSignedIn() &&
+          isValidId(userId) &&
+          isValidId(pickId) &&
+          userId == request.auth.uid &&
+          existing().ownerId == request.auth.uid &&
+          hasValidParentWorkspace(userId);
+
+        allow list: if isSignedIn() &&
+          userId == request.auth.uid &&
+          existing().ownerId == request.auth.uid &&
+          existing().workspaceId == userId;
+
+        allow create: if isVerifiedUser() &&
+          isValidId(userId) &&
+          isValidId(pickId) &&
+          userId == request.auth.uid &&
+          isValidDailyAuditPickDoc(incoming(), userId) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          hasValidParentWorkspace(userId);
+
+        allow update: if isVerifiedUser() &&
+          isValidId(userId) &&
+          isValidId(pickId) &&
+          userId == request.auth.uid &&
+          isValidDailyAuditPickDoc(incoming(), userId) &&
+          existing().settlementStatus != 'adapted' &&
+          incoming().ownerId == existing().ownerId &&
+          incoming().workspaceId == existing().workspaceId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          hasValidParentWorkspace(userId) &&
+          (
+            // Action 1: Settle or revise match outcome before neural adaptation
+            (
+              incoming().settlementStatus in ['pending', 'settled'] &&
+              incoming().diff(existing()).affectedKeys().hasOnly([
+                'settlementStatus',
+                'actualOutcome',
+                'scoreSummary',
+                'updatedAt'
+              ])
+            ) ||
+            // Action 2: Atomically lock pick into terminal 'adapted' state once settledMatches/{pickId} is written
+            (
+              existing().settlementStatus == 'settled' &&
+              (existing().actualOutcome == 0 || existing().actualOutcome == 1) &&
+              incoming().settlementStatus == 'adapted' &&
+              incoming().diff(existing()).affectedKeys().hasOnly([
+                'settlementStatus',
+                'updatedAt'
+              ]) &&
+              existsAfter(/databases/$(database)/documents/workspaces/$(userId)/settledMatches/$(pickId))
+            )
+          );
+
+        allow delete: if isVerifiedUser() &&
+          isValidId(userId) &&
+          isValidId(pickId) &&
+          userId == request.auth.uid &&
+          existing().ownerId == request.auth.uid &&
+          existing().settlementStatus != 'adapted' &&
+          hasValidParentWorkspace(userId);
+      }
+    }
+  }
+}

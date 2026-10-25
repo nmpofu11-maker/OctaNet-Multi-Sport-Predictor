@@ -1,0 +1,6 @@
+{
+  "name": "OctaNet Multi-Sport Predictor",
+  "description": "Hybrid 8-point rule engine and CSV-trained neural network delivering the daily top 10 best bets across soccer, tennis, basketball, golf, cricket, and rugby.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
