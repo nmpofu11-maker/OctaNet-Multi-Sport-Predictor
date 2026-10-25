@@ -771,7 +771,11 @@ export function computeCorpusEvolutionCurve(
   for (let mIdx = 0; mIdx < dedupedMilestones.length; mIdx++) {
     const { corpusSize, trainCount, isFull } = dedupedMilestones[mIdx];
     const trainSlice = trainChronological.slice(0, trainCount);
-    const throughDate = trainSlice[trainSlice.length - 1]?.date ?? rows[rows.length - 1].date;
+    // Report the corpus coverage date at the full-corpus endpoint, including the held-out rows.
+    // Intermediate points remain dated by the last row available to that milestone's training slice.
+    const throughDate = isFull
+      ? indexedRows[indexedRows.length - 1]?.row.date ?? rows[rows.length - 1].date
+      : trainSlice[trainSlice.length - 1]?.date ?? rows[rows.length - 1].date;
 
     const matrixSourceRows = trainSlice; // Never fit features on holdout labels.
     const learnedMatrix = deriveTeamIntelligenceMatrices(
