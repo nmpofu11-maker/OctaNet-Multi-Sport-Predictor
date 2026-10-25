@@ -186,7 +186,7 @@ export const DailyAuditView: React.FC<DailyAuditViewProps> = ({
           <div className="font-medium">{liveAuditMessage.text}</div>
           {liveAuditMessage.sources && liveAuditMessage.sources.length > 0 && (
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-600">
-              <span>Verified scoreboard sources:</span>
+              <span>Search grounding sources (not independently verified):</span>
               {liveAuditMessage.sources.slice(0, 4).map((src, i) => (
                 <a
                   key={i}
@@ -616,13 +616,12 @@ export const DailyAuditView: React.FC<DailyAuditViewProps> = ({
                               <button
                                 type="button"
                                 aria-label={`Grade ${entry.selection} Won`}
-                                onClick={() =>
-                                  onSettleSinglePick(
-                                    entry.id,
-                                    1,
-                                    entry.scoreSummary || 'Verified Win'
-                                  )
-                                }
+                                onClick={() => {
+                                  const source = window.prompt('Confirm the exact event and outcome, then enter the official result source URL (https://...). Cancel to leave pending.');
+                                  if (source && /^https?:\/\//i.test(source.trim())) {
+                                    onSettleSinglePick(entry.id, 1, `SOURCE-VERIFIED: ${source.trim()}`.slice(0, 160));
+                                  }
+                                }}
                                 className={`px-2 py-1 text-xs font-medium rounded transition-colors whitespace-nowrap shrink-0 ${
                                   entry.actualOutcome === 1
                                     ? 'bg-emerald-600 text-white'
@@ -634,13 +633,12 @@ export const DailyAuditView: React.FC<DailyAuditViewProps> = ({
                               <button
                                 type="button"
                                 aria-label={`Grade ${entry.selection} Lost`}
-                                onClick={() =>
-                                  onSettleSinglePick(
-                                    entry.id,
-                                    0,
-                                    entry.scoreSummary || 'Verified Loss'
-                                  )
-                                }
+                                onClick={() => {
+                                  const source = window.prompt('Confirm the exact event and outcome, then enter the official result source URL (https://...). Cancel to leave pending.');
+                                  if (source && /^https?:\/\//i.test(source.trim())) {
+                                    onSettleSinglePick(entry.id, 0, `SOURCE-VERIFIED: ${source.trim()}`.slice(0, 160));
+                                  }
+                                }}
                                 className={`px-2 py-1 text-xs font-medium rounded transition-colors whitespace-nowrap shrink-0 ${
                                   entry.actualOutcome === 0
                                     ? 'bg-rose-600 text-white'

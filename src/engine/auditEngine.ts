@@ -116,7 +116,7 @@ export function simulateDeterministicSettlement(
       ...entry,
       settlementStatus: 'settled',
       actualOutcome: won ? 1 : 0,
-      scoreSummary: synthesizeScoreSummary(entry, won, uScore),
+      scoreSummary: `SIMULATED: ${synthesizeScoreSummary(entry, won, uScore)}`, 
     };
   });
 }
@@ -169,7 +169,10 @@ export function buildLockedAuditCardForDate(
   extraFixtures: DailyFixture[] = [],
   autoSettle = false
 ): DailyAuditEntry[] {
-  const fixtures = [...extraFixtures, ...generateDailyFixturesForDate(auditDate)];
+  const demoFixtures = generateDailyFixturesForDate(auditDate);
+  // If a sport has synced fixtures, do not mix its unverified demo fixtures into that pool.
+  const liveSports = new Set(extraFixtures.map((fixture) => fixture.sport));
+  const fixtures = [...extraFixtures, ...demoFixtures.filter((fixture) => !liveSports.has(fixture.sport))];
   const map = {} as Record<SportId, PredictionResult[]>;
   for (const s of ALL_SPORTS) {
     map[s] = rankTop10BetsForSport(fixtures, s, engine, sportWeights, 10);
@@ -185,12 +188,15 @@ export function computeDailyAuditSummary(entries: DailyAuditEntry[]): DailyAudit
   const settled = entries.filter(
     (e) =>
       (e.settlementStatus === 'settled' || e.settlementStatus === 'adapted') &&
+      e.scoreSummary.startsWith('SOURCE-VERIFIED:') &&
       (e.actualOutcome === 0 || e.actualOutcome === 1)
   );
   const pendingCount = entries.filter((e) => e.settlementStatus === 'pending').length;
   const adaptedCount = entries.filter((e) => e.settlementStatus === 'adapted').length;
   const readyToAdaptCount = entries.filter(
-    (e) => e.settlementStatus === 'settled' && (e.actualOutcome === 0 || e.actualOutcome === 1)
+    (e) => e.settlementStatus === 'settled' &&
+      e.scoreSummary.startsWith('SOURCE-VERIFIED:') &&
+      (e.actualOutcome === 0 || e.actualOutcome === 1)
   ).length;
 
   let wonCount = 0;
@@ -425,12 +431,14 @@ export function adaptNeuralEngineFromAudit(
   deltaReport: AdaptationDeltaReport;
 } {
   const newlySettledEntries = entries.filter(
-    (e) => e.settlementStatus === 'settled' && (e.actualOutcome === 0 || e.actualOutcome === 1)
+    (e) => e.settlementStatus === 'settled' &&
+      e.scoreSummary.startsWith('SOURCE-VERIFIED:') &&
+      (e.actualOutcome === 0 || e.actualOutcome === 1)
   );
 
   if (newlySettledEntries.length === 0) {
     throw new Error(
-      'No newly settled Won/Lost picks are queued for adaptation. Settle pending picks first.'
+      'No source-verified settlements are queued for adaptation. Simulated and AI-generated grades are excluded; manually review the exact event and outcome, then record an official source URL.'
     );
   }
 
@@ -501,7 +509,9 @@ export function adaptNeuralEngineFromAudit(
     .slice(0, 6);
 
   const updatedEntries: DailyAuditEntry[] = entries.map((e) =>
-    e.settlementStatus === 'settled' && (e.actualOutcome === 0 || e.actualOutcome === 1)
+    e.settlementStatus === 'settled' &&
+    e.scoreSummary.startsWith('SOURCE-VERIFIED:') &&
+    (e.actualOutcome === 0 || e.actualOutcome === 1)
       ? { ...e, settlementStatus: 'adapted' }
       : e
   );

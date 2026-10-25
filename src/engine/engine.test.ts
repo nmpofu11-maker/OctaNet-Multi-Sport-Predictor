@@ -207,7 +207,7 @@ test('Daily prediction engine produces exact 10 best bets per day for each of th
   assert.equal(exported.split('\n').length, 11);
 });
 
-test('Yesterday (T-1) Audit Engine settles 60 picks, computes Brier/ROI diagnostics, and adapts neural network into terminal adapted state', () => {
+test('Simulated settlement is excluded from real metrics and cannot train the model', () => {
   assert.equal(getPreviousDateISO('2026-10-25'), '2026-10-24');
 
   const baseCorpus = generateHistoricalTrainingDataset(30); // 180 rows
@@ -225,15 +225,23 @@ test('Yesterday (T-1) Audit Engine settles 60 picks, computes Brier/ROI diagnost
 
   const summary = computeDailyAuditSummary(lockedCard);
   assert.equal(summary.totalLocked, 60);
-  assert.equal(summary.settledCount, 60);
-  assert.equal(summary.readyToAdaptCount, 60);
-  assert.equal(summary.wonCount + summary.lostCount, 60);
-  assert.ok(summary.hybridBrier > 0 && summary.hybridBrier < 0.5);
-  assert.equal(summary.calibrationBuckets.length, 3);
+  assert.equal(summary.settledCount, 0, 'Synthetic outcomes must not count as real settlements');
+  assert.equal(summary.readyToAdaptCount, 0);
+  assert.equal(summary.wonCount + summary.lostCount, 0);
+  assert.ok(lockedCard.every((entry) => entry.scoreSummary.startsWith('SIMULATED:')));
+  assert.throws(
+    () => adaptNeuralEngineFromAudit('2026-10-24', lockedCard, baseCorpus, DEFAULT_HYPERPARAMETERS, weights, initialEngine),
+    /source-verified settlements are queued for adaptation/
+  );
 
+  // Exercise the adaptation path separately with explicitly marked verified test records.
+  const verifiedTestCard = lockedCard.map((entry) => ({
+    ...entry,
+    scoreSummary: 'SOURCE-VERIFIED: https://example.com/test-result',
+  }));
   const adapted = adaptNeuralEngineFromAudit(
     '2026-10-24',
-    lockedCard,
+    verifiedTestCard,
     baseCorpus,
     DEFAULT_HYPERPARAMETERS,
     weights,
@@ -290,7 +298,9 @@ test('computeCorpusEvolutionCurve tracks Brier score improvement and accuracy ev
   assert.ok(finalPt.brierImprovementVsInitialPct > 0);
 
   // Verify dynamic expansion after Yesterday's Audit appends 60 settled picks (360 -> 420 rows)
-  const lockedCard = buildLockedAuditCardForDate('2026-10-24', engine, weights, [], true);
+  const lockedCard = buildLockedAuditCardForDate('2026-10-24', engine, weights, [], true).map((entry) => ({
+    ...entry, scoreSummary: 'SOURCE-VERIFIED: https://example.com/test-result',
+  }));
   const adapted = adaptNeuralEngineFromAudit(
     '2026-10-24',
     lockedCard,
