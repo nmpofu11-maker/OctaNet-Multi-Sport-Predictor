@@ -182,7 +182,7 @@ function readPersistedFixtureDiscoveryArchive(): FixtureDiscoveryArchiveReadResu
     const candidatesByDate: Record<string, FixtureDiscoveryCandidate[]> = {};
     let total = 0;
     for (const [date, values] of Object.entries(saved.candidatesByDate)) {
-      if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date) || !Array.isArray(values)) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Array.isArray(values)) {
         return { candidatesByDate, canPersist: false };
       }
       const sanitized: FixtureDiscoveryCandidate[] = [];
