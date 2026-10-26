@@ -224,6 +224,19 @@ test('Daily prediction engine produces exact 10 best bets per day for each of th
   assert.equal(exported.split('\n').length, 11);
 });
 
+test('locked audit cards never invent demo fixtures when no verified fixtures are supplied', () => {
+  const rows = generateHistoricalTrainingDataset(12);
+  const engine = trainNeuralNetworkOnCSV(rows);
+  const emptyCard = buildLockedAuditCardForDate(
+    '2026-10-24',
+    engine,
+    getDefaultSportWeights(),
+    [],
+    false
+  );
+  assert.deepEqual(emptyCard, []);
+});
+
 test('Simulated settlement is excluded from real metrics and cannot train the model', () => {
   assert.equal(getPreviousDateISO('2026-10-25'), '2026-10-24');
 
@@ -231,11 +244,12 @@ test('Simulated settlement is excluded from real metrics and cannot train the mo
   const weights = getDefaultSportWeights();
   const initialEngine = trainNeuralNetworkOnCSV(baseCorpus, DEFAULT_HYPERPARAMETERS, weights);
 
+  const explicitDemoFixtures = generateDailyFixturesForDate('2026-10-24');
   const lockedCard = buildLockedAuditCardForDate(
     '2026-10-24',
     initialEngine,
     weights,
-    [],
+    explicitDemoFixtures,
     true
   );
   assert.equal(lockedCard.length, 60);
