@@ -19,7 +19,7 @@ import {
   TrainedNeuralEngine,
   trainNeuralNetworkOnCSV,
 } from './neuralNetwork';
-import { generateDailyFixturesForDate } from './sampleData';
+
 
 function clamp(v: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, v));
@@ -169,10 +169,9 @@ export function buildLockedAuditCardForDate(
   extraFixtures: DailyFixture[] = [],
   autoSettle = false
 ): DailyAuditEntry[] {
-  const demoFixtures = generateDailyFixturesForDate(auditDate);
-  // If a sport has synced fixtures, do not mix its unverified demo fixtures into that pool.
-  const liveSports = new Set(extraFixtures.map((fixture) => fixture.sport));
-  const fixtures = [...extraFixtures, ...demoFixtures.filter((fixture) => !liveSports.has(fixture.sport))];
+  // Audit cards must only contain caller-supplied fixtures. Never silently substitute
+  // generated demo fixtures when live fixture ingestion is empty or incomplete.
+  const fixtures = extraFixtures.filter((fixture) => fixture.date === auditDate);
   const map = {} as Record<SportId, PredictionResult[]>;
   for (const s of ALL_SPORTS) {
     map[s] = rankTop10BetsForSport(fixtures, s, engine, sportWeights, 10);
