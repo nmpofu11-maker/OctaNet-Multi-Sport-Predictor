@@ -23,7 +23,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
-import { DailyAuditEntry, HistoricalMatchRow, SportId } from './types/sports';
+import { ALL_SPORTS, DailyAuditEntry, HistoricalMatchRow, SportId } from './types/sports';
 import { sanitizeDocId } from './engine/auditEngine';
 
 const app = initializeApp(firebaseConfig);
@@ -330,6 +330,7 @@ export async function commitAdaptedPicksBatchToFirestore(
         r7_continental_fatigue: clampNum(entry.rules.r7_continental_fatigue, 0, 10),
         r8_coach_volatility: clampNum(entry.rules.r8_coach_volatility, 0, 10),
         outcomeWon: entry.actualOutcome === 1 ? 1 : 0,
+        sourceVerified: true,
         createdAt: serverTimestamp(),
       });
 
@@ -368,104 +369,57 @@ export function subscribeWorkspaceSettledMatches(
   const q = query(
     collection(db, 'workspaces', safeUid, 'settledMatches'),
     where('ownerId', '==', safeUid),
-    where('workspaceId', '==', safeUid)
+    where('workspaceId', '==', safeUid),
+    where('sourceVerified', '==', true)
   );
   return onSnapshot(
     q,
     (snap) => {
-      const rows: HistoricalMatchRow[] = snap.docs.map((d) => {
+      const rows: HistoricalMatchRow[] = snap.docs.flatMap((d): HistoricalMatchRow[] => {
         const data = d.data();
-        return {
+        const date = typeof data.date === 'string' ? data.date : '';
+        const parsedDate = /^\\d{4}-\\d{2}-\\d{2}$/.test(date) ? new Date(`${date}T00:00:00Z`) : null;
+        const validDate = Boolean(parsedDate && !Number.isNaN(parsedDate.getTime()) && parsedDate.toISOString().slice(0, 10) === date);
+        const sport = data.sport as SportId;
+        const strings = ['competition', 'selection', 'opponent', 'market'];
+        const validStrings = strings.every((key) => typeof data[key] === 'string' && data[key].trim().length > 0);
+        const odds = data.decimalOdds;
+        const outcome = data.outcomeWon;
+        const ruleKeys = [
+          'r1_motivation_stakes', 'r2_form_momentum', 'r3_h2h_standings_gap', 'r4_tier_classification',
+          'r5_derby_rivalry', 'r6_squad_value_vs_form', 'r7_continental_fatigue', 'r8_coach_volatility',
+        ];
+        const validRules = ruleKeys.every((key) => typeof data[key] === 'number' && Number.isFinite(data[key]) && data[key] >= 0 && data[key] <= 10);
+        if (
+          data.sourceVerified !== true || !validDate || !ALL_SPORTS.includes(sport) ||
+          !validStrings || typeof data.isHomeOrFavoredContext !== 'boolean' ||
+          typeof odds !== 'number' || !Number.isFinite(odds) || odds < 1.01 || odds > 100 ||
+          (outcome !== 0 && outcome !== 1) || !validRules
+        ) return [];
+        return [{
           id: d.id,
-          date: String(data.date || '2026-10-24'),
-          sport: (data.sport as SportId) || SportId.Soccer,
-          competition: String(data.competition || ''),
-          selection: String(data.selection || ''),
-          opponent: String(data.opponent || ''),
-          market: String(data.market || 'Moneyline'),
-          decimalOdds: Number(data.decimalOdds) || 1.8,
-          isHomeOrFavoredContext: Boolean(data.isHomeOrFavoredContext),
+          date,
+          sport,
+          competition: data.competition,
+          selection: data.selection,
+          opponent: data.opponent,
+          market: data.market,
+          decimalOdds: odds,
+          isHomeOrFavoredContext: data.isHomeOrFavoredContext,
           rules: {
-            r1_motivation_stakes: Number(data.r1_motivation_stakes) || 5,
-            r2_form_momentum: Number(data.r2_form_momentum) || 5,
-            r3_h2h_standings_gap: Number(data.r3_h2h_standings_gap) || 5,
-            r4_tier_classification: Number(data.r4_tier_classification) || 5,
-            r5_derby_rivalry: Number(data.r5_derby_rivalry) || 5,
-            r6_squad_value_vs_form: Number(data.r6_squad_value_vs_form) || 5,
-            r7_continental_fatigue: Number(data.r7_continental_fatigue) || 5,
-            r8_coach_volatility: Number(data.r8_coach_volatility) || 5,
+            r1_motivation_stakes: data.r1_motivation_stakes,
+            r2_form_momentum: data.r2_form_momentum,
+            r3_h2h_standings_gap: data.r3_h2h_standings_gap,
+            r4_tier_classification: data.r4_tier_classification,
+            r5_derby_rivalry: data.r5_derby_rivalry,
+            r6_squad_value_vs_form: data.r6_squad_value_vs_form,
+            r7_continental_fatigue: data.r7_continental_fatigue,
+            r8_coach_volatility: data.r8_coach_volatility,
           },
-          outcomeWon: data.outcomeWon === 1 ? 1 : 0,
-        };
+          outcomeWon: outcome,
+        }];
       });
       onRows(rows);
-    },
-    (error) => {
-      if (onErrorMsg) {
-        onErrorMsg(error instanceof Error ? error.message : String(error));
-      }
-      handleFirestoreError(error, OperationType.LIST, path);
-    }
-  );
-}
-
-/**
- * Real-time subscription to user's auditPicks subcollection
- */
-export function subscribeWorkspaceAuditPicks(
-  uid: string,
-  onEntries: (entries: DailyAuditEntry[]) => void,
-  onErrorMsg?: (msg: string) => void
-): Unsubscribe {
-  const safeUid = sanitizeDocId(uid);
-  const path = `workspaces/${safeUid}/auditPicks`;
-  const q = query(
-    collection(db, 'workspaces', safeUid, 'auditPicks'),
-    where('ownerId', '==', safeUid),
-    where('workspaceId', '==', safeUid)
-  );
-  return onSnapshot(
-    q,
-    (snap) => {
-      const list: DailyAuditEntry[] = snap.docs.map((d) => {
-        const data = d.data();
-        return {
-          id: d.id,
-          auditDate: String(data.auditDate || '2026-10-24'),
-          sport: (data.sport as SportId) || SportId.Soccer,
-          competition: String(data.competition || ''),
-          selection: String(data.selection || ''),
-          opponent: String(data.opponent || ''),
-          market: String(data.market || 'Moneyline'),
-          isHomeOrFavoredContext: Boolean(data.isHomeOrFavoredContext),
-          decimalOdds: Number(data.decimalOdds) || 1.8,
-          kellyFractionPercent: 2.0,
-          ruleProbability: Number(data.ruleProbability) || 0.6,
-          neuralProbability: Number(data.neuralProbability) || 0.6,
-          hybridProbability: Number(data.hybridProbability) || 0.6,
-          cautionFlags: [],
-          rules: {
-            r1_motivation_stakes: Number(data.r1_motivation_stakes) || 5,
-            r2_form_momentum: Number(data.r2_form_momentum) || 5,
-            r3_h2h_standings_gap: Number(data.r3_h2h_standings_gap) || 5,
-            r4_tier_classification: Number(data.r4_tier_classification) || 5,
-            r5_derby_rivalry: Number(data.r5_derby_rivalry) || 5,
-            r6_squad_value_vs_form: Number(data.r6_squad_value_vs_form) || 5,
-            r7_continental_fatigue: Number(data.r7_continental_fatigue) || 5,
-            r8_coach_volatility: Number(data.r8_coach_volatility) || 5,
-          },
-          settlementStatus:
-            data.settlementStatus === 'adapted'
-              ? 'adapted'
-              : data.settlementStatus === 'settled'
-                ? 'settled'
-                : 'pending',
-          actualOutcome:
-            data.actualOutcome === 1 ? 1 : data.actualOutcome === 0 ? 0 : -1,
-          scoreSummary: String(data.scoreSummary || ''),
-        };
-      });
-      onEntries(list);
     },
     (error) => {
       if (onErrorMsg) {
