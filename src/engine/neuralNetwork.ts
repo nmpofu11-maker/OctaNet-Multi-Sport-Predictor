@@ -391,9 +391,6 @@ export function deriveTeamIntelligenceMatrices(
 }
 
 /**
- * Trains the Multi-Layer Perceptron on historical CSV match rows using Momentum SGD + L2 Regularization
- */
-/**
  * Creates an explicitly untrained engine for the empty initial state.
  * No generated rows are used and no performance metrics are claimed.
  */
@@ -423,6 +420,9 @@ export function createUntrainedNeuralEngine(
   };
 }
 
+/**
+ * Trains the Multi-Layer Perceptron on historical CSV match rows using Momentum SGD + L2 Regularization.
+ */
 export function trainNeuralNetworkOnCSV(
   rows: HistoricalMatchRow[],
   hyperparams: NeuralHyperparameters = DEFAULT_HYPERPARAMETERS,
