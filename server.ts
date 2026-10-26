@@ -3,6 +3,8 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI, Type } from '@google/genai';
+import { normalizeTheSportsDbEvents } from './src/engine/fixtureSources';
+import { SportId } from './src/types/sports';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,7 +15,7 @@ function getGenAIClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === 'MY_GEMINI_API_KEY' || apiKey.trim() === '') {
     throw new Error(
-      'GEMINI_API_KEY is not configured yet. Configure your key in Settings > Secrets to run live web schedule sync.'
+      'GEMINI_API_KEY is not configured yet. Configure your key in Settings > Secrets to run Gemini-assisted research.'
     );
   }
   return new GoogleGenAI({
@@ -33,7 +35,7 @@ async function startServer() {
 
   // Basic abuse guard for public demo deployments. This is not a substitute for authentication.
   const requestWindows = new Map<string, { start: number; count: number }>();
-  app.use('/api/ai', (req, res, next) => {
+  app.use(['/api/ai', '/api/sports'], (req, res, next) => {
     const now = Date.now();
     const key = req.ip || req.socket.remoteAddress || 'unknown';
     const current = requestWindows.get(key);
@@ -44,7 +46,7 @@ async function startServer() {
     }
     current.count += 1;
     if (current.count > 12) {
-      res.status(429).json({ error: 'Too many AI requests. Please wait one minute and try again.' });
+      res.status(429).json({ error: 'Too many API requests. Please wait one minute and try again.' });
       return;
     }
     next();
@@ -59,97 +61,64 @@ async function startServer() {
     res.json({ ok: true, geminiConfigured: hasKey });
   });
 
-  // Grounded live schedule & universal 8-rule intelligence sync
-  app.post('/api/ai/sync-fixtures', async (req, res) => {
+  // Source-backed schedule discovery. It returns provider records only, never invented odds or rule scores.
+  const scheduleCache = new Map<string, { expiresAt: number; events: unknown[] }>();
+  const providerCallsByUtcDay = new Map<string, number>();
+  app.post('/api/sports/discover-fixtures', async (req, res) => {
     try {
       const { date, sport } = req.body ?? {};
-      const allowedSports = new Set(['Soccer', 'Tennis', 'Basketball', 'Golf', 'Cricket', 'Rugby']);
-      if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+      const allowedSports = new Set(Object.values(SportId));
+      if (typeof date !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(date) ||
           Number.isNaN(Date.parse(`${date}T00:00:00Z`)) ||
-          typeof sport !== 'string' || !allowedSports.has(sport)) {
+          typeof sport !== 'string' || !allowedSports.has(sport as SportId)) {
         res.status(400).json({ error: 'A valid YYYY-MM-DD date and supported sport are required.' });
         return;
       }
 
-      const ai = getGenAIClient();
-      const prompt = `Search for scheduled professional ${sport} matches, tournaments, or fixtures around ${date}.
-Summarize up to 5 real matchups, noting: (1) title/qualification/relegation motivation, (2) last 5 games form, (3) head-to-head and standings gap, (4) team/player tier, (5) whether it is a derby/rivalry, (6) squad value vs form, (7) continental/cup schedule rotation fatigue, and (8) coach H2H or volatile league status.`;
+      const now = Date.now();
+      let events = scheduleCache.get(date);
+      if (!events || events.expiresAt <= now) {
+        const utcDay = new Date(now).toISOString().slice(0, 10);
+        const callsToday = providerCallsByUtcDay.get(utcDay) ?? 0;
+        if (callsToday >= 3) {
+          res.status(429).json({
+            error: 'The free schedule source has a three-uncached-request daily limit. Reuse a cached date or retry after the UTC day changes.',
+          });
+          return;
+        }
+        providerCallsByUtcDay.set(utcDay, callsToday + 1);
 
-      const searchResp = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents: prompt,
-        config: {
-          tools: [{ googleSearch: {} }],
-        },
-      });
+        const response = await fetch(
+          `https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d=${encodeURIComponent(date)}`,
+          { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(8000) }
+        );
+        if (!response.ok) {
+          throw new Error(`TheSportsDB returned HTTP ${response.status}.`);
+        }
+        const payload = await response.json() as { events?: unknown[] | null };
+        if (payload.events === null) {
+          events = { expiresAt: now + 12 * 60 * 60 * 1000, events: [] };
+        } else if (Array.isArray(payload.events)) {
+          events = { expiresAt: now + 12 * 60 * 60 * 1000, events: payload.events };
+        } else {
+          throw new Error('TheSportsDB returned an unexpected schedule response; no fixtures were accepted.');
+        }
+        scheduleCache.set(date, events);
+      }
 
-      const groundingRaw = searchResp.candidates?.[0]?.groundingMetadata?.groundingChunks ?? [];
-      const sources = groundingRaw
-        .map((c) => (c.web ? { uri: c.web.uri ?? '', title: c.web.title ?? '' } : null))
-        .filter((s): s is { uri: string; title: string } => Boolean(s && s.uri));
-
-      const structResp = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents: `Convert the following ${sport} schedule briefing for ${date} into structured fixture entries using our Universal 8 Rules (0.0 to 10.0, where low r5_derby_rivalry means fierce derby, low r7_continental_fatigue means heavy rotation risk, and low r8_coach_volatility means high-volatility league such as Japan/Korea/China/Norway/Sweden/Belarus/Bulgaria/Romania/Ukraine/Russia):\n\n${searchResp.text ?? ''}`,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                kickoffTime: { type: Type.STRING },
-                competition: { type: Type.STRING },
-                venueOrSurface: { type: Type.STRING },
-                selection: { type: Type.STRING },
-                opponent: { type: Type.STRING },
-                market: { type: Type.STRING },
-                decimalOdds: { type: Type.NUMBER },
-                isHomeOrFavoredContext: { type: Type.BOOLEAN },
-                sportContextStat: { type: Type.STRING },
-                r1_motivation_stakes: { type: Type.NUMBER },
-                r2_form_momentum: { type: Type.NUMBER },
-                r3_h2h_standings_gap: { type: Type.NUMBER },
-                r4_tier_classification: { type: Type.NUMBER },
-                r5_derby_rivalry: { type: Type.NUMBER },
-                r6_squad_value_vs_form: { type: Type.NUMBER },
-                r7_continental_fatigue: { type: Type.NUMBER },
-                r8_coach_volatility: { type: Type.NUMBER },
-              },
-              required: [
-                'kickoffTime',
-                'competition',
-                'venueOrSurface',
-                'selection',
-                'opponent',
-                'market',
-                'decimalOdds',
-                'isHomeOrFavoredContext',
-                'sportContextStat',
-                'r1_motivation_stakes',
-                'r2_form_momentum',
-                'r3_h2h_standings_gap',
-                'r4_tier_classification',
-                'r5_derby_rivalry',
-                'r6_squad_value_vs_form',
-                'r7_continental_fatigue',
-                'r8_coach_volatility',
-              ],
-            },
-          },
-        },
-      });
-
-      const parsedFixtures = JSON.parse((structResp.text ?? '[]').trim());
+      const candidates = normalizeTheSportsDbEvents(events.events, sport as SportId, date);
       res.json({
-        fixtures: parsedFixtures,
-        briefing: searchResp.text ?? '',
-        sources,
+        provider: 'TheSportsDB',
+        providerNotice: 'Provider-listed schedule records only. Rule scores, odds, and prediction evidence are not generated by this endpoint.',
+        date,
+        sport,
+        fetchedAt: new Date().toISOString(),
+        sourceUrl: 'https://www.thesportsdb.com/',
+        candidates,
       });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to synchronize live sports fixtures.';
-      res.status(500).json({ error: message });
+      const message = error instanceof Error ? error.message : 'Unable to retrieve source-backed schedule records.';
+      res.status(502).json({ error: message });
     }
   });
 
