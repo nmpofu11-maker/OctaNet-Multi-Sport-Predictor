@@ -28,6 +28,7 @@ import {
   buildLockedAuditCardForDate,
   computeDailyAuditSummary,
   getPreviousDateISO,
+  selectSuppliedFixturesForDate,
 } from './auditEngine';
 
 test('all 6 sports adapt the universal 8 rules with normalized weights summing to 1.0', () => {
@@ -222,6 +223,20 @@ test('Daily prediction engine produces exact 10 best bets per day for each of th
   assert.equal(crossTop10.length, 10);
   const exported = exportPredictionsToCSV(crossTop10);
   assert.equal(exported.split('\n').length, 11);
+});
+
+test('daily prediction fixture selection never falls back to generated demo fixtures', () => {
+  const supplied = selectSuppliedFixturesForDate('2026-10-25', []);
+  assert.deepEqual(supplied, []);
+  const engine = trainNeuralNetworkOnCSV(generateHistoricalTrainingDataset(12));
+  const predictions = rankTop10BetsForSport(
+    supplied,
+    SportId.Soccer,
+    engine,
+    getDefaultSportWeights()[SportId.Soccer],
+    10
+  );
+  assert.equal(predictions.length, 0);
 });
 
 test('locked audit cards never invent demo fixtures when no verified fixtures are supplied', () => {
