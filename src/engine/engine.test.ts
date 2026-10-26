@@ -68,6 +68,19 @@ test('empty initial engine is explicitly untrained and exposes no performance me
   assert.equal(Object.keys(engine.intelligencePayload.team_intelligence_matrices).length, 0);
 });
 
+test('minimum-size training keeps at least two newest rows out of the training set', () => {
+  const rows = generateSyntheticTestHistoricalRows(2).slice(0, 8);
+  assert.equal(rows.length, 8);
+  const engine = trainNeuralNetworkOnCSV(rows, {
+    ...DEFAULT_HYPERPARAMETERS,
+    epochs: 10,
+  });
+  assert.equal(engine.report.totalRows, 8);
+  assert.equal(engine.report.trainRows, 6);
+  assert.equal(engine.report.valRows, 2);
+  assert.ok(engine.report.trainRows < engine.report.totalRows);
+});
+
 test('all 6 sports adapt the universal 8 rules with normalized weights summing to 1.0', () => {
   assert.equal(ALL_SPORTS.length, 6);
   const weights = getDefaultSportWeights();

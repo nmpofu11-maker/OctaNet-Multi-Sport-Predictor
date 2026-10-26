@@ -456,7 +456,11 @@ export function trainNeuralNetworkOnCSV(
   // so they are deliberately not used to construct validation features.
   const chronological = rows.map((row, idx) => ({ row, idx }))
     .sort((a, b) => a.row.date.localeCompare(b.row.date) || a.idx - b.idx);
-  const holdoutCount = Math.max(0, Math.floor(chronological.length * 0.2));
+  // Keep at least two newest rows for a real chronological holdout, even at the 8-row minimum.
+  const holdoutCount = Math.min(
+    Math.max(2, Math.floor(chronological.length * 0.2)),
+    chronological.length - 2
+  );
   const trainingRows = chronological.slice(0, chronological.length - holdoutCount).map(({ row }) => row);
   const prelimMatrix = deriveTeamIntelligenceMatrices(
     trainingRows,
@@ -501,10 +505,14 @@ export function trainNeuralNetworkOnCSV(
   const orderedDataset = dataset.map((sample, idx) => ({ sample, idx }))
     .sort((a, b) => a.sample.row.date.localeCompare(b.sample.row.date) || a.idx - b.idx)
     .map(({ sample }) => sample);
-  const holdoutSize = Math.max(0, Math.floor(orderedDataset.length * 0.2));
+  // Never substitute training rows for validation rows: that would report in-sample metrics.
+  const holdoutSize = Math.min(
+    Math.max(2, Math.floor(orderedDataset.length * 0.2)),
+    orderedDataset.length - 2
+  );
   const trainSet = orderedDataset.slice(0, orderedDataset.length - holdoutSize);
   const valSet = orderedDataset.slice(orderedDataset.length - holdoutSize);
-  const evalSet = valSet.length >= 2 ? valSet : trainSet;
+  const evalSet = valSet;
 
   const mlp = initializeMLP(h1Dim, h2Dim, 20261025);
 
