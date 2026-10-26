@@ -9,6 +9,7 @@ import {
 } from './sportRules';
 import {
   DEFAULT_HYPERPARAMETERS,
+  createUntrainedNeuralEngine,
   rankCrossSportTop10,
   rankTop10BetsForSport,
   trainNeuralNetworkOnCSV,
@@ -30,6 +31,16 @@ import {
   getPreviousDateISO,
   selectSuppliedFixturesForDate,
 } from './auditEngine';
+
+test('empty initial engine is explicitly untrained and exposes no performance metrics', () => {
+  const engine = createUntrainedNeuralEngine();
+  assert.equal(engine.report.totalRows, 0);
+  assert.equal(engine.report.trainRows, 0);
+  assert.equal(engine.report.valRows, 0);
+  assert.equal(engine.report.epochHistory.length, 0);
+  assert.equal(engine.intelligencePayload.model_engine, 'UNTRAINED — awaiting historical results');
+  assert.equal(Object.keys(engine.intelligencePayload.team_intelligence_matrices).length, 0);
+});
 
 test('all 6 sports adapt the universal 8 rules with normalized weights summing to 1.0', () => {
   assert.equal(ALL_SPORTS.length, 6);
