@@ -12,7 +12,6 @@ import {
   ALL_SPORTS,
   DailyAuditEntry,
   DailyFixture,
-  FixtureDiscoveryCandidate,
   HistoricalMatchRow,
   IntelligenceMatrixPayload,
   NeuralHyperparameters,
@@ -21,6 +20,7 @@ import {
   SPORT_LABELS,
   SportId,
 } from './types/sports';
+import { FixtureDiscoveryCandidate } from './engine/fixtureSources';
 import { getDefaultSportWeights, SportRuleWeights } from './engine/sportRules';
 import {
   DEFAULT_HYPERPARAMETERS,
