@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI, Type } from '@google/genai';
 import { normalizeTheSportsDbEvents } from './src/engine/fixtureSources';
-import { SportId } from './src/types/sports';
+import { SPORT_LABELS, SportId } from './src/types/sports';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,7 +63,6 @@ async function startServer() {
 
   // Source-backed schedule discovery. It returns provider records only, never invented odds or rule scores.
   const scheduleCache = new Map<string, { expiresAt: number; events: unknown[] }>();
-  const providerCallsByUtcDay = new Map<string, number>();
   app.post('/api/sports/discover-fixtures', async (req, res) => {
     try {
       const { date, sport } = req.body ?? {};
@@ -76,20 +75,11 @@ async function startServer() {
       }
 
       const now = Date.now();
-      let events = scheduleCache.get(date);
+      const cacheKey = `${date}:${sport}`;
+      let events = scheduleCache.get(cacheKey);
       if (!events || events.expiresAt <= now) {
-        const utcDay = new Date(now).toISOString().slice(0, 10);
-        const callsToday = providerCallsByUtcDay.get(utcDay) ?? 0;
-        if (callsToday >= 3) {
-          res.status(429).json({
-            error: 'The free schedule source has a three-uncached-request daily limit. Reuse a cached date or retry after the UTC day changes.',
-          });
-          return;
-        }
-        providerCallsByUtcDay.set(utcDay, callsToday + 1);
-
         const response = await fetch(
-          `https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d=${encodeURIComponent(date)}`,
+          `https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d=${encodeURIComponent(date)}&s=${encodeURIComponent(SPORT_LABELS[sport as SportId])}`,
           { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(8000) }
         );
         if (!response.ok) {
@@ -103,7 +93,7 @@ async function startServer() {
         } else {
           throw new Error('TheSportsDB returned an unexpected schedule response; no fixtures were accepted.');
         }
-        scheduleCache.set(date, events);
+        scheduleCache.set(cacheKey, events);
       }
 
       const candidates = normalizeTheSportsDbEvents(events.events, sport as SportId, date);
