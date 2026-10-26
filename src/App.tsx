@@ -349,13 +349,13 @@ export default function App() {
         : [];
     }
     return map;
-  }, [dailyFixtures, engine, historicalRows.length, sportWeights]);
+  }, [dailyFixtures, engine, historicalRows.length, sportWeights, isTrainedForActiveCorpus]);
 
   const crossSportTop10 = useMemo(
     () => isTrainedForActiveCorpus
       ? rankCrossSportTop10(dailyFixtures, engine, sportWeights, 10)
       : [],
-    [dailyFixtures, engine, historicalRows.length, sportWeights]
+    [dailyFixtures, engine, historicalRows.length, sportWeights, isTrainedForActiveCorpus]
   );
 
   // Active Audit Card & Summary
