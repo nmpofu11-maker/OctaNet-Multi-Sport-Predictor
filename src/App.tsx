@@ -107,6 +107,100 @@ function readPersistedTrainingState(): PersistedTrainingState | null {
   }
 }
 
+const FIXTURE_DISCOVERY_STORAGE_KEY = 'octanet-fixture-discovery-v1';
+
+interface PersistedFixtureDiscoveryArchive {
+  version: 1;
+  candidatesByDate: Record<string, FixtureDiscoveryCandidate[]>;
+  savedAt: string;
+}
+
+interface FixtureDiscoveryArchiveReadResult {
+  candidatesByDate: Record<string, FixtureDiscoveryCandidate[]>;
+  canPersist: boolean;
+}
+
+function sanitizePersistedFixtureCandidate(value: unknown, date: string): FixtureDiscoveryCandidate | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const item = value as Record<string, unknown>;
+  if (
+    item.provider !== 'TheSportsDB' ||
+    typeof item.id !== 'string' ||
+    typeof item.providerEventId !== 'string' ||
+    typeof item.sport !== 'string' ||
+    !ALL_SPORTS.includes(item.sport as SportId) ||
+    item.date !== date ||
+    typeof item.eventName !== 'string' ||
+    !item.eventName.trim() ||
+    typeof item.sourceUrl !== 'string' ||
+    !item.sourceUrl.startsWith('https://www.thesportsdb.com/event/')
+  ) return null;
+
+  const nullableText = (key: string): string | null => {
+    const field = item[key];
+    return typeof field === 'string' && field.trim() ? field.trim() : null;
+  };
+  const nullableScore = (key: string): number | null => {
+    const field = item[key];
+    return typeof field === 'number' && Number.isFinite(field) ? field : null;
+  };
+
+  return {
+    id: item.id,
+    provider: 'TheSportsDB',
+    providerEventId: item.providerEventId,
+    sport: item.sport as SportId,
+    date,
+    kickoffTime: nullableText('kickoffTime'),
+    competition: nullableText('competition'),
+    eventName: item.eventName.trim(),
+    selection: nullableText('selection'),
+    opponent: nullableText('opponent'),
+    venue: nullableText('venue'),
+    status: nullableText('status'),
+    homeScore: nullableScore('homeScore'),
+    awayScore: nullableScore('awayScore'),
+    sourceUrl: item.sourceUrl,
+  };
+}
+
+function readPersistedFixtureDiscoveryArchive(): FixtureDiscoveryArchiveReadResult {
+  if (typeof window === 'undefined') {
+    return { candidatesByDate: {}, canPersist: false };
+  }
+  try {
+    const raw = window.localStorage.getItem(FIXTURE_DISCOVERY_STORAGE_KEY);
+    if (!raw) return { candidatesByDate: {}, canPersist: true };
+    const saved = JSON.parse(raw) as Partial<PersistedFixtureDiscoveryArchive>;
+    if (
+      saved.version !== 1 ||
+      !saved.candidatesByDate ||
+      typeof saved.candidatesByDate !== 'object' ||
+      Array.isArray(saved.candidatesByDate)
+    ) return { candidatesByDate: {}, canPersist: false };
+
+    const candidatesByDate: Record<string, FixtureDiscoveryCandidate[]> = {};
+    let total = 0;
+    for (const [date, values] of Object.entries(saved.candidatesByDate)) {
+      if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date) || !Array.isArray(values)) {
+        return { candidatesByDate, canPersist: false };
+      }
+      const sanitized: FixtureDiscoveryCandidate[] = [];
+      for (const value of values) {
+        const candidate = sanitizePersistedFixtureCandidate(value, date);
+        if (!candidate) return { candidatesByDate, canPersist: false };
+        sanitized.push(candidate);
+        total += 1;
+        if (total > 10000) return { candidatesByDate, canPersist: false };
+      }
+      candidatesByDate[date] = sanitized;
+    }
+    return { candidatesByDate, canPersist: true };
+  } catch {
+    return { candidatesByDate: {}, canPersist: false };
+  }
+}
+
 function canWriteTrainingState(): boolean {
   if (typeof window === 'undefined') return false;
   try {
@@ -212,7 +306,9 @@ export default function App() {
   const [customFixturesByDate, setCustomFixturesByDate] = useState<
     Record<string, DailyFixture[]>
   >({});
-  const [fixtureCandidatesByDate, setFixtureCandidatesByDate] = useState<Record<string, FixtureDiscoveryCandidate[]>>({});
+  const [fixtureDiscoveryInitial] = useState(readPersistedFixtureDiscoveryArchive);
+  const [fixtureCandidatesByDate, setFixtureCandidatesByDate] = useState<Record<string, FixtureDiscoveryCandidate[]>>(fixtureDiscoveryInitial.candidatesByDate);
+  const [fixtureDiscoveryPersistenceAllowed, setFixtureDiscoveryPersistenceAllowed] = useState(fixtureDiscoveryInitial.canPersist);
   const [isSyncingLive, setIsSyncingLive] = useState(false);
   const [liveSyncMessage, setLiveSyncMessage] = useState<{
     type: 'success' | 'error';
@@ -247,6 +343,25 @@ export default function App() {
       setCloudBannerError({ text: 'Local persistence failed. Export your active CSV corpus before leaving this session.' });
     }
   }, [historicalRows, hyperparams, engine, trainedCorpusFingerprint, persistenceAllowed]);
+
+  // Persist source-listed schedule records separately from the training corpus/model.
+  // A malformed saved archive is preserved rather than silently overwritten.
+  useEffect(() => {
+    if (!fixtureDiscoveryPersistenceAllowed) {
+      setCloudBannerError({ text: 'Saved fixture discovery archive could not be safely read or written. It was not overwritten; export or recover it before continuing.' });
+      return;
+    }
+    try {
+      window.localStorage.setItem(FIXTURE_DISCOVERY_STORAGE_KEY, JSON.stringify({
+        version: 1,
+        candidatesByDate: fixtureCandidatesByDate,
+        savedAt: new Date().toISOString(),
+      } satisfies PersistedFixtureDiscoveryArchive));
+    } catch {
+      setFixtureDiscoveryPersistenceAllowed(false);
+      setCloudBannerError({ text: 'Fixture discovery archive persistence failed. Source records may not survive refresh; do not clear browser storage.' });
+    }
+  }, [fixtureCandidatesByDate, fixtureDiscoveryPersistenceAllowed]);
 
   // Subscribe to Firebase Auth & Firestore Workspace listeners when authenticated
   useEffect(() => {
