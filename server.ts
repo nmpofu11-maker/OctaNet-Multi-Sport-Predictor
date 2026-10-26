@@ -68,7 +68,7 @@ async function startServer() {
     try {
       const { date, sport } = req.body ?? {};
       const allowedSports = new Set(Object.values(SportId));
-      if (typeof date !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(date) ||
+      if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
           Number.isNaN(Date.parse(`${date}T00:00:00Z`)) ||
           typeof sport !== 'string' || !allowedSports.has(sport as SportId)) {
         res.status(400).json({ error: 'A valid YYYY-MM-DD date and supported sport are required.' });
