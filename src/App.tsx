@@ -105,6 +105,19 @@ function readPersistedTrainingState(): PersistedTrainingState | null {
   }
 }
 
+function canWriteTrainingState(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const raw = window.localStorage.getItem(TRAINING_STATE_STORAGE_KEY);
+    if (!raw) return true;
+    const saved = JSON.parse(raw) as Partial<PersistedTrainingState>;
+    return saved.version === 1 && Array.isArray(saved.rows) && Boolean(saved.hyperparams) &&
+      Boolean(saved.engine?.report) && Boolean(saved.engine?.weights) && saved.rows.length <= 50000;
+  } catch {
+    return false;
+  }
+}
+
 function formatCloudErrorMessage(raw: string): { text: string; upgradeUrl?: string } {
   if (raw.includes("Free daily read units per project (free tier database)")) {
     const upgradeUrl = `https://console.firebase.google.com/project/${firebaseConfig.projectId}/firestore/databases/${firebaseConfig.firestoreDatabaseId}/data?openUpgradeDialog=true`;
@@ -141,6 +154,7 @@ export default function App() {
 
   const [sportWeights, setSportWeights] = useState<SportRuleWeights>(initialState.weights);
   const savedTrainingState = useMemo(() => readPersistedTrainingState(), []);
+  const persistenceAllowed = useMemo(() => canWriteTrainingState(), []);
   const [historicalRows, setHistoricalRows] = useState<HistoricalMatchRow[]>(
     savedTrainingState?.rows ?? initialState.baseRows
   );
@@ -198,6 +212,10 @@ export default function App() {
   // Persist imported historical rows and explicitly trained weights across refreshes.
   // This versioned key has no generated/demo seed data and never silently reseeds a corpus.
   useEffect(() => {
+    if (!persistenceAllowed) {
+      setCloudBannerError({ text: 'Saved training state could not be safely read. It was not overwritten; export or recover your saved corpus before continuing.' });
+      return;
+    }
     try {
       window.localStorage.setItem(TRAINING_STATE_STORAGE_KEY, JSON.stringify({
         version: 1,
@@ -209,7 +227,7 @@ export default function App() {
     } catch {
       setCloudBannerError({ text: 'Local persistence failed. Export your active CSV corpus before leaving this session.' });
     }
-  }, [historicalRows, hyperparams, engine]);
+  }, [historicalRows, hyperparams, engine, persistenceAllowed]);
 
   // Subscribe to Firebase Auth & Firestore Workspace listeners when authenticated
   useEffect(() => {
