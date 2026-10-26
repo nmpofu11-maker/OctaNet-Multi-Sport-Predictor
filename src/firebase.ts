@@ -188,6 +188,7 @@ export async function syncAuditCardToFirestore(
         ruleProbability: clampNum(entry.ruleProbability, 0, 1),
         neuralProbability: clampNum(entry.neuralProbability, 0, 1),
         hybridProbability: clampNum(entry.hybridProbability, 0, 1),
+        kellyFractionPercent: clampNum(entry.kellyFractionPercent, 0, 100),
         r1_motivation_stakes: clampNum(entry.rules.r1_motivation_stakes, 0, 10),
         r2_form_momentum: clampNum(entry.rules.r2_form_momentum, 0, 10),
         r3_h2h_standings_gap: clampNum(entry.rules.r3_h2h_standings_gap, 0, 10),
@@ -472,7 +473,8 @@ export function subscribeWorkspaceAuditPicks(
           typeof data.isHomeOrFavoredContext !== 'boolean' ||
           typeof odds !== 'number' || !Number.isFinite(odds) || odds < 1.01 || odds > 100 ||
           !validProbability(data.ruleProbability) || !validProbability(data.neuralProbability) ||
-          !validProbability(data.hybridProbability) || !validRules ||
+          !validProbability(data.hybridProbability) ||
+          typeof data.kellyFractionPercent !== 'number' || !Number.isFinite(data.kellyFractionPercent) || data.kellyFractionPercent < 0 || data.kellyFractionPercent > 100 || !validRules ||
           !['pending', 'settled', 'adapted'].includes(status) ||
           (outcome !== -1 && outcome !== 0 && outcome !== 1) ||
           typeof data.scoreSummary !== 'string'
@@ -487,7 +489,7 @@ export function subscribeWorkspaceAuditPicks(
           market: data.market,
           isHomeOrFavoredContext: data.isHomeOrFavoredContext,
           decimalOdds: odds,
-          kellyFractionPercent: typeof data.kellyFractionPercent === 'number' && Number.isFinite(data.kellyFractionPercent) ? data.kellyFractionPercent : 0,
+          kellyFractionPercent: data.kellyFractionPercent,
           ruleProbability: data.ruleProbability,
           neuralProbability: data.neuralProbability,
           hybridProbability: data.hybridProbability,
