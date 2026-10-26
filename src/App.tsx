@@ -12,6 +12,7 @@ import {
   ALL_SPORTS,
   DailyAuditEntry,
   DailyFixture,
+  FixtureDiscoveryCandidate,
   HistoricalMatchRow,
   IntelligenceMatrixPayload,
   NeuralHyperparameters,
@@ -211,6 +212,7 @@ export default function App() {
   const [customFixturesByDate, setCustomFixturesByDate] = useState<
     Record<string, DailyFixture[]>
   >({});
+  const [fixtureCandidatesByDate, setFixtureCandidatesByDate] = useState<Record<string, FixtureDiscoveryCandidate[]>>({});
   const [isSyncingLive, setIsSyncingLive] = useState(false);
   const [liveSyncMessage, setLiveSyncMessage] = useState<{
     type: 'success' | 'error';
@@ -727,76 +729,48 @@ export default function App() {
     setIsSyncingLive(true);
     setLiveSyncMessage(null);
     try {
-      const resp = await fetch('/api/ai/sync-fixtures', {
+      const resp = await fetch('/api/sports/discover-fixtures', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sport: SPORT_LABELS[sport], date }),
+        body: JSON.stringify({ sport, date }),
       });
       const data = await resp.json();
       if (!resp.ok) {
-        throw new Error(data.error || 'Failed to sync live schedule.');
+        throw new Error(data.error || 'Failed to retrieve source-backed schedule records.');
       }
-      const rawItems: unknown[] = Array.isArray(data.fixtures) ? data.fixtures : [];
-      const ruleKeys: RuleKey[] = [
-        'r1_motivation_stakes', 'r2_form_momentum', 'r3_h2h_standings_gap', 'r4_tier_classification',
-        'r5_derby_rivalry', 'r6_squad_value_vs_form', 'r7_continental_fatigue', 'r8_coach_volatility',
-      ];
-      const validItems = rawItems.filter((candidate): candidate is Record<string, unknown> => {
-        if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return false;
-        const item = candidate as Record<string, unknown>;
-        const requiredStrings = ['kickoffTime', 'competition', 'venueOrSurface', 'selection', 'opponent', 'market', 'sportContextStat'];
-        if (requiredStrings.some((key) => typeof item[key] !== 'string' || !(item[key] as string).trim())) return false;
-        if (typeof item.isHomeOrFavoredContext !== 'boolean') return false;
-        if (typeof item.decimalOdds !== 'number' || !Number.isFinite(item.decimalOdds) || item.decimalOdds < 1.01 || item.decimalOdds > 100) return false;
-        return ruleKeys.every((key) => typeof item[key] === 'number' && Number.isFinite(item[key]) && Number(item[key]) >= 0 && Number(item[key]) <= 10);
-      });
-      if (validItems.length === 0) {
-        throw new Error('No complete fixture candidates were returned. Missing or invalid fields are not replaced with invented defaults.');
-      }
-      const mapped: DailyFixture[] = validItems.map((item, idx) => {
-          const selection = String(item.selection);
-          const opponent = String(item.opponent);
-          return {
-            id: `live-${date}-${sport}-${Date.now()}-${idx}`,
-            date,
-            kickoffTime: String(item.kickoffTime),
-            sport,
-            competition: String(item.competition),
-            venueOrSurface: String(item.venueOrSurface),
-            selection,
-            opponent,
-            matchupLabel: `${selection} vs ${opponent}`,
-            market: String(item.market),
-            decimalOdds: Number(item.decimalOdds),
-            isHomeOrFavoredContext: item.isHomeOrFavoredContext as boolean,
-            sportContextStat: String(item.sportContextStat),
-            rules: {
-              r1_motivation_stakes: Number(item.r1_motivation_stakes),
-              r2_form_momentum: Number(item.r2_form_momentum),
-              r3_h2h_standings_gap: Number(item.r3_h2h_standings_gap),
-              r4_tier_classification: Number(item.r4_tier_classification),
-              r5_derby_rivalry: Number(item.r5_derby_rivalry),
-              r6_squad_value_vs_form: Number(item.r6_squad_value_vs_form),
-              r7_continental_fatigue: Number(item.r7_continental_fatigue),
-              r8_coach_volatility: Number(item.r8_coach_volatility),
-            },
-          };
-        }
-      );
 
-      setCustomFixturesByDate((prev) => ({
+      const rawCandidates: unknown[] = Array.isArray(data.candidates) ? data.candidates : [];
+      const candidates = rawCandidates.filter((value): value is FixtureDiscoveryCandidate => {
+        if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+        const item = value as Record<string, unknown>;
+        return item.provider === 'TheSportsDB' &&
+          item.sport === sport &&
+          item.date === date &&
+          typeof item.id === 'string' &&
+          typeof item.providerEventId === 'string' &&
+          typeof item.eventName === 'string' && item.eventName.trim().length > 0 &&
+          typeof item.sourceUrl === 'string' && item.sourceUrl.startsWith('https://');
+      });
+
+      setFixtureCandidatesByDate((prev) => ({
         ...prev,
-        [date]: [...(prev[date] ?? []).filter((fixture) => fixture.sport !== sport), ...mapped],
+        [date]: [
+          ...(prev[date] ?? []).filter((candidate) => candidate.sport !== sport),
+          ...candidates,
+        ],
       }));
+
       setLiveSyncMessage({
         type: 'success',
-        text: `Loaded ${mapped.length} AI-search-grounded ${SPORT_LABELS[sport]} candidates for ${date}. These are not independently verified fixtures or bookmaker odds.`,
-        sources: data.sources,
+        text: candidates.length > 0
+          ? `Loaded ${candidates.length} schedule records from TheSportsDB for ${SPORT_LABELS[sport]} on ${date}. These are discovery records only: no odds or rule scores were invented, and they are not yet eligible for forecasts until source-backed team evidence is available.`
+          : `TheSportsDB returned no ${SPORT_LABELS[sport]} schedule records for ${date}. No placeholder fixtures or scores were added.`,
+        sources: [{ uri: typeof data.sourceUrl === 'string' ? data.sourceUrl : 'https://www.thesportsdb.com/', title: 'TheSportsDB schedule data' }],
       });
     } catch (err) {
       setLiveSyncMessage({
         type: 'error',
-        text: err instanceof Error ? err.message : 'Unable to fetch live fixtures.',
+        text: err instanceof Error ? err.message : 'Unable to retrieve source-backed schedule records.',
       });
     } finally {
       setIsSyncingLive(false);
@@ -994,6 +968,7 @@ export default function App() {
               onLiveSyncSport={handleLiveSyncSport}
               isSyncingLive={isSyncingLive}
               liveSyncMessage={liveSyncMessage}
+              fixtureCandidates={fixtureCandidatesByDate[selectedDate] ?? []}
               neuralBlendAlpha={engine.hyperparams.neuralBlendAlpha}
             />
           )}
