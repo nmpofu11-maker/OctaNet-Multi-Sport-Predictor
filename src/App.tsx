@@ -762,6 +762,9 @@ export default function App() {
   };
 
   const handleRecalibrateNotesAI = async () => {
+    if (engine.report.epochHistory.length === 0 || engine.report.totalRows !== historicalRows.length || historicalRows.length < 8) {
+      throw new Error('AI model notes are unavailable until the active historical corpus has been explicitly trained.');
+    }
     setIsCalibratingAI(true);
     try {
       const sampleTeams = Object.entries(engine.intelligencePayload.team_intelligence_matrices)
