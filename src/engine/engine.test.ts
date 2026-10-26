@@ -27,11 +27,19 @@ import {
 } from './__tests__/testFixtures';
 import {
   adaptNeuralEngineFromAudit,
+  isSourceVerifiedScoreSummary,
   buildLockedAuditCardForDate,
   computeDailyAuditSummary,
   getPreviousDateISO,
   selectSuppliedFixturesForDate,
 } from './auditEngine';
+
+test('source verification marker requires a credential-free HTTPS URL', () => {
+  assert.equal(isSourceVerifiedScoreSummary('SOURCE-VERIFIED: https://results.example.org/match/123'), true);
+  assert.equal(isSourceVerifiedScoreSummary('SOURCE-VERIFIED: http://results.example.org/match/123'), false);
+  assert.equal(isSourceVerifiedScoreSummary('SOURCE-VERIFIED: https://user:pass@results.example.org/match/123'), false);
+  assert.equal(isSourceVerifiedScoreSummary('SOURCE-VERIFIED: not-a-url'), false);
+});
 
 test('corpus fingerprint changes when data changes even if row count stays the same', () => {
   const rows = generateSyntheticTestHistoricalRows(2);
