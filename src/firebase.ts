@@ -276,6 +276,7 @@ export async function commitAdaptedPicksBatchToFirestore(
           ruleProbability: clampNum(entry.ruleProbability, 0, 1),
           neuralProbability: clampNum(entry.neuralProbability, 0, 1),
           hybridProbability: clampNum(entry.hybridProbability, 0, 1),
+          kellyFractionPercent: clampNum(entry.kellyFractionPercent, 0, 100),
           r1_motivation_stakes: clampNum(entry.rules.r1_motivation_stakes, 0, 10),
           r2_form_momentum: clampNum(entry.rules.r2_form_momentum, 0, 10),
           r3_h2h_standings_gap: clampNum(entry.rules.r3_h2h_standings_gap, 0, 10),
