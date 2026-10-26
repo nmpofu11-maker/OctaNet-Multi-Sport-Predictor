@@ -24,7 +24,7 @@ import {
 } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 import { ALL_SPORTS, DailyAuditEntry, HistoricalMatchRow, SportId } from './types/sports';
-import { sanitizeDocId } from './engine/auditEngine';
+import { isSourceVerifiedScoreSummary, sanitizeDocId } from './engine/auditEngine';
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
@@ -252,6 +252,13 @@ export async function commitAdaptedPicksBatchToFirestore(
 ): Promise<void> {
   const safeUid = sanitizeDocId(uid);
   const basePath = `workspaces/${safeUid}`;
+  if (settledEntries.some((entry) =>
+    entry.settlementStatus !== 'settled' ||
+    (entry.actualOutcome !== 0 && entry.actualOutcome !== 1) ||
+    !isSourceVerifiedScoreSummary(entry.scoreSummary)
+  )) {
+    throw new Error('Cloud adaptation blocked: every row must have a settled binary outcome and a valid SOURCE-VERIFIED HTTPS URL. URL syntax does not independently authenticate the source.');
+  }
   try {
     // First ensure any local settled picks exist in auditPicks with status 'settled' before transitioning to 'adapted'
     const prepBatch = writeBatch(db);
