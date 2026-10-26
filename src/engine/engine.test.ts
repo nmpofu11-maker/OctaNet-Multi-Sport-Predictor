@@ -18,6 +18,7 @@ import {
   exportPredictionsToCSV,
   parseHistoricalCSV,
   serializeHistoricalRowsToCSV,
+  fingerprintHistoricalRows,
   validateIntelligenceMatrixJSON,
 } from './csvParser';
 import {
@@ -31,6 +32,14 @@ import {
   getPreviousDateISO,
   selectSuppliedFixturesForDate,
 } from './auditEngine';
+
+test('corpus fingerprint changes when data changes even if row count stays the same', () => {
+  const rows = generateSyntheticTestHistoricalRows(2);
+  assert.equal(fingerprintHistoricalRows(rows), fingerprintHistoricalRows(rows.map((row) => ({ ...row }))));
+  const changed = rows.map((row, index) => index === 0 ? { ...row, selection: `${row.selection} changed` } : row);
+  assert.equal(changed.length, rows.length);
+  assert.notEqual(fingerprintHistoricalRows(rows), fingerprintHistoricalRows(changed));
+});
 
 test('empty initial engine is explicitly untrained and exposes no performance metrics', () => {
   const engine = createUntrainedNeuralEngine();
