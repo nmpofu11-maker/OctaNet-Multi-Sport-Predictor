@@ -393,6 +393,37 @@ export function deriveTeamIntelligenceMatrices(
 /**
  * Trains the Multi-Layer Perceptron on historical CSV match rows using Momentum SGD + L2 Regularization
  */
+/**
+ * Creates an explicitly untrained engine for the empty initial state.
+ * No generated rows are used and no performance metrics are claimed.
+ */
+export function createUntrainedNeuralEngine(
+  hyperparams: NeuralHyperparameters = DEFAULT_HYPERPARAMETERS,
+  sportRuleWeights?: SportRuleWeights
+): TrainedNeuralEngine {
+  const h1Dim = clamp(Math.round(hyperparams.hiddenLayer1Size), 4, 64);
+  const h2Dim = clamp(Math.round(hyperparams.hiddenLayer2Size), 4, 32);
+  const learnedFeatureImportance = Object.fromEntries(
+    RULE_KEYS.map((key) => [key, 0])
+  ) as Record<RuleKey, number>;
+  const sportCounts = Object.fromEntries(ALL_SPORTS.map((sport) => [sport, 0])) as Record<SportId, number>;
+  const payload = deriveTeamIntelligenceMatrices([], 'OctaNet-UNTRAINED', 0, 0);
+  payload.model_engine = 'UNTRAINED — awaiting historical results';
+  payload.meta_improvement_notes = 'Not trained. Import historical match results and explicitly start training.';
+  return {
+    weights: initializeMLP(h1Dim, h2Dim),
+    hyperparams: { ...hyperparams },
+    intelligencePayload: payload,
+    report: {
+      trainedAt: '', totalRows: 0, trainRows: 0, valRows: 0, sportCounts,
+      baselineRuleAccuracy: 0, baselineRuleBrier: 0, neuralValAccuracy: 0,
+      neuralValBrier: 0, hybridValAccuracy: 0, hybridValBrier: 0,
+      epochHistory: [], learnedFeatureImportance,
+      confusionMatrix: { tp: 0, tn: 0, fp: 0, fn: 0 },
+    },
+  };
+}
+
 export function trainNeuralNetworkOnCSV(
   rows: HistoricalMatchRow[],
   hyperparams: NeuralHyperparameters = DEFAULT_HYPERPARAMETERS,
