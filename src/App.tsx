@@ -115,7 +115,7 @@ export default function App() {
       trained,
       weights,
       [],
-      true
+      false
     );
     return { weights, baseRows, trained, yesterdayDate, yesterdayCard };
   }, []);
@@ -275,7 +275,8 @@ export default function App() {
   const dailyFixtures = useMemo(() => {
     const base = generateDailyFixturesForDate(selectedDate);
     const liveExtras = customFixturesByDate[selectedDate] ?? [];
-    return [...liveExtras, ...base];
+    const liveSports = new Set(liveExtras.map((fixture) => fixture.sport));
+    return [...liveExtras, ...base.filter((fixture) => !liveSports.has(fixture.sport))];
   }, [selectedDate, customFixturesByDate]);
 
   const predictionsBySport = useMemo(() => {
@@ -311,7 +312,7 @@ export default function App() {
     setLiveAuditMessage(null);
     setAuditCardsByDate((prev) => {
       if (prev[nextAuditDate]) return prev;
-      const autoSettle = nextAuditDate < selectedDate;
+      const autoSettle = false; // Historical dates must be settled from verified results, never simulated outcomes.
       return {
         ...prev,
         [nextAuditDate]: buildLockedAuditCardForDate(
@@ -337,7 +338,7 @@ export default function App() {
           engine,
           sportWeights,
           customFixturesByDate[prevDay] ?? [],
-          true
+          false
         ),
       };
     });
@@ -385,7 +386,7 @@ export default function App() {
           ...item,
           settlementStatus: outcome === -1 ? 'pending' : 'settled',
           actualOutcome: outcome,
-          scoreSummary: outcome === -1 ? '' : scoreSummary || item.scoreSummary,
+          scoreSummary: outcome === -1 ? '' : scoreSummary,
         };
         targetUpdated = nextItem;
         return nextItem;
@@ -412,7 +413,7 @@ export default function App() {
     }));
     setLiveAuditMessage({
       type: 'success',
-      text: `Graded all non-adapted predictions on ${auditDate}. Review sport Brier scores or click "Append & Adapt Neural Engine" to retrain.`,
+      text: `Simulated outcomes were labelled as synthetic and excluded from verified performance metrics and model adaptation.`,
     });
 
     if (currentUser) {
@@ -493,7 +494,7 @@ export default function App() {
             ...entry,
             settlementStatus: isSettled ? 'settled' : 'pending',
             actualOutcome: isSettled ? (found.actualOutcome as 0 | 1) : -1,
-            scoreSummary: String(found.scoreSummary || '').slice(0, 160),
+            scoreSummary: `AI-UNVERIFIED: ${String(found.scoreSummary || '').slice(0, 140)}`, 
           };
           updatedForCloud.push(nextEntry);
           return nextEntry;
@@ -503,7 +504,7 @@ export default function App() {
 
       setLiveAuditMessage({
         type: 'success',
-        text: `Verified live results for ${candidates.length} matchups (${settledCountDelta} settled with final scores).`,
+        text: `AI search graded ${candidates.length} matchups (${settledCountDelta} candidate outcomes). Grades remain unverified until manually checked against an official source.`,
         sources: data.sources,
       });
 
@@ -661,58 +662,49 @@ export default function App() {
       if (!resp.ok) {
         throw new Error(data.error || 'Failed to sync live schedule.');
       }
-      const rawItems = Array.isArray(data.fixtures) ? data.fixtures : [];
-      const mapped: DailyFixture[] = rawItems.map(
-        (item: Record<string, unknown>, idx: number) => {
-          const selection = String(item.selection || 'Favored Side');
-          const opponent = String(item.opponent || 'Opponent');
+      const rawItems: unknown[] = Array.isArray(data.fixtures) ? data.fixtures : [];
+      const ruleKeys: RuleKey[] = [
+        'r1_motivation_stakes', 'r2_form_momentum', 'r3_h2h_standings_gap', 'r4_tier_classification',
+        'r5_derby_rivalry', 'r6_squad_value_vs_form', 'r7_continental_fatigue', 'r8_coach_volatility',
+      ];
+      const validItems = rawItems.filter((candidate): candidate is Record<string, unknown> => {
+        if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return false;
+        const item = candidate as Record<string, unknown>;
+        const requiredStrings = ['kickoffTime', 'competition', 'venueOrSurface', 'selection', 'opponent', 'market', 'sportContextStat'];
+        if (requiredStrings.some((key) => typeof item[key] !== 'string' || !(item[key] as string).trim())) return false;
+        if (typeof item.isHomeOrFavoredContext !== 'boolean') return false;
+        if (typeof item.decimalOdds !== 'number' || !Number.isFinite(item.decimalOdds) || item.decimalOdds < 1.01 || item.decimalOdds > 100) return false;
+        return ruleKeys.every((key) => typeof item[key] === 'number' && Number.isFinite(item[key]) && Number(item[key]) >= 0 && Number(item[key]) <= 10);
+      });
+      if (validItems.length === 0) {
+        throw new Error('No complete fixture candidates were returned. Missing or invalid fields are not replaced with invented defaults.');
+      }
+      const mapped: DailyFixture[] = validItems.map((item, idx) => {
+          const selection = String(item.selection);
+          const opponent = String(item.opponent);
           return {
             id: `live-${date}-${sport}-${Date.now()}-${idx}`,
             date,
-            kickoffTime: String(item.kickoffTime || '18:00 UTC'),
+            kickoffTime: String(item.kickoffTime),
             sport,
-            competition: String(item.competition || `${SPORT_LABELS[sport]} Tour`),
-            venueOrSurface: String(item.venueOrSurface || 'Main Venue'),
+            competition: String(item.competition),
+            venueOrSurface: String(item.venueOrSurface),
             selection,
             opponent,
             matchupLabel: `${selection} vs ${opponent}`,
-            market: String(item.market || 'Moneyline'),
-            decimalOdds: Math.min(4.5, Math.max(1.2, Number(item.decimalOdds) || 1.9)),
-            isHomeOrFavoredContext: Boolean(item.isHomeOrFavoredContext ?? true),
-            sportContextStat: String(item.sportContextStat || 'Live web sync'),
+            market: String(item.market),
+            decimalOdds: Number(item.decimalOdds),
+            isHomeOrFavoredContext: item.isHomeOrFavoredContext as boolean,
+            sportContextStat: String(item.sportContextStat),
             rules: {
-              r1_motivation_stakes: Math.min(
-                10,
-                Math.max(0, Number(item.r1_motivation_stakes) || 7.2)
-              ),
-              r2_form_momentum: Math.min(
-                10,
-                Math.max(0, Number(item.r2_form_momentum) || 7)
-              ),
-              r3_h2h_standings_gap: Math.min(
-                10,
-                Math.max(0, Number(item.r3_h2h_standings_gap) || 6.8)
-              ),
-              r4_tier_classification: Math.min(
-                10,
-                Math.max(0, Number(item.r4_tier_classification) || 7)
-              ),
-              r5_derby_rivalry: Math.min(
-                10,
-                Math.max(0, Number(item.r5_derby_rivalry) || 7.8)
-              ),
-              r6_squad_value_vs_form: Math.min(
-                10,
-                Math.max(0, Number(item.r6_squad_value_vs_form) || 6.8)
-              ),
-              r7_continental_fatigue: Math.min(
-                10,
-                Math.max(0, Number(item.r7_continental_fatigue) || 7.2)
-              ),
-              r8_coach_volatility: Math.min(
-                10,
-                Math.max(0, Number(item.r8_coach_volatility) || 6.8)
-              ),
+              r1_motivation_stakes: Number(item.r1_motivation_stakes),
+              r2_form_momentum: Number(item.r2_form_momentum),
+              r3_h2h_standings_gap: Number(item.r3_h2h_standings_gap),
+              r4_tier_classification: Number(item.r4_tier_classification),
+              r5_derby_rivalry: Number(item.r5_derby_rivalry),
+              r6_squad_value_vs_form: Number(item.r6_squad_value_vs_form),
+              r7_continental_fatigue: Number(item.r7_continental_fatigue),
+              r8_coach_volatility: Number(item.r8_coach_volatility),
             },
           };
         }
@@ -720,11 +712,11 @@ export default function App() {
 
       setCustomFixturesByDate((prev) => ({
         ...prev,
-        [date]: [...mapped, ...(prev[date] ?? [])],
+        [date]: [...(prev[date] ?? []).filter((fixture) => fixture.sport !== sport), ...mapped],
       }));
       setLiveSyncMessage({
         type: 'success',
-        text: `Merged ${mapped.length} live ${SPORT_LABELS[sport]} matchups for ${date} into the 8-Rule + Neural ranking pool.`,
+        text: `Loaded ${mapped.length} AI-search-grounded ${SPORT_LABELS[sport]} candidates for ${date}. These are not independently verified fixtures or bookmaker odds.`,
         sources: data.sources,
       });
     } catch (err) {
@@ -871,6 +863,9 @@ export default function App() {
         </header>
 
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-[1360px] w-full mx-auto space-y-4">
+          <div role="note" className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-xs leading-5 text-amber-900">
+            <strong>Evidence status:</strong> Generated demo fixtures and synthetic training rows are not real-world evidence. Gemini-search candidates and estimated odds are not independently verified. Only manually verified or trusted-source final results may be used for learning; simulated outcomes are excluded.
+          </div>
           {cloudBannerError && (
             <div
               role="alert"

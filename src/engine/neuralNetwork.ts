@@ -421,14 +421,20 @@ export function trainNeuralNetworkOnCSV(
     }
   }
 
+  // Keep evaluation outcomes out of learned features: reserve the latest 20% by date
+  // before deriving competitor coefficients. Existing matrices may contain later labels,
+  // so they are deliberately not used to construct validation features.
+  const chronological = rows.map((row, idx) => ({ row, idx }))
+    .sort((a, b) => a.row.date.localeCompare(b.row.date) || a.idx - b.idx);
+  const holdoutCount = Math.max(0, Math.floor(chronological.length * 0.2));
+  const trainingRows = chronological.slice(0, chronological.length - holdoutCount).map(({ row }) => row);
   const prelimMatrix = deriveTeamIntelligenceMatrices(
-    rows,
+    trainingRows,
     `OctaNet-MLP-${INPUT_DIM}x${h1Dim}x${h2Dim}x1`,
     0.65,
     0.21
   );
   const mergedTeams: Record<string, TeamIntelligenceEntry> = {
-    ...(existingMatrix?.team_intelligence_matrices ?? {}),
     ...prelimMatrix.team_intelligence_matrices,
   };
 
@@ -462,8 +468,12 @@ export function trainNeuralNetworkOnCSV(
     };
   });
 
-  const trainSet = dataset.filter((_, idx) => idx % 5 !== 4);
-  const valSet = dataset.filter((_, idx) => idx % 5 === 4);
+  const orderedDataset = dataset.map((sample, idx) => ({ sample, idx }))
+    .sort((a, b) => a.sample.row.date.localeCompare(b.sample.row.date) || a.idx - b.idx)
+    .map(({ sample }) => sample);
+  const holdoutSize = Math.max(0, Math.floor(orderedDataset.length * 0.2));
+  const trainSet = orderedDataset.slice(0, orderedDataset.length - holdoutSize);
+  const valSet = orderedDataset.slice(orderedDataset.length - holdoutSize);
   const evalSet = valSet.length >= 2 ? valSet : trainSet;
 
   const mlp = initializeMLP(h1Dim, h2Dim, 20261025);
@@ -719,15 +729,13 @@ export function computeCorpusEvolutionCurve(
     }
   }
 
-  // Use the exact same stratified 20% holdout benchmark as trainNeuralNetworkOnCSV so the
-  // 100% milestone aligns with the active TrainingReport KPIs, while sorting the 80% training
-  // pool strictly chronologically so earlier milestones only see historical data up to throughDate.
-  const indexedRows = rows.map((row, idx) => ({ row, idx }));
-  const valRaw = indexedRows.filter(({ idx }) => idx % 5 === 4).map((x) => x.row);
-  const trainChronological = indexedRows
-    .filter(({ idx }) => idx % 5 !== 4)
-    .sort((a, b) => a.row.date.localeCompare(b.row.date) || a.idx - b.idx)
-    .map((x) => x.row);
+  // Chronological out-of-time holdout: latest 20% is evaluation-only.
+  // Competitor matrices for each milestone are derived only from that milestone's training rows.
+  const indexedRows = rows.map((row, idx) => ({ row, idx }))
+    .sort((a, b) => a.row.date.localeCompare(b.row.date) || a.idx - b.idx);
+  const holdoutSize = Math.max(0, Math.floor(indexedRows.length * 0.2));
+  const trainChronological = indexedRows.slice(0, indexedRows.length - holdoutSize).map((x) => x.row);
+  const valRaw = indexedRows.slice(indexedRows.length - holdoutSize).map((x) => x.row);
 
   const evalRows = valRaw.length >= 2 ? valRaw : trainChronological;
   const totalTrain = trainChronological.length;
@@ -763,9 +771,13 @@ export function computeCorpusEvolutionCurve(
   for (let mIdx = 0; mIdx < dedupedMilestones.length; mIdx++) {
     const { corpusSize, trainCount, isFull } = dedupedMilestones[mIdx];
     const trainSlice = trainChronological.slice(0, trainCount);
-    const throughDate = trainSlice[trainSlice.length - 1]?.date ?? rows[rows.length - 1].date;
+    // Report the corpus coverage date at the full-corpus endpoint, including the held-out rows.
+    // Intermediate points remain dated by the last row available to that milestone's training slice.
+    const throughDate = isFull
+      ? indexedRows[indexedRows.length - 1]?.row.date ?? rows[rows.length - 1].date
+      : trainSlice[trainSlice.length - 1]?.date ?? rows[rows.length - 1].date;
 
-    const matrixSourceRows = isFull ? rows : trainSlice;
+    const matrixSourceRows = trainSlice; // Never fit features on holdout labels.
     const learnedMatrix = deriveTeamIntelligenceMatrices(
       matrixSourceRows,
       `OctaNet-MLP-${INPUT_DIM}x${h1Dim}x${h2Dim}x1`,

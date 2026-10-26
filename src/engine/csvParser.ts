@@ -142,14 +142,18 @@ export function parseHistoricalCSV(csvText: string): CSVParseResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  if (colSelection === -1) {
-    errors.push('Missing required team/player column (expected `selection`, `team`, `home_team`, or `player`).');
-  }
-  if (colOutcome === -1) {
-    errors.push('Missing required binary target column (expected `outcome`, `won`, or `result` with 1/0 or W/L).');
-  }
-  if ([colR1, colR2, colR3, colR4, colR5, colR6, colR7, colR8].every((idx) => idx === -1)) {
-    errors.push('No 8-rule columns detected (expected columns such as `r1_motivation` .. `r8_coach_volatility` or `r1`..`r8`).');
+  // Do not invent missing training values: they can contaminate evaluation and adaptation metrics.
+  const requiredColumns: [string, number][] = [
+    ['date', colDate], ['sport', colSport], ['competition', colComp],
+    ['selection/team/player', colSelection], ['opponent', colOpponent], ['market', colMarket],
+    ['decimal odds', colOdds], ['home/favored context', colHome], ['outcome', colOutcome],
+    ['R1 motivation/stakes', colR1], ['R2 form/momentum', colR2],
+    ['R3 H2H/standings gap', colR3], ['R4 tier classification', colR4],
+    ['R5 derby/rivalry', colR5], ['R6 squad value vs form', colR6],
+    ['R7 fatigue', colR7], ['R8 coach/volatility', colR8],
+  ];
+  for (const [label, index] of requiredColumns) {
+    if (index === -1) errors.push(`Missing required CSV column: ${label}.`);
   }
 
   if (errors.length > 0) {
@@ -165,24 +169,48 @@ export function parseHistoricalCSV(csvText: string): CSVParseResult {
       continue;
     }
 
-    const rawSport = colSport !== -1 ? cells[colSport]?.toLowerCase().replace(/\s+/g, '') : 'soccer';
-    const sport = SPORT_ALIASES[rawSport] ?? SportId.Soccer;
-    if (colSport !== -1 && !SPORT_ALIASES[rawSport]) {
-      warnings.push(`Line ${i + 1}: unrecognized sport "${cells[colSport]}", defaulted to Soccer.`);
+    const requiredValues = requiredColumns.map(([, index]) => cells[index]?.trim() ?? '');
+    if (requiredValues.some((value) => value.length === 0)) {
+      warnings.push(`Skipped line ${i + 1}: one or more required fields are blank.`);
+      continue;
     }
 
-    const selection = cells[colSelection] || `Competitor ${i}`;
-    const opponent = colOpponent !== -1 ? cells[colOpponent] || 'Field / Opponent' : 'Field / Opponent';
-    const competition = colComp !== -1 ? cells[colComp] || `${SPORT_LABELS[sport]} Tour` : `${SPORT_LABELS[sport]} Tour`;
-    const market = colMarket !== -1 ? cells[colMarket] || 'Moneyline / Win' : 'Moneyline / Win';
-    const date = colDate !== -1 && cells[colDate] ? cells[colDate] : '2026-09-15';
+    const rawDate = cells[colDate].trim();
+    const parsedDate = new Date(`${rawDate}T00:00:00Z`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(rawDate) ||
+        Number.isNaN(parsedDate.getTime()) ||
+        parsedDate.toISOString().slice(0, 10) !== rawDate) {
+      warnings.push(`Skipped line ${i + 1}: date must be a real YYYY-MM-DD date.`);
+      continue;
+    }
+    const date = rawDate;
 
-    const parsedOdds = colOdds !== -1 ? Number(cells[colOdds]) : 1.91;
-    const decimalOdds = !Number.isNaN(parsedOdds) && parsedOdds >= 1.02 ? parsedOdds : 1.91;
+    const rawSport = cells[colSport].toLowerCase().replace(/\s+/g, '');
+    const sport = SPORT_ALIASES[rawSport];
+    if (!sport) {
+      warnings.push(`Skipped line ${i + 1}: unrecognized sport "${cells[colSport]}"; row excluded.`);
+      continue;
+    }
 
-    const rawHome = colHome !== -1 ? (cells[colHome] ?? '').toLowerCase() : '1';
+    const selection = cells[colSelection].trim();
+    const opponent = cells[colOpponent].trim();
+    const competition = cells[colComp].trim();
+    const market = cells[colMarket].trim();
+
+    const parsedOdds = Number(cells[colOdds]);
+    if (!Number.isFinite(parsedOdds) || parsedOdds < 1.02) {
+      warnings.push(`Skipped line ${i + 1}: decimal odds must be a finite number >= 1.02.`);
+      continue;
+    }
+    const decimalOdds = parsedOdds;
+
+    const rawHome = cells[colHome].trim().toLowerCase();
+    if (!['1', '0', 'true', 'false', 'yes', 'no', 'home', 'away', 'favored', 'underdog'].includes(rawHome)) {
+      warnings.push(`Skipped line ${i + 1}: home/favored context must be explicit.`);
+      continue;
+    }
     const isHomeOrFavoredContext =
-      rawHome === '1' || rawHome === 'true' || rawHome === 'yes' || rawHome === 'home';
+      rawHome === '1' || rawHome === 'true' || rawHome === 'yes' || rawHome === 'home' || rawHome === 'favored';
 
     const rawOut = (cells[colOutcome] ?? '').toLowerCase();
     let outcomeWon: 0 | 1 | null = null;
@@ -196,15 +224,22 @@ export function parseHistoricalCSV(csvText: string): CSVParseResult {
       continue;
     }
 
+    const rawRuleValues = [colR1, colR2, colR3, colR4, colR5, colR6, colR7, colR8]
+      .map((index) => cells[index].trim());
+    const numericRuleValues = rawRuleValues.map(Number);
+    if (numericRuleValues.some((value) => !Number.isFinite(value) || value < 0 || value > 100)) {
+      warnings.push(`Skipped line ${i + 1}: all eight rule scores must be numeric values from 0 to 10 (or 0 to 100 scale).`);
+      continue;
+    }
     const rules: RuleScoreVector = {
-      r1_motivation_stakes: parseRuleNumber(colR1 !== -1 ? cells[colR1] : undefined, 6.2),
-      r2_form_momentum: parseRuleNumber(colR2 !== -1 ? cells[colR2] : undefined, 6.0),
-      r3_h2h_standings_gap: parseRuleNumber(colR3 !== -1 ? cells[colR3] : undefined, 5.8),
-      r4_tier_classification: parseRuleNumber(colR4 !== -1 ? cells[colR4] : undefined, 6.0),
-      r5_derby_rivalry: parseRuleNumber(colR5 !== -1 ? cells[colR5] : undefined, 7.5),
-      r6_squad_value_vs_form: parseRuleNumber(colR6 !== -1 ? cells[colR6] : undefined, 6.0),
-      r7_continental_fatigue: parseRuleNumber(colR7 !== -1 ? cells[colR7] : undefined, 7.2),
-      r8_coach_volatility: parseRuleNumber(colR8 !== -1 ? cells[colR8] : undefined, 6.5),
+      r1_motivation_stakes: parseRuleNumber(cells[colR1], 6.2),
+      r2_form_momentum: parseRuleNumber(cells[colR2], 6.0),
+      r3_h2h_standings_gap: parseRuleNumber(cells[colR3], 5.8),
+      r4_tier_classification: parseRuleNumber(cells[colR4], 6.0),
+      r5_derby_rivalry: parseRuleNumber(cells[colR5], 7.5),
+      r6_squad_value_vs_form: parseRuleNumber(cells[colR6], 6.0),
+      r7_continental_fatigue: parseRuleNumber(cells[colR7], 7.2),
+      r8_coach_volatility: parseRuleNumber(cells[colR8], 6.5),
     };
 
     rows.push({

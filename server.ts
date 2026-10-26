@@ -28,7 +28,27 @@ function getGenAIClient(): GoogleGenAI {
 
 async function startServer() {
   const app = express();
-  app.use(express.json({ limit: '4mb' }));
+  app.disable('x-powered-by');
+  app.use(express.json({ limit: '256kb' }));
+
+  // Basic abuse guard for public demo deployments. This is not a substitute for authentication.
+  const requestWindows = new Map<string, { start: number; count: number }>();
+  app.use('/api/ai', (req, res, next) => {
+    const now = Date.now();
+    const key = req.ip || req.socket.remoteAddress || 'unknown';
+    const current = requestWindows.get(key);
+    if (!current || now - current.start >= 60_000) {
+      requestWindows.set(key, { start: now, count: 1 });
+      next();
+      return;
+    }
+    current.count += 1;
+    if (current.count > 12) {
+      res.status(429).json({ error: 'Too many AI requests. Please wait one minute and try again.' });
+      return;
+    }
+    next();
+  });
 
   app.get('/api/health', (_req, res) => {
     const hasKey = Boolean(
@@ -43,8 +63,11 @@ async function startServer() {
   app.post('/api/ai/sync-fixtures', async (req, res) => {
     try {
       const { date, sport } = req.body ?? {};
-      if (!date || !sport) {
-        res.status(400).json({ error: 'Both `date` and `sport` are required.' });
+      const allowedSports = new Set(['Soccer', 'Tennis', 'Basketball', 'Golf', 'Cricket', 'Rugby']);
+      if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+          Number.isNaN(Date.parse(`${date}T00:00:00Z`)) ||
+          typeof sport !== 'string' || !allowedSports.has(sport)) {
+        res.status(400).json({ error: 'A valid YYYY-MM-DD date and supported sport are required.' });
         return;
       }
 
@@ -133,6 +156,12 @@ Summarize up to 5 real matchups, noting: (1) title/qualification/relegation moti
   app.post('/api/ai/calibrate-notes', async (req, res) => {
     try {
       const { modelEngine, accuracy, brier, topFeatures, sampleTeams } = req.body ?? {};
+      if (typeof modelEngine !== 'string' || modelEngine.length > 120 ||
+          typeof accuracy !== 'number' || !Number.isFinite(accuracy) || accuracy < 0 || accuracy > 1 ||
+          typeof brier !== 'number' || !Number.isFinite(brier) || brier < 0 || brier > 1) {
+        res.status(400).json({ error: 'Valid model name, accuracy (0–1), and Brier score (0–1) are required.' });
+        return;
+      }
       const ai = getGenAIClient();
       const response = await ai.models.generateContent({
         model: 'gemini-3.8-flash',
@@ -152,14 +181,19 @@ Summarize up to 5 real matchups, noting: (1) title/qualification/relegation moti
   app.post('/api/ai/audit-results', async (req, res) => {
     try {
       const { date, sport, picks } = req.body ?? {};
-      if (!date || !Array.isArray(picks) || picks.length === 0) {
-        res.status(400).json({ error: '`date` and a non-empty `picks` array are required.' });
+      if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+          !Array.isArray(picks) || picks.length === 0 || picks.length > 15 ||
+          picks.some((p: unknown) => !p || typeof p !== 'object' ||
+            typeof (p as Record<string, unknown>).id !== 'string' || String((p as Record<string, unknown>).id).length > 128 ||
+            typeof (p as Record<string, unknown>).selection !== 'string' || String((p as Record<string, unknown>).selection).length > 120 ||
+            typeof (p as Record<string, unknown>).opponent !== 'string' || String((p as Record<string, unknown>).opponent).length > 120 ||
+            typeof (p as Record<string, unknown>).market !== 'string' || String((p as Record<string, unknown>).market).length > 80)) {
+        res.status(400).json({ error: 'A valid date and 1–15 well-formed picks are required.' });
         return;
       }
 
       const ai = getGenAIClient();
       const compactList = picks
-        .slice(0, 15)
         .map(
           (p: Record<string, unknown>) =>
             `- ID: ${String(p.id)} | ${String(p.selection)} vs ${String(p.opponent)} (${String(p.competition)}, Market: ${String(p.market)})`
