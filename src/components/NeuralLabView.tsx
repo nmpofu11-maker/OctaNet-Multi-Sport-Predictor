@@ -126,7 +126,7 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
   } | null>(null);
 
   const { report } = engine;
-  const isTrainedForCorpus = Boolean(trainedCorpusFingerprint && trainedCorpusFingerprint === fingerprintHistoricalRows(historicalRows) && report.epochHistory.length > 0 && report.totalRows === historicalRows.length && historicalRows.length >= 8);
+  const isTrainedForCorpus = Boolean(trainedCorpusFingerprint && trainedCorpusFingerprint === fingerprintHistoricalRows(historicalRows) && report.epochHistory.length > 0 && report.totalRows === historicalRows.length && Object.keys(hyperparams).every((key) => engine.hyperparams[key as keyof NeuralHyperparameters] === hyperparams[key as keyof NeuralHyperparameters]) && historicalRows.length >= 8);
   const epochHistory = isTrainedForCorpus ? report.epochHistory : [];
 
   // The learning-curve helper fits temporary models for each milestone. Never invoke it
