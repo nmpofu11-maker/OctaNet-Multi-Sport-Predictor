@@ -618,7 +618,7 @@ export const DailyAuditView: React.FC<DailyAuditViewProps> = ({
                                 aria-label={`Grade ${entry.selection} Won`}
                                 onClick={() => {
                                   const source = window.prompt('Confirm the exact event and outcome, then enter the official result source URL (https://...). Cancel to leave pending.');
-                                  if (source && /^https?:\/\//i.test(source.trim())) {
+                                  if (source && /^https:\/\//i.test(source.trim())) {
                                     onSettleSinglePick(entry.id, 1, `SOURCE-VERIFIED: ${source.trim()}`.slice(0, 160));
                                   }
                                 }}
@@ -635,7 +635,7 @@ export const DailyAuditView: React.FC<DailyAuditViewProps> = ({
                                 aria-label={`Grade ${entry.selection} Lost`}
                                 onClick={() => {
                                   const source = window.prompt('Confirm the exact event and outcome, then enter the official result source URL (https://...). Cancel to leave pending.');
-                                  if (source && /^https?:\/\//i.test(source.trim())) {
+                                  if (source && /^https:\/\//i.test(source.trim())) {
                                     onSettleSinglePick(entry.id, 0, `SOURCE-VERIFIED: ${source.trim()}`.slice(0, 160));
                                   }
                                 }}
