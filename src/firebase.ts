@@ -429,3 +429,91 @@ export function subscribeWorkspaceSettledMatches(
     }
   );
 }
+
+/**
+ * Real-time subscription to user's auditPicks subcollection.
+ * Invalid legacy documents are omitted instead of being filled with invented dates,
+ * odds, probabilities, rule scores, or outcomes.
+ */
+export function subscribeWorkspaceAuditPicks(
+  uid: string,
+  onEntries: (entries: DailyAuditEntry[]) => void,
+  onErrorMsg?: (msg: string) => void
+): Unsubscribe {
+  const safeUid = sanitizeDocId(uid);
+  const path = `workspaces/${safeUid}/auditPicks`;
+  const q = query(
+    collection(db, 'workspaces', safeUid, 'auditPicks'),
+    where('ownerId', '==', safeUid),
+    where('workspaceId', '==', safeUid)
+  );
+  return onSnapshot(
+    q,
+    (snap) => {
+      const list: DailyAuditEntry[] = snap.docs.flatMap((d): DailyAuditEntry[] => {
+        const data = d.data();
+        const auditDate = typeof data.auditDate === 'string' ? data.auditDate : '';
+        const parsedDate = /^\d{4}-\d{2}-\d{2}$/.test(auditDate) ? new Date(`${auditDate}T00:00:00Z`) : null;
+        const validDate = Boolean(parsedDate && !Number.isNaN(parsedDate.getTime()) && parsedDate.toISOString().slice(0, 10) === auditDate);
+        const sport = data.sport as SportId;
+        const strings = ['competition', 'selection', 'opponent', 'market'];
+        const validStrings = strings.every((key) => typeof data[key] === 'string' && data[key].trim().length > 0);
+        const odds = data.decimalOdds;
+        const ruleKeys = [
+          'r1_motivation_stakes', 'r2_form_momentum', 'r3_h2h_standings_gap', 'r4_tier_classification',
+          'r5_derby_rivalry', 'r6_squad_value_vs_form', 'r7_continental_fatigue', 'r8_coach_volatility',
+        ];
+        const validRules = ruleKeys.every((key) => typeof data[key] === 'number' && Number.isFinite(data[key]) && data[key] >= 0 && data[key] <= 10);
+        const validProbability = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1;
+        const status = data.settlementStatus;
+        const outcome = data.actualOutcome;
+        if (
+          !validDate || !ALL_SPORTS.includes(sport) || !validStrings ||
+          typeof data.isHomeOrFavoredContext !== 'boolean' ||
+          typeof odds !== 'number' || !Number.isFinite(odds) || odds < 1.01 || odds > 100 ||
+          !validProbability(data.ruleProbability) || !validProbability(data.neuralProbability) ||
+          !validProbability(data.hybridProbability) || !validRules ||
+          !['pending', 'settled', 'adapted'].includes(status) ||
+          (outcome !== -1 && outcome !== 0 && outcome !== 1) ||
+          typeof data.scoreSummary !== 'string'
+        ) return [];
+        return [{
+          id: d.id,
+          auditDate,
+          sport,
+          competition: data.competition,
+          selection: data.selection,
+          opponent: data.opponent,
+          market: data.market,
+          isHomeOrFavoredContext: data.isHomeOrFavoredContext,
+          decimalOdds: odds,
+          kellyFractionPercent: typeof data.kellyFractionPercent === 'number' && Number.isFinite(data.kellyFractionPercent) ? data.kellyFractionPercent : 0,
+          ruleProbability: data.ruleProbability,
+          neuralProbability: data.neuralProbability,
+          hybridProbability: data.hybridProbability,
+          cautionFlags: Array.isArray(data.cautionFlags) ? data.cautionFlags.filter((flag: unknown): flag is string => typeof flag === 'string') : [],
+          rules: {
+            r1_motivation_stakes: data.r1_motivation_stakes,
+            r2_form_momentum: data.r2_form_momentum,
+            r3_h2h_standings_gap: data.r3_h2h_standings_gap,
+            r4_tier_classification: data.r4_tier_classification,
+            r5_derby_rivalry: data.r5_derby_rivalry,
+            r6_squad_value_vs_form: data.r6_squad_value_vs_form,
+            r7_continental_fatigue: data.r7_continental_fatigue,
+            r8_coach_volatility: data.r8_coach_volatility,
+          },
+          settlementStatus: status as DailyAuditEntry['settlementStatus'],
+          actualOutcome: outcome as -1 | 0 | 1,
+          scoreSummary: data.scoreSummary,
+        }];
+      });
+      onEntries(list);
+    },
+    (error) => {
+      if (onErrorMsg) {
+        onErrorMsg(error instanceof Error ? error.message : String(error));
+      }
+      handleFirestoreError(error, OperationType.LIST, path);
+    }
+  );
+}
