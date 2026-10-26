@@ -31,6 +31,7 @@ import {
   generateSyntheticTestFixtures,
   generateSyntheticTestHistoricalRows,
 } from './__tests__/testFixtures';
+import { normalizeTheSportsDbEvents } from './fixtureSources';
 import {
   adaptNeuralEngineFromAudit,
   isSourceVerifiedScoreSummary,
@@ -239,6 +240,52 @@ test('bookmaker odds never affect features, rule probabilities, learned team coe
   assert.equal(lowOddsPrediction.neuralProbability, highOddsPrediction.neuralProbability);
   assert.equal(lowOddsPrediction.hybridProbability, highOddsPrediction.hybridProbability);
   assert.equal(lowOddsPrediction.confidenceTier, highOddsPrediction.confidenceTier);
+});
+
+test('source-backed fixture discovery accepts provider event records without inventing evidence', () => {
+  const candidates = normalizeTheSportsDbEvents([
+    {
+      idEvent: '12345',
+      strSport: 'Soccer',
+      dateEvent: '2026-10-26',
+      strEvent: 'Home FC vs Away FC',
+      strLeague: 'Example League',
+      strTime: '18:30:00',
+      strHomeTeam: 'Home FC',
+      strAwayTeam: 'Away FC',
+      strStatus: 'Not Started',
+      intHomeScore: null,
+      intAwayScore: null,
+    },
+    {
+      idEvent: '67890',
+      strSport: 'Basketball',
+      dateEvent: '2026-10-26',
+      strEvent: 'Other event',
+      strLeague: 'Other League',
+    },
+    {
+      idEvent: '99999',
+      strSport: 'Soccer',
+      dateEvent: '2026-10-27',
+      strEvent: 'Wrong date',
+    },
+    {
+      strSport: 'Soccer',
+      dateEvent: '2026-10-26',
+      strEvent: 'Missing provider event ID',
+    },
+  ], SportId.Soccer, '2026-10-26');
+
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0].provider, 'TheSportsDB');
+  assert.equal(candidates[0].providerEventId, '12345');
+  assert.equal(candidates[0].eventName, 'Home FC vs Away FC');
+  assert.equal(candidates[0].kickoffTime, '18:30:00');
+  assert.equal(candidates[0].homeScore, null);
+  assert.equal(candidates[0].awayScore, null);
+  assert.equal('decimalOdds' in candidates[0], false);
+  assert.equal('rules' in candidates[0], false);
 });
 
 test('CSV parser round-trips universal 8-rule multi-sport data and validates malformed inputs', () => {

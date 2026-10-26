@@ -15,6 +15,7 @@ import {
   SPORT_LABELS,
   SportId,
 } from '../types/sports';
+import { FixtureDiscoveryCandidate } from '../engine/fixtureSources';
 import { SPORT_ADAPTED_RULES } from '../engine/sportRules';
 
 interface DailyBetsViewProps {
@@ -34,6 +35,7 @@ interface DailyBetsViewProps {
   onLiveSyncSport: (sport: SportId, date: string) => Promise<void>;
   isSyncingLive: boolean;
   liveSyncMessage: { type: 'success' | 'error'; text: string; sources?: { uri: string; title: string }[] } | null;
+  fixtureCandidates: FixtureDiscoveryCandidate[];
   neuralBlendAlpha: number;
 }
 
@@ -54,6 +56,7 @@ export const DailyBetsView: React.FC<DailyBetsViewProps> = ({
   onLiveSyncSport,
   isSyncingLive,
   liveSyncMessage,
+  fixtureCandidates,
   neuralBlendAlpha,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -308,6 +311,46 @@ export const DailyBetsView: React.FC<DailyBetsViewProps> = ({
             </div>
           )}
         </div>
+      )}
+
+      {fixtureCandidates.filter((candidate) => selectedSport === 'cross-sport' || candidate.sport === selectedSport).length > 0 && (
+        <section className="rounded-xl border border-slate-200 bg-white p-4 space-y-3" aria-labelledby="schedule-records-heading">
+          <div>
+            <h2 id="schedule-records-heading" className="text-sm font-semibold text-slate-900">Provider-listed schedule records · not prediction-ready</h2>
+            <p className="mt-1 text-xs leading-5 text-slate-600">
+              Source records from TheSportsDB are shown separately from forecasts. This feed does not supply all eight evidence rules, and the app does not invent rule scores or odds to fill those gaps.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+            {fixtureCandidates
+              .filter((candidate) => selectedSport === 'cross-sport' || candidate.sport === selectedSport)
+              .slice(0, 18)
+              .map((candidate) => (
+                <article key={candidate.id} className="rounded-lg border border-slate-200 p-3 min-w-0">
+                  <div className="text-xs font-semibold text-slate-900 break-words">{candidate.eventName}</div>
+                  <div className="mt-1 text-[11px] text-slate-600">
+                    {candidate.competition ?? 'Competition not supplied'} · {SPORT_LABELS[candidate.sport]}
+                  </div>
+                  <div className="mt-1 text-[11px] text-slate-600">
+                    {candidate.date}{candidate.kickoffTime ? ` · ${candidate.kickoffTime}` : ''}
+                    {candidate.venue ? ` · ${candidate.venue}` : ''}
+                  </div>
+                  <div className="mt-1 text-[11px] text-slate-500">
+                    {candidate.status ?? 'Status not supplied'}
+                    {candidate.homeScore !== null && candidate.awayScore !== null
+                      ? ` · Provider score: ${candidate.homeScore}–${candidate.awayScore}`
+                      : ''}
+                  </div>
+                  <a href={candidate.sourceUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block text-[11px] font-medium text-blue-700 underline hover:text-blue-900">
+                    Open provider record
+                  </a>
+                </article>
+              ))}
+          </div>
+          {fixtureCandidates.filter((candidate) => selectedSport === 'cross-sport' || candidate.sport === selectedSport).length > 18 && (
+            <p className="text-[11px] text-slate-500">Showing the first 18 records for this view.</p>
+          )}
+        </section>
       )}
 
       {/* Search & Edge Filter Controls */}
