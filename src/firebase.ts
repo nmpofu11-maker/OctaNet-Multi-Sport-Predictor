@@ -391,7 +391,7 @@ export function subscribeWorkspaceSettledMatches(
         ];
         const validRules = ruleKeys.every((key) => typeof data[key] === 'number' && Number.isFinite(data[key]) && data[key] >= 0 && data[key] <= 10);
         if (
-          data.sourceVerified !== true || typeof data.sourceReference !== 'string' || !/^https?:\\/\\//i.test(data.sourceReference) ||
+          data.sourceVerified !== true || typeof data.sourceReference !== 'string' || !/^https?:\/\//i.test(data.sourceReference) ||
           !validDate || !ALL_SPORTS.includes(sport) || !validStrings || typeof data.isHomeOrFavoredContext !== 'boolean' ||
           typeof odds !== 'number' || !Number.isFinite(odds) || odds < 1.01 || odds > 100 ||
           (outcome !== 0 && outcome !== 1) || !validRules
