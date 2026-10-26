@@ -126,14 +126,13 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
   const isTrainedForCorpus = report.epochHistory.length > 0 && report.totalRows === historicalRows.length && historicalRows.length >= 8;
   const epochHistory = isTrainedForCorpus ? report.epochHistory : [];
 
+  // The learning-curve helper fits temporary models for each milestone. Never invoke it
+  // on import alone: that would perform hidden training and show metrics before explicit training.
   const evolutionCurve = useMemo(
-    () =>
-      computeCorpusEvolutionCurve(
-        historicalRows,
-        engine.hyperparams,
-        sportWeights
-      ),
-    [historicalRows, engine.hyperparams, sportWeights]
+    () => isTrainedForCorpus
+      ? computeCorpusEvolutionCurve(historicalRows, engine.hyperparams, sportWeights)
+      : [],
+    [isTrainedForCorpus, historicalRows, engine.hyperparams, sportWeights]
   );
 
   const firstMilestone = evolutionCurve[0];
