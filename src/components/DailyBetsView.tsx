@@ -12,10 +12,10 @@ import {
 import {
   ALL_SPORTS,
   PredictionResult,
-  FixtureDiscoveryCandidate,
   SPORT_LABELS,
   SportId,
 } from '../types/sports';
+import { FixtureDiscoveryCandidate } from '../engine/fixtureSources';
 import { SPORT_ADAPTED_RULES } from '../engine/sportRules';
 
 interface DailyBetsViewProps {
