@@ -232,7 +232,7 @@ test('bookmaker odds never affect features, rule probabilities, learned team coe
   assert.deepEqual(matrixA, matrixB);
 
   const engine = trainNeuralNetworkOnCSV(rows, { ...DEFAULT_HYPERPARAMETERS, epochs: 10 });
-  const fixture = generateSyntheticTestFixtures(1)[0];
+  const fixture = generateSyntheticTestFixtures('2026-10-26')[0];
   const lowOddsPrediction = predictFixture({ ...fixture, decimalOdds: 1.10 }, engine, getDefaultSportWeights()[fixture.sport]);
   const highOddsPrediction = predictFixture({ ...fixture, decimalOdds: 25.0 }, engine, getDefaultSportWeights()[fixture.sport]);
   assert.equal(lowOddsPrediction.ruleProbability, highOddsPrediction.ruleProbability);
