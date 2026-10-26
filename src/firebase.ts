@@ -331,6 +331,7 @@ export async function commitAdaptedPicksBatchToFirestore(
         r8_coach_volatility: clampNum(entry.rules.r8_coach_volatility, 0, 10),
         outcomeWon: entry.actualOutcome === 1 ? 1 : 0,
         sourceVerified: true,
+        sourceReference: entry.scoreSummary.replace(/^SOURCE-VERIFIED:\\s*/, '').slice(0, 500),
         createdAt: serverTimestamp(),
       });
 
@@ -369,8 +370,7 @@ export function subscribeWorkspaceSettledMatches(
   const q = query(
     collection(db, 'workspaces', safeUid, 'settledMatches'),
     where('ownerId', '==', safeUid),
-    where('workspaceId', '==', safeUid),
-    where('sourceVerified', '==', true)
+    where('workspaceId', '==', safeUid)
   );
   return onSnapshot(
     q,
