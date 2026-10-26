@@ -154,19 +154,19 @@ test('CSV parser round-trips universal 8-rule multi-sport data and validates mal
   assert.equal(parsed.rows[0].outcomeWon, sampleRows[0].outcomeWon);
 
   // Missing source values must be excluded rather than silently defaulted into training data.
-  const incompleteLines = csvString.split('\\n');
+  const incompleteLines = csvString.split('\n');
   const firstDataCells = incompleteLines[1].split(',');
   firstDataCells[0] = ''; // missing date
   incompleteLines[1] = firstDataCells.join(',');
-  const incompleteParsed = parseHistoricalCSV(incompleteLines.join('\\n'));
+  const incompleteParsed = parseHistoricalCSV(incompleteLines.join('\n'));
   assert.equal(incompleteParsed.rows.length, sampleRows.length - 1);
   assert.ok(incompleteParsed.warnings.some((warning) => warning.includes('required fields are blank')));
 
-  const invalidDateLines = csvString.split('\\n');
+  const invalidDateLines = csvString.split('\n');
   const invalidDateCells = invalidDateLines[1].split(',');
   invalidDateCells[0] = '2026-02-30';
   invalidDateLines[1] = invalidDateCells.join(',');
-  const invalidDateParsed = parseHistoricalCSV(invalidDateLines.join('\\n'));
+  const invalidDateParsed = parseHistoricalCSV(invalidDateLines.join('\n'));
   assert.equal(invalidDateParsed.rows.length, sampleRows.length - 1);
   assert.ok(invalidDateParsed.warnings.some((warning) => warning.includes('real YYYY-MM-DD date')));
 });
