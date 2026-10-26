@@ -328,21 +328,15 @@ test('computeCorpusEvolutionCurve tracks Brier score improvement and accuracy ev
   );
   assert.ok(finalPt.brierImprovementVsInitialPct > 0);
 
-  // Verify dynamic expansion after Yesterday's Audit appends 60 settled picks (360 -> 420 rows)
-  const lockedCard = buildLockedAuditCardForDate('2026-10-24', engine, weights, [], true).map((entry) => ({
-    ...entry, scoreSummary: 'SOURCE-VERIFIED: https://example.com/test-result',
+  // A larger synthetic test corpus verifies curve expansion independently of
+  // settlement/adaptation, which must require genuinely source-verified results.
+  const expandedCorpus = generateHistoricalTrainingDataset(70).map((row, index, allRows) => ({
+    ...row,
+    date: index >= allRows.length - 60 ? '2026-10-24' : row.date,
   }));
-  const adapted = adaptNeuralEngineFromAudit(
-    '2026-10-24',
-    lockedCard,
-    baseCorpus,
-    DEFAULT_HYPERPARAMETERS,
-    weights,
-    engine
-  );
   const curve420 = computeCorpusEvolutionCurve(
-    adapted.nextCorpus,
-    adapted.nextHyperparams,
+    expandedCorpus,
+    DEFAULT_HYPERPARAMETERS,
     weights
   );
   assert.equal(curve420[curve420.length - 1].corpusSize, 420);
