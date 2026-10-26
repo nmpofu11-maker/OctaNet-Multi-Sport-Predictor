@@ -14,6 +14,19 @@ export interface CSVParseResult {
   errors: string[];
 }
 
+/** Stable fingerprint of the exact active corpus; detects same-row-count dataset swaps. */
+export function fingerprintHistoricalRows(rows: HistoricalMatchRow[]): string {
+  const serialized = JSON.stringify(rows);
+  let hash = 14695981039346656037n;
+  const prime = 1099511628211n;
+  const mask = 0xffffffffffffffffn;
+  for (let i = 0; i < serialized.length; i++) {
+    hash ^= BigInt(serialized.charCodeAt(i));
+    hash = (hash * prime) & mask;
+  }
+  return `octanet-corpus-v1:${rows.length}:${hash.toString(16).padStart(16, '0')}`;
+}
+
 const SPORT_ALIASES: Record<string, SportId> = {
   soccer: SportId.Soccer,
   football: SportId.Soccer,
