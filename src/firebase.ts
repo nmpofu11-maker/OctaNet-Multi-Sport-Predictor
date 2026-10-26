@@ -331,7 +331,7 @@ export async function commitAdaptedPicksBatchToFirestore(
         r8_coach_volatility: clampNum(entry.rules.r8_coach_volatility, 0, 10),
         outcomeWon: entry.actualOutcome === 1 ? 1 : 0,
         sourceVerified: true,
-        sourceReference: entry.scoreSummary.replace(/^SOURCE-VERIFIED:\\s*/, '').slice(0, 500),
+        sourceReference: entry.scoreSummary.replace(/^SOURCE-VERIFIED:\s*/, '').slice(0, 500),
         createdAt: serverTimestamp(),
       });
 
@@ -378,7 +378,7 @@ export function subscribeWorkspaceSettledMatches(
       const rows: HistoricalMatchRow[] = snap.docs.flatMap((d): HistoricalMatchRow[] => {
         const data = d.data();
         const date = typeof data.date === 'string' ? data.date : '';
-        const parsedDate = /^\\d{4}-\\d{2}-\\d{2}$/.test(date) ? new Date(`${date}T00:00:00Z`) : null;
+        const parsedDate = /^\d{4}-\d{2}-\d{2}$/.test(date) ? new Date(`${date}T00:00:00Z`) : null;
         const validDate = Boolean(parsedDate && !Number.isNaN(parsedDate.getTime()) && parsedDate.toISOString().slice(0, 10) === date);
         const sport = data.sport as SportId;
         const strings = ['competition', 'selection', 'opponent', 'market'];
