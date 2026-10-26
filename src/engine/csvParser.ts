@@ -424,63 +424,10 @@ export function validateIntelligenceMatrixJSON(rawJson: string): {
   }
 }
 
-export function generateSportCSVTemplate(sport: SportId | 'all'): string {
-  const sampleSports = sport === 'all' ? ALL_SPORTS : [sport];
-  const sampleRows: HistoricalMatchRow[] = sampleSports.map((s, idx) => ({
-    id: `tpl-${s}-${idx}`,
-    date: '2026-10-18',
-    sport: s,
-    competition:
-      s === SportId.Soccer
-        ? 'Premier League'
-        : s === SportId.Tennis
-        ? 'ATP Vienna Indoor 500'
-        : s === SportId.Basketball
-        ? 'NBA Regular Season'
-        : s === SportId.Golf
-        ? 'PGA Zozo Championship'
-        : s === SportId.Cricket
-        ? 'ICC World Test Championship'
-        : 'United Rugby Championship',
-    selection:
-      s === SportId.Soccer
-        ? 'Arsenal'
-        : s === SportId.Tennis
-        ? 'Jannik Sinner'
-        : s === SportId.Basketball
-        ? 'Boston Celtics'
-        : s === SportId.Golf
-        ? 'Collin Morikawa'
-        : s === SportId.Cricket
-        ? 'India'
-        : 'Leinster',
-    opponent:
-      s === SportId.Soccer
-        ? 'Brighton'
-        : s === SportId.Tennis
-        ? 'Alex de Minaur'
-        : s === SportId.Basketball
-        ? 'Indiana Pacers'
-        : s === SportId.Golf
-        ? 'Sahith Theegala'
-        : s === SportId.Cricket
-        ? 'New Zealand'
-        : 'Ulster',
-    market:
-      s === SportId.Golf ? '72-Hole H2H Matchup' : s === SportId.Rugby ? 'Handicap -5.5' : 'Moneyline / Win',
-    decimalOdds: 1.85,
-    isHomeOrFavoredContext: true,
-    rules: {
-      r1_motivation_stakes: 8.6,
-      r2_form_momentum: 8.2,
-      r3_h2h_standings_gap: 7.9,
-      r4_tier_classification: 8.1,
-      r5_derby_rivalry: 8.5,
-      r6_squad_value_vs_form: 7.8,
-      r7_continental_fatigue: 8.0,
-      r8_coach_volatility: 7.7,
-    },
-    outcomeWon: 1,
-  }));
-  return serializeHistoricalRowsToCSV(sampleRows);
+/**
+ * Return only the schema header. Never ship illustrative fixtures or outcomes in a
+ * downloadable template, because users may mistake them for historical evidence.
+ */
+export function generateSportCSVTemplate(_sport: SportId | 'all'): string {
+  return serializeHistoricalRowsToCSV([]);
 }

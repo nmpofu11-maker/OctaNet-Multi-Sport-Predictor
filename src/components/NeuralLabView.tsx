@@ -240,7 +240,7 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `octanet-${templateSport}-training-template.csv`;
+    a.download = `octanet-${templateSport}-empty-csv-header.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -997,10 +997,10 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-slate-900">
-              Direct CSV Training Sandbox &amp; Schema Templates
+              Direct CSV Training Sandbox &amp; Empty Schema Template
             </h2>
             <p className="text-xs text-slate-500">
-              Paste exported spreadsheet rows (date, sport, competition, selection, opponent, market, decimal_odds, is_home, r1_motivation..r8_coach_volatility, outcome) and train directly.
+              Downloadable templates contain headers only—no example fixtures, odds, rule scores, or outcomes. Add only genuine historical records that you have checked before training.
             </p>
           </div>
 
@@ -1014,10 +1014,10 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
               onChange={(e) => setTemplateSport(e.target.value as SportId | 'all')}
               className="px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-700"
             >
-              <option value="all">All 6 Sports Template</option>
+              <option value="all">All 6 Sports — Empty Header</option>
               {ALL_SPORTS.map((s) => (
                 <option key={s} value={s}>
-                  {SPORT_LABELS[s]} CSV Template
+                  {SPORT_LABELS[s]} Empty CSV Header
                 </option>
               ))}
             </select>
@@ -1027,7 +1027,7 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors whitespace-nowrap shrink-0"
             >
               <Download className="w-3.5 h-3.5" />
-              Download Template
+              Download Empty CSV Header
             </button>
           </div>
         </div>
