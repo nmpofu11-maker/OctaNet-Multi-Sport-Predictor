@@ -21,9 +21,9 @@ import {
   validateIntelligenceMatrixJSON,
 } from './csvParser';
 import {
-  generateDailyFixturesForDate,
-  generateHistoricalTrainingDataset,
-} from './sampleData';
+  generateSyntheticTestFixtures,
+  generateSyntheticTestHistoricalRows,
+} from './__tests__/testFixtures';
 import {
   adaptNeuralEngineFromAudit,
   buildLockedAuditCardForDate,
@@ -155,7 +155,7 @@ test('CSV parser round-trips universal 8-rule multi-sport data and validates mal
   const missingColRes = parseHistoricalCSV('date,sport,notes\n2026-10-01,soccer,hello');
   assert.ok(missingColRes.errors.length >= 2);
 
-  const sampleRows = generateHistoricalTrainingDataset(10);
+  const sampleRows = generateSyntheticTestHistoricalRows(10);
   assert.equal(sampleRows.length, 60);
 
   const csvString = serializeHistoricalRowsToCSV(sampleRows);
@@ -184,7 +184,7 @@ test('CSV parser round-trips universal 8-rule multi-sport data and validates mal
 });
 
 test('20-input MLP neural network trains on CSV rows, reduces loss, and generates compliant Team Intelligence Matrix JSON', () => {
-  const rows = generateHistoricalTrainingDataset(40);
+  const rows = generateSyntheticTestHistoricalRows(40);
   const engine = trainNeuralNetworkOnCSV(rows, {
     ...DEFAULT_HYPERPARAMETERS,
     epochs: 80,
@@ -211,10 +211,10 @@ test('20-input MLP neural network trains on CSV rows, reduces loss, and generate
 });
 
 test('Daily prediction engine produces exact 10 best bets per day for each of the 6 sports', () => {
-  const rows = generateHistoricalTrainingDataset(30);
+  const rows = generateSyntheticTestHistoricalRows(30);
   const engine = trainNeuralNetworkOnCSV(rows);
   const weights = getDefaultSportWeights();
-  const dailyFixtures = generateDailyFixturesForDate('2026-10-25');
+  const dailyFixtures = generateSyntheticTestFixtures('2026-10-25');
 
   for (const sport of ALL_SPORTS) {
     const top10 = rankTop10BetsForSport(dailyFixtures, sport, engine, weights, 10);
@@ -239,7 +239,7 @@ test('Daily prediction engine produces exact 10 best bets per day for each of th
 test('daily prediction fixture selection never falls back to generated demo fixtures', () => {
   const supplied = selectSuppliedFixturesForDate('2026-10-25', []);
   assert.deepEqual(supplied, []);
-  const engine = trainNeuralNetworkOnCSV(generateHistoricalTrainingDataset(12));
+  const engine = trainNeuralNetworkOnCSV(generateSyntheticTestHistoricalRows(12));
   const predictions = rankTop10BetsForSport(
     supplied,
     SportId.Soccer,
@@ -251,7 +251,7 @@ test('daily prediction fixture selection never falls back to generated demo fixt
 });
 
 test('locked audit cards never invent demo fixtures when no verified fixtures are supplied', () => {
-  const rows = generateHistoricalTrainingDataset(12);
+  const rows = generateSyntheticTestHistoricalRows(12);
   const engine = trainNeuralNetworkOnCSV(rows);
   const emptyCard = buildLockedAuditCardForDate(
     '2026-10-24',
@@ -266,11 +266,11 @@ test('locked audit cards never invent demo fixtures when no verified fixtures ar
 test('Simulated settlement is excluded from real metrics and cannot train the model', () => {
   assert.equal(getPreviousDateISO('2026-10-25'), '2026-10-24');
 
-  const baseCorpus = generateHistoricalTrainingDataset(30); // 180 rows
+  const baseCorpus = generateSyntheticTestHistoricalRows(30); // 180 rows
   const weights = getDefaultSportWeights();
   const initialEngine = trainNeuralNetworkOnCSV(baseCorpus, DEFAULT_HYPERPARAMETERS, weights);
 
-  const explicitDemoFixtures = generateDailyFixturesForDate('2026-10-24');
+  const explicitDemoFixtures = generateSyntheticTestFixtures('2026-10-24');
   const lockedCard = buildLockedAuditCardForDate(
     '2026-10-24',
     initialEngine,
@@ -324,7 +324,7 @@ test('Simulated settlement is excluded from real metrics and cannot train the mo
 test('computeCorpusEvolutionCurve tracks Brier score improvement and accuracy evolution across corpus growth', async () => {
   const { computeCorpusEvolutionCurve } = await import('./neuralNetwork');
   const weights = getDefaultSportWeights();
-  const baseCorpus = generateHistoricalTrainingDataset(60); // 360 rows
+  const baseCorpus = generateSyntheticTestHistoricalRows(60); // 360 rows
   const engine = trainNeuralNetworkOnCSV(baseCorpus, DEFAULT_HYPERPARAMETERS, weights);
 
   const curve360 = computeCorpusEvolutionCurve(baseCorpus, DEFAULT_HYPERPARAMETERS, weights);
@@ -356,7 +356,7 @@ test('computeCorpusEvolutionCurve tracks Brier score improvement and accuracy ev
 
   // A larger synthetic test corpus verifies curve expansion independently of
   // settlement/adaptation, which must require genuinely source-verified results.
-  const expandedCorpus = generateHistoricalTrainingDataset(70).map((row, index, allRows) => ({
+  const expandedCorpus = generateSyntheticTestHistoricalRows(70).map((row, index, allRows) => ({
     ...row,
     date: index >= allRows.length - 60 ? '2026-10-24' : row.date,
   }));
