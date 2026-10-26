@@ -592,6 +592,10 @@ export default function App() {
   };
 
   const handleAdaptNeuralNetwork = async () => {
+    if (!isTrainedForActiveCorpus) {
+      setLiveAuditMessage({ type: 'error', text: 'Adaptation blocked: explicitly train the current historical CSV corpus first. Audit adaptation cannot perform the initial training step.' });
+      return;
+    }
     const entries = auditCardsByDate[auditDate] ?? [];
     setIsAdapting(true);
     setLiveAuditMessage(null);
@@ -1007,6 +1011,7 @@ export default function App() {
               isFetchingLiveResults={isFetchingLiveResults}
               liveAuditMessage={liveAuditMessage}
               onAdaptNeuralNetwork={handleAdaptNeuralNetwork}
+              isModelTrained={isTrainedForActiveCorpus}
               isAdapting={isAdapting}
               lastAdaptationReport={lastAdaptationReport}
               isCloudSynced={Boolean(currentUser)}
