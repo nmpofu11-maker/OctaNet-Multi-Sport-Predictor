@@ -177,6 +177,7 @@ export default function App() {
     trainedCorpusFingerprint === activeCorpusFingerprint &&
     engine.report.epochHistory.length > 0 &&
     engine.report.totalRows === historicalRows.length &&
+    Object.keys(hyperparams).every((key) => engine.hyperparams[key as keyof NeuralHyperparameters] === hyperparams[key as keyof NeuralHyperparameters]) &&
     historicalRows.length >= 8
   );
 
@@ -936,7 +937,7 @@ export default function App() {
 
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-[1360px] w-full mx-auto space-y-4">
           <div role="note" className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-xs leading-5 text-amber-900">
-            <strong>Model status:</strong> {isTrainedForActiveCorpus ? `TRAINED on ${historicalRows.length} user-supplied historical rows; data authenticity is not independently verified.` : 'UNTRAINED or active corpus changed — explicit training is required before predictions are available.'} OctaNet does not generate demo fixtures or synthetic training rows. AI-search fixture candidates and estimated odds are unverified. Simulated outcomes are excluded from learning.
+            <strong>Model status:</strong> {isTrainedForActiveCorpus ? `TRAINED on ${historicalRows.length} user-supplied historical rows; data authenticity is not independently verified.` : 'UNTRAINED or corpus/training settings changed — explicit training is required before predictions are available.'} OctaNet does not generate demo fixtures or synthetic training rows. AI-search fixture candidates and estimated odds are unverified. Simulated outcomes are excluded from learning.
           </div>
           {cloudBannerError && (
             <div
