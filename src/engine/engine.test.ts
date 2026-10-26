@@ -19,6 +19,7 @@ import {
   parseHistoricalCSV,
   serializeHistoricalRowsToCSV,
   fingerprintHistoricalRows,
+  generateSportCSVTemplate,
   validateIntelligenceMatrixJSON,
 } from './csvParser';
 import {
@@ -33,6 +34,14 @@ import {
   getPreviousDateISO,
   selectSuppliedFixturesForDate,
 } from './auditEngine';
+
+test('downloadable CSV templates contain headers only and no illustrative result rows', () => {
+  const template = generateSportCSVTemplate('all');
+  const lines = template.split(/\\r?\\n/);
+  assert.equal(lines.length, 1, 'template must contain exactly one header row');
+  assert.match(lines[0], /^date,sport,competition,selection,opponent,market,decimal_odds,is_home,/);
+  assert.doesNotMatch(template, /Arsenal|Jannik Sinner|Boston Celtics|2026-10-18/);
+});
 
 test('source verification marker requires a credential-free HTTPS URL', () => {
   assert.equal(isSourceVerifiedScoreSummary('SOURCE-VERIFIED: https://results.example.org/match/123'), true);
