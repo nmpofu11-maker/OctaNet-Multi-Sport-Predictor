@@ -28,6 +28,7 @@ import {
   generateSportCSVTemplate,
   parseHistoricalCSV,
   serializeHistoricalRowsToCSV,
+  fingerprintHistoricalRows,
 } from '../engine/csvParser';
 import { SPORT_ADAPTED_RULES, SportRuleWeights } from '../engine/sportRules';
 
@@ -39,6 +40,7 @@ interface NeuralLabViewProps {
   onUpdateHyperparams: (next: NeuralHyperparameters) => void;
   onLoadRows: (rows: HistoricalMatchRow[]) => void;
   onTrainWithRows: (rows: HistoricalMatchRow[], nextParams: NeuralHyperparameters) => void;
+  trainedCorpusFingerprint: string | null;
 }
 
 interface EvolutionTooltipProps {
@@ -108,6 +110,7 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
   onUpdateHyperparams,
   onLoadRows,
   onTrainWithRows,
+  trainedCorpusFingerprint,
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [csvEditorText, setCsvEditorText] = useState<string>(() =>
@@ -123,7 +126,7 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
   } | null>(null);
 
   const { report } = engine;
-  const isTrainedForCorpus = report.epochHistory.length > 0 && report.totalRows === historicalRows.length && historicalRows.length >= 8;
+  const isTrainedForCorpus = Boolean(trainedCorpusFingerprint && trainedCorpusFingerprint === fingerprintHistoricalRows(historicalRows) && report.epochHistory.length > 0 && report.totalRows === historicalRows.length && historicalRows.length >= 8);
   const epochHistory = isTrainedForCorpus ? report.epochHistory : [];
 
   // The learning-curve helper fits temporary models for each milestone. Never invoke it
