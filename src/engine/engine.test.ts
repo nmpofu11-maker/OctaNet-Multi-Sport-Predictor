@@ -291,6 +291,18 @@ test('Simulated settlement is excluded from real metrics and cannot train the mo
     /source-verified settlements are queued for adaptation/
   );
 
+  const malformedSourceCard = lockedCard.map((entry) => ({
+    ...entry,
+    settlementStatus: 'settled' as const,
+    actualOutcome: 1 as const,
+    scoreSummary: 'SOURCE-VERIFIED: not-a-url',
+  }));
+  assert.equal(computeDailyAuditSummary(malformedSourceCard).settledCount, 0);
+  assert.throws(
+    () => adaptNeuralEngineFromAudit('2026-10-24', malformedSourceCard, baseCorpus, DEFAULT_HYPERPARAMETERS, weights, initialEngine),
+    /source-verified settlements are queued for adaptation/
+  );
+
   // Exercise the adaptation path separately with explicitly marked verified test records.
   const verifiedTestCard = lockedCard.map((entry) => ({
     ...entry,
