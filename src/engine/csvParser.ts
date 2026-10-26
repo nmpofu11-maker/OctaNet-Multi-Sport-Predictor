@@ -177,7 +177,7 @@ export function parseHistoricalCSV(csvText: string): CSVParseResult {
 
     const rawDate = cells[colDate].trim();
     const parsedDate = new Date(`${rawDate}T00:00:00Z`);
-    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(rawDate) ||
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(rawDate) ||
         Number.isNaN(parsedDate.getTime()) ||
         parsedDate.toISOString().slice(0, 10) !== rawDate) {
       warnings.push(`Skipped line ${i + 1}: date must be a real YYYY-MM-DD date.`);
@@ -185,7 +185,7 @@ export function parseHistoricalCSV(csvText: string): CSVParseResult {
     }
     const date = rawDate;
 
-    const rawSport = cells[colSport].toLowerCase().replace(/\\s+/g, '');
+    const rawSport = cells[colSport].toLowerCase().replace(/\s+/g, '');
     const sport = SPORT_ALIASES[rawSport];
     if (!sport) {
       warnings.push(`Skipped line ${i + 1}: unrecognized sport "${cells[colSport]}"; row excluded.`);
