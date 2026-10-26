@@ -1,11 +1,12 @@
+/** TEST ONLY: synthetic fixtures used to exercise engine behavior. Never use these as real match evidence. */
 import {
   ALL_SPORTS,
   DailyFixture,
   HistoricalMatchRow,
   RuleScoreVector,
   SportId,
-} from '../types/sports';
-import { isVolatileCompetition } from './sportRules';
+} from '../../types/sports';
+import { isVolatileCompetition } from '../sportRules';
 
 interface SportPoolConfig {
   competitions: string[];
@@ -508,7 +509,7 @@ class DeterministicRNG {
  * Universal 8 Multi-Sport Rules (Motivation, Last-5 Form, H2H + 8-Spot Gap, Tiers, Derby Disruption,
  * Squad Value Subordinate to Motivation/Form/H2H, Continental Fatigue, and Coach H2H + Volatile Leagues)
  */
-export function generateHistoricalTrainingDataset(rowsPerSport = 60): HistoricalMatchRow[] {
+export function generateSyntheticTestHistoricalRows(rowsPerSport = 60): HistoricalMatchRow[] {
   const rng = new DeterministicRNG('octanet-universal-8rules-csv-v2');
   const rows: HistoricalMatchRow[] = [];
 
@@ -632,7 +633,7 @@ export function generateHistoricalTrainingDataset(rowsPerSport = 60): Historical
  * and watchlist volatile-league fixtures so the Universal 8-Rule + Neural Engine filters out
  * traps and surfaces the cleanest Top 10 Best Bets per sport!
  */
-export function generateDailyFixturesForDate(dateStr: string): DailyFixture[] {
+export function generateSyntheticTestFixtures(dateStr: string): DailyFixture[] {
   const fixtures: DailyFixture[] = [];
   const fixturesPerSport = 16;
 

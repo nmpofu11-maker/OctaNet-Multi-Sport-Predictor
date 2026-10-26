@@ -81,7 +81,9 @@ export const IntelligenceMatrixView: React.FC<IntelligenceMatrixViewProps> = ({
             Team &amp; Competitor Intelligence Matrices
           </h1>
           <p className="mt-1 text-sm text-slate-600 max-w-2xl">
-            Empirical coefficients learned from historical CSV outcomes (home advantage, form momentum, volatility index, and fatigue penalty) feeding both the 8-rule prior and MLP input vector.
+            {Object.keys(payload.team_intelligence_matrices).length === 0
+              ? 'No learned competitor coefficients are available yet. Import historical results and explicitly train the model before treating any coefficients as empirical.'
+              : 'Competitor coefficients derived from the active CSV corpus (home advantage, form momentum, volatility index, and fatigue penalty) feed the 8-rule prior and MLP input vector. Verify source data before relying on these estimates.'}
           </p>
         </div>
 
@@ -253,7 +255,7 @@ export const IntelligenceMatrixView: React.FC<IntelligenceMatrixViewProps> = ({
                 <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
                   <tr>
                     <th className="py-3 pl-4 pr-3">Team / Competitor</th>
-                    <th className="py-3 px-3 text-right">CSV Sample Matches</th>
+                    <th className="py-3 px-3 text-right">Matches in Active Corpus</th>
                     <th className="py-3 px-3 text-right">Home / Surface Mult.</th>
                     <th className="py-3 px-3 text-right">Form Momentum Wt.</th>
                     <th className="py-3 px-3 text-right">Volatility Index</th>

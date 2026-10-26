@@ -1,0 +1,37 @@
+name: Quality Checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - fix/purge-synthetic-default-state
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Test, typecheck, and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.12.0
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Verify patched gRPC dependency is locked
+        run: node -e "const p=require('./package.json'); const l=require('./package-lock.json'); if(p.overrides?.['@grpc/grpc-js'] !== '1.13.6' || l.packages?.['node_modules/@grpc/grpc-js']?.version !== '1.13.6') { console.error('Expected @grpc/grpc-js 1.13.6 override and lock entry'); process.exit(1); }"
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+      - name: Run unit tests
+        run: npm test
+      - name: TypeScript check
+        run: npm run lint
+      - name: Production build
+        run: npm run build

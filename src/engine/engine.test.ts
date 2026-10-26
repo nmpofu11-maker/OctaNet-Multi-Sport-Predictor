@@ -9,6 +9,7 @@ import {
 } from './sportRules';
 import {
   DEFAULT_HYPERPARAMETERS,
+  createUntrainedNeuralEngine,
   rankCrossSportTop10,
   rankTop10BetsForSport,
   trainNeuralNetworkOnCSV,
@@ -17,19 +18,46 @@ import {
   exportPredictionsToCSV,
   parseHistoricalCSV,
   serializeHistoricalRowsToCSV,
+  fingerprintHistoricalRows,
   validateIntelligenceMatrixJSON,
 } from './csvParser';
 import {
-  generateDailyFixturesForDate,
-  generateHistoricalTrainingDataset,
-} from './sampleData';
+  generateSyntheticTestFixtures,
+  generateSyntheticTestHistoricalRows,
+} from './__tests__/testFixtures';
 import {
   adaptNeuralEngineFromAudit,
+  isSourceVerifiedScoreSummary,
   buildLockedAuditCardForDate,
   computeDailyAuditSummary,
   getPreviousDateISO,
   selectSuppliedFixturesForDate,
 } from './auditEngine';
+
+test('source verification marker requires a credential-free HTTPS URL', () => {
+  assert.equal(isSourceVerifiedScoreSummary('SOURCE-VERIFIED: https://results.example.org/match/123'), true);
+  assert.equal(isSourceVerifiedScoreSummary('SOURCE-VERIFIED: http://results.example.org/match/123'), false);
+  assert.equal(isSourceVerifiedScoreSummary('SOURCE-VERIFIED: https://user:pass@results.example.org/match/123'), false);
+  assert.equal(isSourceVerifiedScoreSummary('SOURCE-VERIFIED: not-a-url'), false);
+});
+
+test('corpus fingerprint changes when data changes even if row count stays the same', () => {
+  const rows = generateSyntheticTestHistoricalRows(2);
+  assert.equal(fingerprintHistoricalRows(rows), fingerprintHistoricalRows(rows.map((row) => ({ ...row }))));
+  const changed = rows.map((row, index) => index === 0 ? { ...row, selection: `${row.selection} changed` } : row);
+  assert.equal(changed.length, rows.length);
+  assert.notEqual(fingerprintHistoricalRows(rows), fingerprintHistoricalRows(changed));
+});
+
+test('empty initial engine is explicitly untrained and exposes no performance metrics', () => {
+  const engine = createUntrainedNeuralEngine();
+  assert.equal(engine.report.totalRows, 0);
+  assert.equal(engine.report.trainRows, 0);
+  assert.equal(engine.report.valRows, 0);
+  assert.equal(engine.report.epochHistory.length, 0);
+  assert.equal(engine.intelligencePayload.model_engine, 'UNTRAINED — awaiting historical results');
+  assert.equal(Object.keys(engine.intelligencePayload.team_intelligence_matrices).length, 0);
+});
 
 test('all 6 sports adapt the universal 8 rules with normalized weights summing to 1.0', () => {
   assert.equal(ALL_SPORTS.length, 6);
@@ -144,7 +172,7 @@ test('CSV parser round-trips universal 8-rule multi-sport data and validates mal
   const missingColRes = parseHistoricalCSV('date,sport,notes\n2026-10-01,soccer,hello');
   assert.ok(missingColRes.errors.length >= 2);
 
-  const sampleRows = generateHistoricalTrainingDataset(10);
+  const sampleRows = generateSyntheticTestHistoricalRows(10);
   assert.equal(sampleRows.length, 60);
 
   const csvString = serializeHistoricalRowsToCSV(sampleRows);
@@ -173,7 +201,7 @@ test('CSV parser round-trips universal 8-rule multi-sport data and validates mal
 });
 
 test('20-input MLP neural network trains on CSV rows, reduces loss, and generates compliant Team Intelligence Matrix JSON', () => {
-  const rows = generateHistoricalTrainingDataset(40);
+  const rows = generateSyntheticTestHistoricalRows(40);
   const engine = trainNeuralNetworkOnCSV(rows, {
     ...DEFAULT_HYPERPARAMETERS,
     epochs: 80,
@@ -200,10 +228,10 @@ test('20-input MLP neural network trains on CSV rows, reduces loss, and generate
 });
 
 test('Daily prediction engine produces exact 10 best bets per day for each of the 6 sports', () => {
-  const rows = generateHistoricalTrainingDataset(30);
+  const rows = generateSyntheticTestHistoricalRows(30);
   const engine = trainNeuralNetworkOnCSV(rows);
   const weights = getDefaultSportWeights();
-  const dailyFixtures = generateDailyFixturesForDate('2026-10-25');
+  const dailyFixtures = generateSyntheticTestFixtures('2026-10-25');
 
   for (const sport of ALL_SPORTS) {
     const top10 = rankTop10BetsForSport(dailyFixtures, sport, engine, weights, 10);
@@ -228,7 +256,7 @@ test('Daily prediction engine produces exact 10 best bets per day for each of th
 test('daily prediction fixture selection never falls back to generated demo fixtures', () => {
   const supplied = selectSuppliedFixturesForDate('2026-10-25', []);
   assert.deepEqual(supplied, []);
-  const engine = trainNeuralNetworkOnCSV(generateHistoricalTrainingDataset(12));
+  const engine = trainNeuralNetworkOnCSV(generateSyntheticTestHistoricalRows(12));
   const predictions = rankTop10BetsForSport(
     supplied,
     SportId.Soccer,
@@ -240,7 +268,7 @@ test('daily prediction fixture selection never falls back to generated demo fixt
 });
 
 test('locked audit cards never invent demo fixtures when no verified fixtures are supplied', () => {
-  const rows = generateHistoricalTrainingDataset(12);
+  const rows = generateSyntheticTestHistoricalRows(12);
   const engine = trainNeuralNetworkOnCSV(rows);
   const emptyCard = buildLockedAuditCardForDate(
     '2026-10-24',
@@ -255,11 +283,11 @@ test('locked audit cards never invent demo fixtures when no verified fixtures ar
 test('Simulated settlement is excluded from real metrics and cannot train the model', () => {
   assert.equal(getPreviousDateISO('2026-10-25'), '2026-10-24');
 
-  const baseCorpus = generateHistoricalTrainingDataset(30); // 180 rows
+  const baseCorpus = generateSyntheticTestHistoricalRows(30); // 180 rows
   const weights = getDefaultSportWeights();
   const initialEngine = trainNeuralNetworkOnCSV(baseCorpus, DEFAULT_HYPERPARAMETERS, weights);
 
-  const explicitDemoFixtures = generateDailyFixturesForDate('2026-10-24');
+  const explicitDemoFixtures = generateSyntheticTestFixtures('2026-10-24');
   const lockedCard = buildLockedAuditCardForDate(
     '2026-10-24',
     initialEngine,
@@ -277,6 +305,18 @@ test('Simulated settlement is excluded from real metrics and cannot train the mo
   assert.ok(lockedCard.every((entry) => entry.scoreSummary.startsWith('SIMULATED:')));
   assert.throws(
     () => adaptNeuralEngineFromAudit('2026-10-24', lockedCard, baseCorpus, DEFAULT_HYPERPARAMETERS, weights, initialEngine),
+    /source-verified settlements are queued for adaptation/
+  );
+
+  const malformedSourceCard = lockedCard.map((entry) => ({
+    ...entry,
+    settlementStatus: 'settled' as const,
+    actualOutcome: 1 as const,
+    scoreSummary: 'SOURCE-VERIFIED: not-a-url',
+  }));
+  assert.equal(computeDailyAuditSummary(malformedSourceCard).settledCount, 0);
+  assert.throws(
+    () => adaptNeuralEngineFromAudit('2026-10-24', malformedSourceCard, baseCorpus, DEFAULT_HYPERPARAMETERS, weights, initialEngine),
     /source-verified settlements are queued for adaptation/
   );
 
@@ -313,7 +353,7 @@ test('Simulated settlement is excluded from real metrics and cannot train the mo
 test('computeCorpusEvolutionCurve tracks Brier score improvement and accuracy evolution across corpus growth', async () => {
   const { computeCorpusEvolutionCurve } = await import('./neuralNetwork');
   const weights = getDefaultSportWeights();
-  const baseCorpus = generateHistoricalTrainingDataset(60); // 360 rows
+  const baseCorpus = generateSyntheticTestHistoricalRows(60); // 360 rows
   const engine = trainNeuralNetworkOnCSV(baseCorpus, DEFAULT_HYPERPARAMETERS, weights);
 
   const curve360 = computeCorpusEvolutionCurve(baseCorpus, DEFAULT_HYPERPARAMETERS, weights);
@@ -345,7 +385,7 @@ test('computeCorpusEvolutionCurve tracks Brier score improvement and accuracy ev
 
   // A larger synthetic test corpus verifies curve expansion independently of
   // settlement/adaptation, which must require genuinely source-verified results.
-  const expandedCorpus = generateHistoricalTrainingDataset(70).map((row, index, allRows) => ({
+  const expandedCorpus = generateSyntheticTestHistoricalRows(70).map((row, index, allRows) => ({
     ...row,
     date: index >= allRows.length - 60 ? '2026-10-24' : row.date,
   }));

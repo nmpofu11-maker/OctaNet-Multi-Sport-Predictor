@@ -31,6 +31,7 @@ interface DailyAuditViewProps {
     sources?: { uri: string; title: string }[];
   } | null;
   onAdaptNeuralNetwork: () => Promise<void>;
+  isModelTrained: boolean;
   isAdapting: boolean;
   lastAdaptationReport: AdaptationDeltaReport | null;
   isCloudSynced: boolean;
@@ -48,6 +49,7 @@ export const DailyAuditView: React.FC<DailyAuditViewProps> = ({
   isFetchingLiveResults,
   liveAuditMessage,
   onAdaptNeuralNetwork,
+  isModelTrained,
   isAdapting,
   lastAdaptationReport,
   isCloudSynced,
@@ -104,13 +106,15 @@ export const DailyAuditView: React.FC<DailyAuditViewProps> = ({
           <button
             type="button"
             onClick={onAdaptNeuralNetwork}
-            disabled={isAdapting || summary.readyToAdaptCount === 0}
+            disabled={isAdapting || !isModelTrained || summary.readyToAdaptCount === 0}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-500 transition-colors whitespace-nowrap shrink-0"
           >
             <BrainCircuit className="w-3.5 h-3.5" />
             {isAdapting
               ? 'Adapting Neural Weights...'
-              : summary.readyToAdaptCount > 0
+              : !isModelTrained
+                ? 'Train Current CSV Before Adaptation'
+                : summary.readyToAdaptCount > 0
                 ? `Append ${summary.readyToAdaptCount} Settled & Adapt Neural Engine`
                 : summary.adaptedCount > 0
                   ? 'All Settled Picks Adapted'
@@ -618,7 +622,7 @@ export const DailyAuditView: React.FC<DailyAuditViewProps> = ({
                                 aria-label={`Grade ${entry.selection} Won`}
                                 onClick={() => {
                                   const source = window.prompt('Confirm the exact event and outcome, then enter the official result source URL (https://...). Cancel to leave pending.');
-                                  if (source && /^https?:\/\//i.test(source.trim())) {
+                                  if (source && /^https:\/\//i.test(source.trim())) {
                                     onSettleSinglePick(entry.id, 1, `SOURCE-VERIFIED: ${source.trim()}`.slice(0, 160));
                                   }
                                 }}
@@ -635,7 +639,7 @@ export const DailyAuditView: React.FC<DailyAuditViewProps> = ({
                                 aria-label={`Grade ${entry.selection} Lost`}
                                 onClick={() => {
                                   const source = window.prompt('Confirm the exact event and outcome, then enter the official result source URL (https://...). Cancel to leave pending.');
-                                  if (source && /^https?:\/\//i.test(source.trim())) {
+                                  if (source && /^https:\/\//i.test(source.trim())) {
                                     onSettleSinglePick(entry.id, 0, `SOURCE-VERIFIED: ${source.trim()}`.slice(0, 160));
                                   }
                                 }}

@@ -85,13 +85,13 @@ export const DailyBetsView: React.FC<DailyBetsViewProps> = ({
         ? crossSportTop10
         : predictionsBySport[selectedSport] ?? [];
     if (base.length === 0) {
-      return { avgEdge: 0, avgHybridProb: 0, avgEightScore: 0, highConvictionCount: 0 };
+      return { hasData: false, avgEdge: 0, avgHybridProb: 0, avgEightScore: 0, highConvictionCount: 0 };
     }
     const avgEdge = base.reduce((acc, b) => acc + b.edgePercent, 0) / base.length;
     const avgHybridProb = base.reduce((acc, b) => acc + b.hybridProbability, 0) / base.length;
     const avgEightScore = base.reduce((acc, b) => acc + b.eightPointNormalized, 0) / base.length;
     const highConvictionCount = base.filter((b) => b.confidenceTier === 'High Conviction').length;
-    return { avgEdge, avgHybridProb, avgEightScore, highConvictionCount };
+    return { hasData: true, avgEdge, avgHybridProb, avgEightScore, highConvictionCount };
   }, [selectedSport, crossSportTop10, predictionsBySport]);
 
   const activeSportRulesPreview =
@@ -116,7 +116,9 @@ export const DailyBetsView: React.FC<DailyBetsViewProps> = ({
               : `${SPORT_LABELS[selectedSport]} · Daily 10 Best Bets`}
           </h1>
           <p className="mt-1 text-sm text-slate-600 max-w-2xl">
-            Ranked by hybrid expected value combining sport-adapted 8-point fundamentals ({Math.round((1 - neuralBlendAlpha) * 100)}% prior) with CSV-trained neural probabilities ({Math.round(neuralBlendAlpha * 100)}% MLP).
+            {(selectedSport === 'cross-sport' ? crossSportTop10.length > 0 : (predictionsBySport[selectedSport] ?? []).length > 0)
+              ? `Ranked by hybrid expected value combining sport-adapted 8-point fundamentals (${Math.round((1 - neuralBlendAlpha) * 100)}% prior) with explicitly trained CSV neural probabilities (${Math.round(neuralBlendAlpha * 100)}% MLP).`
+              : 'No predictions available. The model must be explicitly trained on imported historical rows, and supplied fixture candidates must be available. No demo predictions are generated.'}
           </p>
         </div>
 
@@ -211,31 +213,30 @@ export const DailyBetsView: React.FC<DailyBetsViewProps> = ({
         <div className="p-4">
           <div className="text-xs text-slate-500">Top 10 Mean Expected Value</div>
           <div className="mt-1 text-xl font-semibold font-mono tabular-nums text-emerald-700">
-            {summaryStats.avgEdge >= 0 ? '+' : ''}
-            {summaryStats.avgEdge.toFixed(2)}%
+            {summaryStats.hasData ? <>{summaryStats.avgEdge >= 0 ? '+' : ''}{summaryStats.avgEdge.toFixed(2)}%</> : 'Unavailable'}
           </div>
-          <div className="mt-0.5 text-xs text-slate-500">vs bookmaker implied odds</div>
+          <div className="mt-0.5 text-xs text-slate-500">{summaryStats.hasData ? 'vs bookmaker implied odds' : 'Not trained or no eligible predictions'}</div>
         </div>
         <div className="p-4">
           <div className="text-xs text-slate-500">Mean Hybrid Win Probability</div>
           <div className="mt-1 text-xl font-semibold font-mono tabular-nums text-slate-900">
-            {(summaryStats.avgHybridProb * 100).toFixed(1)}%
+            {summaryStats.hasData ? (summaryStats.avgHybridProb * 100).toFixed(1) + '%' : 'Unavailable'}
           </div>
-          <div className="mt-0.5 text-xs text-slate-500">8-rule + MLP consensus</div>
+          <div className="mt-0.5 text-xs text-slate-500">{summaryStats.hasData ? '8-rule + MLP consensus' : 'Not trained or no eligible predictions'}</div>
         </div>
         <div className="p-4">
           <div className="text-xs text-slate-500">Mean 8-Point Model Rating</div>
           <div className="mt-1 text-xl font-semibold font-mono tabular-nums text-slate-900">
-            {summaryStats.avgEightScore.toFixed(2)} / 8.00
+            {summaryStats.hasData ? summaryStats.avgEightScore.toFixed(2) + ' / 8.00' : 'Unavailable'}
           </div>
-          <div className="mt-0.5 text-xs text-slate-500">Sport-adapted rule index</div>
+          <div className="mt-0.5 text-xs text-slate-500">{summaryStats.hasData ? 'Sport-adapted rule index' : 'Not trained or no eligible predictions'}</div>
         </div>
         <div className="p-4">
           <div className="text-xs text-slate-500">High-Conviction Selections</div>
           <div className="mt-1 text-xl font-semibold font-mono tabular-nums text-blue-700">
-            {summaryStats.highConvictionCount} of 10
+            {summaryStats.hasData ? summaryStats.highConvictionCount + ' of 10' : 'Unavailable'}
           </div>
-          <div className="mt-0.5 text-xs text-slate-500">Edge &ge; +6.5% &amp; Score &ge; 5.60</div>
+          <div className="mt-0.5 text-xs text-slate-500">{summaryStats.hasData ? 'Edge ≥ +6.5% and score ≥ 5.60' : 'Not trained or no eligible predictions'}</div>
         </div>
       </div>
 

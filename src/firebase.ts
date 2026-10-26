@@ -23,8 +23,8 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
-import { DailyAuditEntry, HistoricalMatchRow, SportId } from './types/sports';
-import { sanitizeDocId } from './engine/auditEngine';
+import { ALL_SPORTS, DailyAuditEntry, HistoricalMatchRow, SportId } from './types/sports';
+import { isSourceVerifiedScoreSummary, sanitizeDocId } from './engine/auditEngine';
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
@@ -188,6 +188,7 @@ export async function syncAuditCardToFirestore(
         ruleProbability: clampNum(entry.ruleProbability, 0, 1),
         neuralProbability: clampNum(entry.neuralProbability, 0, 1),
         hybridProbability: clampNum(entry.hybridProbability, 0, 1),
+        kellyFractionPercent: clampNum(entry.kellyFractionPercent, 0, 100),
         r1_motivation_stakes: clampNum(entry.rules.r1_motivation_stakes, 0, 10),
         r2_form_momentum: clampNum(entry.rules.r2_form_momentum, 0, 10),
         r3_h2h_standings_gap: clampNum(entry.rules.r3_h2h_standings_gap, 0, 10),
@@ -251,6 +252,13 @@ export async function commitAdaptedPicksBatchToFirestore(
 ): Promise<void> {
   const safeUid = sanitizeDocId(uid);
   const basePath = `workspaces/${safeUid}`;
+  if (settledEntries.some((entry) =>
+    entry.settlementStatus !== 'settled' ||
+    (entry.actualOutcome !== 0 && entry.actualOutcome !== 1) ||
+    !isSourceVerifiedScoreSummary(entry.scoreSummary)
+  )) {
+    throw new Error('Cloud adaptation blocked: every row must have a settled binary outcome and a valid SOURCE-VERIFIED HTTPS URL. URL syntax does not independently authenticate the source.');
+  }
   try {
     // First ensure any local settled picks exist in auditPicks with status 'settled' before transitioning to 'adapted'
     const prepBatch = writeBatch(db);
@@ -275,6 +283,7 @@ export async function commitAdaptedPicksBatchToFirestore(
           ruleProbability: clampNum(entry.ruleProbability, 0, 1),
           neuralProbability: clampNum(entry.neuralProbability, 0, 1),
           hybridProbability: clampNum(entry.hybridProbability, 0, 1),
+          kellyFractionPercent: clampNum(entry.kellyFractionPercent, 0, 100),
           r1_motivation_stakes: clampNum(entry.rules.r1_motivation_stakes, 0, 10),
           r2_form_momentum: clampNum(entry.rules.r2_form_momentum, 0, 10),
           r3_h2h_standings_gap: clampNum(entry.rules.r3_h2h_standings_gap, 0, 10),
@@ -330,6 +339,8 @@ export async function commitAdaptedPicksBatchToFirestore(
         r7_continental_fatigue: clampNum(entry.rules.r7_continental_fatigue, 0, 10),
         r8_coach_volatility: clampNum(entry.rules.r8_coach_volatility, 0, 10),
         outcomeWon: entry.actualOutcome === 1 ? 1 : 0,
+        sourceVerified: true,
+        sourceReference: entry.scoreSummary.replace(/^SOURCE-VERIFIED:\s*/, '').slice(0, 500),
         createdAt: serverTimestamp(),
       });
 
@@ -373,30 +384,49 @@ export function subscribeWorkspaceSettledMatches(
   return onSnapshot(
     q,
     (snap) => {
-      const rows: HistoricalMatchRow[] = snap.docs.map((d) => {
+      const rows: HistoricalMatchRow[] = snap.docs.flatMap((d): HistoricalMatchRow[] => {
         const data = d.data();
-        return {
+        const date = typeof data.date === 'string' ? data.date : '';
+        const parsedDate = /^\d{4}-\d{2}-\d{2}$/.test(date) ? new Date(`${date}T00:00:00Z`) : null;
+        const validDate = Boolean(parsedDate && !Number.isNaN(parsedDate.getTime()) && parsedDate.toISOString().slice(0, 10) === date);
+        const sport = data.sport as SportId;
+        const strings = ['competition', 'selection', 'opponent', 'market'];
+        const validStrings = strings.every((key) => typeof data[key] === 'string' && data[key].trim().length > 0);
+        const odds = data.decimalOdds;
+        const outcome = data.outcomeWon;
+        const ruleKeys = [
+          'r1_motivation_stakes', 'r2_form_momentum', 'r3_h2h_standings_gap', 'r4_tier_classification',
+          'r5_derby_rivalry', 'r6_squad_value_vs_form', 'r7_continental_fatigue', 'r8_coach_volatility',
+        ];
+        const validRules = ruleKeys.every((key) => typeof data[key] === 'number' && Number.isFinite(data[key]) && data[key] >= 0 && data[key] <= 10);
+        if (
+          data.sourceVerified !== true || typeof data.sourceReference !== 'string' || !isSourceVerifiedScoreSummary(`SOURCE-VERIFIED: ${data.sourceReference}`) ||
+          !validDate || !ALL_SPORTS.includes(sport) || !validStrings || typeof data.isHomeOrFavoredContext !== 'boolean' ||
+          typeof odds !== 'number' || !Number.isFinite(odds) || odds < 1.01 || odds > 100 ||
+          (outcome !== 0 && outcome !== 1) || !validRules
+        ) return [];
+        return [{
           id: d.id,
-          date: String(data.date || '2026-10-24'),
-          sport: (data.sport as SportId) || SportId.Soccer,
-          competition: String(data.competition || ''),
-          selection: String(data.selection || ''),
-          opponent: String(data.opponent || ''),
-          market: String(data.market || 'Moneyline'),
-          decimalOdds: Number(data.decimalOdds) || 1.8,
-          isHomeOrFavoredContext: Boolean(data.isHomeOrFavoredContext),
+          date,
+          sport,
+          competition: data.competition,
+          selection: data.selection,
+          opponent: data.opponent,
+          market: data.market,
+          decimalOdds: odds,
+          isHomeOrFavoredContext: data.isHomeOrFavoredContext,
           rules: {
-            r1_motivation_stakes: Number(data.r1_motivation_stakes) || 5,
-            r2_form_momentum: Number(data.r2_form_momentum) || 5,
-            r3_h2h_standings_gap: Number(data.r3_h2h_standings_gap) || 5,
-            r4_tier_classification: Number(data.r4_tier_classification) || 5,
-            r5_derby_rivalry: Number(data.r5_derby_rivalry) || 5,
-            r6_squad_value_vs_form: Number(data.r6_squad_value_vs_form) || 5,
-            r7_continental_fatigue: Number(data.r7_continental_fatigue) || 5,
-            r8_coach_volatility: Number(data.r8_coach_volatility) || 5,
+            r1_motivation_stakes: data.r1_motivation_stakes,
+            r2_form_momentum: data.r2_form_momentum,
+            r3_h2h_standings_gap: data.r3_h2h_standings_gap,
+            r4_tier_classification: data.r4_tier_classification,
+            r5_derby_rivalry: data.r5_derby_rivalry,
+            r6_squad_value_vs_form: data.r6_squad_value_vs_form,
+            r7_continental_fatigue: data.r7_continental_fatigue,
+            r8_coach_volatility: data.r8_coach_volatility,
           },
-          outcomeWon: data.outcomeWon === 1 ? 1 : 0,
-        };
+          outcomeWon: outcome,
+        }];
       });
       onRows(rows);
     },
@@ -410,7 +440,9 @@ export function subscribeWorkspaceSettledMatches(
 }
 
 /**
- * Real-time subscription to user's auditPicks subcollection
+ * Real-time subscription to user's auditPicks subcollection.
+ * Invalid legacy documents are omitted instead of being filled with invented dates,
+ * odds, probabilities, rule scores, or outcomes.
  */
 export function subscribeWorkspaceAuditPicks(
   uid: string,
@@ -427,43 +459,63 @@ export function subscribeWorkspaceAuditPicks(
   return onSnapshot(
     q,
     (snap) => {
-      const list: DailyAuditEntry[] = snap.docs.map((d) => {
+      const list: DailyAuditEntry[] = snap.docs.flatMap((d): DailyAuditEntry[] => {
         const data = d.data();
-        return {
+        const auditDate = typeof data.auditDate === 'string' ? data.auditDate : '';
+        const parsedDate = /^\d{4}-\d{2}-\d{2}$/.test(auditDate) ? new Date(`${auditDate}T00:00:00Z`) : null;
+        const validDate = Boolean(parsedDate && !Number.isNaN(parsedDate.getTime()) && parsedDate.toISOString().slice(0, 10) === auditDate);
+        const sport = data.sport as SportId;
+        const strings = ['competition', 'selection', 'opponent', 'market'];
+        const validStrings = strings.every((key) => typeof data[key] === 'string' && data[key].trim().length > 0);
+        const odds = data.decimalOdds;
+        const ruleKeys = [
+          'r1_motivation_stakes', 'r2_form_momentum', 'r3_h2h_standings_gap', 'r4_tier_classification',
+          'r5_derby_rivalry', 'r6_squad_value_vs_form', 'r7_continental_fatigue', 'r8_coach_volatility',
+        ];
+        const validRules = ruleKeys.every((key) => typeof data[key] === 'number' && Number.isFinite(data[key]) && data[key] >= 0 && data[key] <= 10);
+        const validProbability = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1;
+        const status = data.settlementStatus;
+        const outcome = data.actualOutcome;
+        if (
+          !validDate || !ALL_SPORTS.includes(sport) || !validStrings ||
+          typeof data.isHomeOrFavoredContext !== 'boolean' ||
+          typeof odds !== 'number' || !Number.isFinite(odds) || odds < 1.01 || odds > 100 ||
+          !validProbability(data.ruleProbability) || !validProbability(data.neuralProbability) ||
+          !validProbability(data.hybridProbability) ||
+          typeof data.kellyFractionPercent !== 'number' || !Number.isFinite(data.kellyFractionPercent) || data.kellyFractionPercent < 0 || data.kellyFractionPercent > 100 || !validRules ||
+          !['pending', 'settled', 'adapted'].includes(status) ||
+          (outcome !== -1 && outcome !== 0 && outcome !== 1) ||
+          typeof data.scoreSummary !== 'string'
+        ) return [];
+        return [{
           id: d.id,
-          auditDate: String(data.auditDate || '2026-10-24'),
-          sport: (data.sport as SportId) || SportId.Soccer,
-          competition: String(data.competition || ''),
-          selection: String(data.selection || ''),
-          opponent: String(data.opponent || ''),
-          market: String(data.market || 'Moneyline'),
-          isHomeOrFavoredContext: Boolean(data.isHomeOrFavoredContext),
-          decimalOdds: Number(data.decimalOdds) || 1.8,
-          kellyFractionPercent: 2.0,
-          ruleProbability: Number(data.ruleProbability) || 0.6,
-          neuralProbability: Number(data.neuralProbability) || 0.6,
-          hybridProbability: Number(data.hybridProbability) || 0.6,
-          cautionFlags: [],
+          auditDate,
+          sport,
+          competition: data.competition,
+          selection: data.selection,
+          opponent: data.opponent,
+          market: data.market,
+          isHomeOrFavoredContext: data.isHomeOrFavoredContext,
+          decimalOdds: odds,
+          kellyFractionPercent: data.kellyFractionPercent,
+          ruleProbability: data.ruleProbability,
+          neuralProbability: data.neuralProbability,
+          hybridProbability: data.hybridProbability,
+          cautionFlags: Array.isArray(data.cautionFlags) ? data.cautionFlags.filter((flag: unknown): flag is string => typeof flag === 'string') : [],
           rules: {
-            r1_motivation_stakes: Number(data.r1_motivation_stakes) || 5,
-            r2_form_momentum: Number(data.r2_form_momentum) || 5,
-            r3_h2h_standings_gap: Number(data.r3_h2h_standings_gap) || 5,
-            r4_tier_classification: Number(data.r4_tier_classification) || 5,
-            r5_derby_rivalry: Number(data.r5_derby_rivalry) || 5,
-            r6_squad_value_vs_form: Number(data.r6_squad_value_vs_form) || 5,
-            r7_continental_fatigue: Number(data.r7_continental_fatigue) || 5,
-            r8_coach_volatility: Number(data.r8_coach_volatility) || 5,
+            r1_motivation_stakes: data.r1_motivation_stakes,
+            r2_form_momentum: data.r2_form_momentum,
+            r3_h2h_standings_gap: data.r3_h2h_standings_gap,
+            r4_tier_classification: data.r4_tier_classification,
+            r5_derby_rivalry: data.r5_derby_rivalry,
+            r6_squad_value_vs_form: data.r6_squad_value_vs_form,
+            r7_continental_fatigue: data.r7_continental_fatigue,
+            r8_coach_volatility: data.r8_coach_volatility,
           },
-          settlementStatus:
-            data.settlementStatus === 'adapted'
-              ? 'adapted'
-              : data.settlementStatus === 'settled'
-                ? 'settled'
-                : 'pending',
-          actualOutcome:
-            data.actualOutcome === 1 ? 1 : data.actualOutcome === 0 ? 0 : -1,
-          scoreSummary: String(data.scoreSummary || ''),
-        };
+          settlementStatus: status as DailyAuditEntry['settlementStatus'],
+          actualOutcome: outcome as -1 | 0 | 1,
+          scoreSummary: data.scoreSummary,
+        }];
       });
       onEntries(list);
     },

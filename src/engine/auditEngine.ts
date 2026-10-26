@@ -25,6 +25,21 @@ function clamp(v: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, v));
 }
 
+/** A source-verification label is eligible only when followed by a valid HTTPS URL.
+ * This validates URL syntax, not the source's authenticity or the truth of its contents.
+ */
+export function isSourceVerifiedScoreSummary(value: string): boolean {
+  const prefix = 'SOURCE-VERIFIED:';
+  if (typeof value !== 'string' || !value.startsWith(prefix)) return false;
+  const source = value.slice(prefix.length).trim();
+  try {
+    const url = new URL(source);
+    return url.protocol === 'https:' && Boolean(url.hostname) && !url.username && !url.password;
+  } catch {
+    return false;
+  }
+}
+
 function hashStringSeed(str: string): number {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < str.length; i++) {
@@ -198,14 +213,14 @@ export function computeDailyAuditSummary(entries: DailyAuditEntry[]): DailyAudit
   const settled = entries.filter(
     (e) =>
       (e.settlementStatus === 'settled' || e.settlementStatus === 'adapted') &&
-      e.scoreSummary.startsWith('SOURCE-VERIFIED:') &&
+      isSourceVerifiedScoreSummary(e.scoreSummary) &&
       (e.actualOutcome === 0 || e.actualOutcome === 1)
   );
   const pendingCount = entries.filter((e) => e.settlementStatus === 'pending').length;
   const adaptedCount = entries.filter((e) => e.settlementStatus === 'adapted').length;
   const readyToAdaptCount = entries.filter(
     (e) => e.settlementStatus === 'settled' &&
-      e.scoreSummary.startsWith('SOURCE-VERIFIED:') &&
+      isSourceVerifiedScoreSummary(e.scoreSummary) &&
       (e.actualOutcome === 0 || e.actualOutcome === 1)
   ).length;
 
@@ -442,7 +457,7 @@ export function adaptNeuralEngineFromAudit(
 } {
   const newlySettledEntries = entries.filter(
     (e) => e.settlementStatus === 'settled' &&
-      e.scoreSummary.startsWith('SOURCE-VERIFIED:') &&
+      isSourceVerifiedScoreSummary(e.scoreSummary) &&
       (e.actualOutcome === 0 || e.actualOutcome === 1)
   );
 
@@ -520,7 +535,7 @@ export function adaptNeuralEngineFromAudit(
 
   const updatedEntries: DailyAuditEntry[] = entries.map((e) =>
     e.settlementStatus === 'settled' &&
-    e.scoreSummary.startsWith('SOURCE-VERIFIED:') &&
+    isSourceVerifiedScoreSummary(e.scoreSummary) &&
     (e.actualOutcome === 0 || e.actualOutcome === 1)
       ? { ...e, settlementStatus: 'adapted' }
       : e

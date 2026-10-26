@@ -27,12 +27,12 @@ npm run build
 
 ## Data and model safeguards
 
-- The seeded historical corpus and generated fixture pool are synthetic demo data. They must not be described as real historical performance or live fixtures.
-- When AI-search candidates are loaded for a sport/date, generated demo fixtures for that sport/date are removed from that ranking pool. AI-generated candidates and odds remain unverified.
+- The application starts with an empty corpus and an explicitly untrained model. Synthetic generators remain in the engine test suite only; they are not imported by the application or training UI.
+- No generated fixture pool is used in the application. AI-search candidates and estimated odds remain unverified and are not evidence that a fixture or market is real.
 - Search-grounded result grades are labelled `AI-UNVERIFIED:` and do not count as real settled results or enter model adaptation.
 - Simulated results are labelled `SIMULATED:` and do not count as real performance or enter model adaptation.
 - Manual settlement asks for an official result source URL. Only entries labelled `SOURCE-VERIFIED:` are eligible for the audit metrics and training-adaptation path. Verify the event identity, market rules, final outcome, and source yourself.
-- Model evaluation uses a chronological latest-20% holdout. Competitor coefficients used to build training/evaluation features are derived from training rows only. This improves leakage control but does not turn synthetic or biased source data into valid evidence.
+- Training starts only after an explicit user action with at least eight imported rows. CSV authenticity is not automatically verified; the user must check event identity, source, result and market rules. Holdout metrics are only descriptive of the supplied corpus and do not establish real-world predictive performance.
 
 ## Security and deployment limitations
 

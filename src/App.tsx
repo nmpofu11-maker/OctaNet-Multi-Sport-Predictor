@@ -26,6 +26,7 @@ import {
   rankCrossSportTop10,
   rankTop10BetsForSport,
   TrainedNeuralEngine,
+  createUntrainedNeuralEngine,
   trainNeuralNetworkOnCSV,
 } from './engine/neuralNetwork';
 import {
@@ -37,8 +38,7 @@ import {
   getPreviousDateISO,
   simulateDeterministicSettlement,
 } from './engine/auditEngine';
-import { generateHistoricalTrainingDataset } from './engine/sampleData';
-import { exportPredictionsToCSV } from './engine/csvParser';
+import { exportPredictionsToCSV, fingerprintHistoricalRows } from './engine/csvParser';
 import {
   commitAdaptedPicksBatchToFirestore,
   ensureUserWorkspace,
@@ -78,6 +78,47 @@ function triggerCSVDownload(csvContent: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+const TRAINING_STATE_STORAGE_KEY = 'octanet-training-state-v1';
+
+interface PersistedTrainingState {
+  version: 1;
+  rows: HistoricalMatchRow[];
+  hyperparams: NeuralHyperparameters;
+  engine: TrainedNeuralEngine;
+  savedAt: string;
+  trainedCorpusFingerprint?: string | null;
+}
+
+function readPersistedTrainingState(): PersistedTrainingState | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(TRAINING_STATE_STORAGE_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as Partial<PersistedTrainingState>;
+    if (
+      saved.version !== 1 || !Array.isArray(saved.rows) ||
+      !saved.hyperparams || !saved.engine || !saved.engine.report ||
+      !saved.engine.weights || saved.rows.length > 50000
+    ) return null;
+    return saved as PersistedTrainingState;
+  } catch {
+    return null;
+  }
+}
+
+function canWriteTrainingState(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const raw = window.localStorage.getItem(TRAINING_STATE_STORAGE_KEY);
+    if (!raw) return true;
+    const saved = JSON.parse(raw) as Partial<PersistedTrainingState>;
+    return saved.version === 1 && Array.isArray(saved.rows) && Boolean(saved.hyperparams) &&
+      Boolean(saved.engine?.report) && Boolean(saved.engine?.weights) && saved.rows.length <= 50000;
+  } catch {
+    return false;
+  }
+}
+
 function formatCloudErrorMessage(raw: string): { text: string; upgradeUrl?: string } {
   if (raw.includes("Free daily read units per project (free tier database)")) {
     const upgradeUrl = `https://console.firebase.google.com/project/${firebaseConfig.projectId}/firestore/databases/${firebaseConfig.firestoreDatabaseId}/data?openUpgradeDialog=true`;
@@ -99,33 +140,46 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Date & Active Sport Selection
-  const [selectedDate, setSelectedDate] = useState<string>('2026-10-25');
+  const [selectedDate, setSelectedDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [selectedSport, setSelectedSport] = useState<SportId | 'cross-sport'>(SportId.Soccer);
 
   // Initial Seed Corpus, Weights & Neural Engine
   const initialState = useMemo(() => {
     const weights = getDefaultSportWeights();
-    const baseRows = generateHistoricalTrainingDataset(60);
-    const trained = trainNeuralNetworkOnCSV(baseRows, DEFAULT_HYPERPARAMETERS, weights);
-    const yesterdayDate = getPreviousDateISO('2026-10-25');
-    const yesterdayCard = buildLockedAuditCardForDate(
-      yesterdayDate,
-      trained,
-      weights,
-      [],
-      false
-    );
-    return { weights, baseRows, trained, yesterdayDate, yesterdayCard };
+    const baseRows: HistoricalMatchRow[] = [];
+    const untrained = createUntrainedNeuralEngine(DEFAULT_HYPERPARAMETERS);
+    const yesterdayDate = getPreviousDateISO(new Date().toISOString().slice(0, 10));
+    const yesterdayCard: DailyAuditEntry[] = [];
+    return { weights, baseRows, trained: untrained, yesterdayDate, yesterdayCard };
   }, []);
 
   const [sportWeights, setSportWeights] = useState<SportRuleWeights>(initialState.weights);
+  const savedTrainingState = useMemo(() => readPersistedTrainingState(), []);
+  const persistenceAllowed = useMemo(() => canWriteTrainingState(), []);
   const [historicalRows, setHistoricalRows] = useState<HistoricalMatchRow[]>(
-    initialState.baseRows
+    savedTrainingState?.rows ?? initialState.baseRows
   );
   const [hyperparams, setHyperparams] = useState<NeuralHyperparameters>(
-    DEFAULT_HYPERPARAMETERS
+    savedTrainingState?.hyperparams ?? DEFAULT_HYPERPARAMETERS
   );
-  const [engine, setEngine] = useState<TrainedNeuralEngine>(initialState.trained);
+  const [engine, setEngine] = useState<TrainedNeuralEngine>(
+    savedTrainingState?.engine ?? initialState.trained
+  );
+  const [trainedCorpusFingerprint, setTrainedCorpusFingerprint] = useState<string | null>(
+    savedTrainingState?.trainedCorpusFingerprint ?? null
+  );
+  const activeCorpusFingerprint = useMemo(
+    () => fingerprintHistoricalRows(historicalRows),
+    [historicalRows]
+  );
+  const isTrainedForActiveCorpus = Boolean(
+    trainedCorpusFingerprint &&
+    trainedCorpusFingerprint === activeCorpusFingerprint &&
+    engine.report.epochHistory.length > 0 &&
+    engine.report.totalRows === historicalRows.length &&
+    Object.keys(hyperparams).every((key) => engine.hyperparams[key as keyof NeuralHyperparameters] === hyperparams[key as keyof NeuralHyperparameters]) &&
+    historicalRows.length >= 8
+  );
 
   // Daily Audit Cards & Adaptation State
   const [auditDate, setAuditDate] = useState<string>(initialState.yesterdayDate);
@@ -171,6 +225,27 @@ export default function App() {
     null
   );
 
+  // Persist imported historical rows and explicitly trained weights across refreshes.
+  // This versioned key has no generated/demo seed data and never silently reseeds a corpus.
+  useEffect(() => {
+    if (!persistenceAllowed) {
+      setCloudBannerError({ text: 'Saved training state could not be safely read. It was not overwritten; export or recover your saved corpus before continuing.' });
+      return;
+    }
+    try {
+      window.localStorage.setItem(TRAINING_STATE_STORAGE_KEY, JSON.stringify({
+        version: 1,
+        rows: historicalRows,
+        hyperparams,
+        engine,
+        trainedCorpusFingerprint,
+        savedAt: new Date().toISOString(),
+      } satisfies PersistedTrainingState));
+    } catch {
+      setCloudBannerError({ text: 'Local persistence failed. Export your active CSV corpus before leaving this session.' });
+    }
+  }, [historicalRows, hyperparams, engine, trainedCorpusFingerprint, persistenceAllowed]);
+
   // Subscribe to Firebase Auth & Firestore Workspace listeners when authenticated
   useEffect(() => {
     const unsubAuth = subscribeAuthState((user) => {
@@ -209,16 +284,8 @@ export default function App() {
               const existingIds = new Set(prev.map((x) => x.id));
               const additions = freshRows.filter((r) => !existingIds.has(r.id));
               if (additions.length === 0) return prev;
-              const merged = [...prev, ...additions];
-              setEngine((prevEng) =>
-                trainNeuralNetworkOnCSV(
-                  merged,
-                  prevEng.hyperparams,
-                  sportWeights,
-                  prevEng.intelligencePayload
-                )
-              );
-              return merged;
+              // Cloud arrivals update the corpus only. Training is always an explicit user action.
+              return [...prev, ...additions];
             });
           },
           (msg) => setCloudBannerError(formatCloudErrorMessage(msg))
@@ -278,14 +345,18 @@ export default function App() {
   const predictionsBySport = useMemo(() => {
     const map = {} as Record<SportId, PredictionResult[]>;
     for (const s of ALL_SPORTS) {
-      map[s] = rankTop10BetsForSport(dailyFixtures, s, engine, sportWeights, 10);
+      map[s] = isTrainedForActiveCorpus
+        ? rankTop10BetsForSport(dailyFixtures, s, engine, sportWeights, 10)
+        : [];
     }
     return map;
-  }, [dailyFixtures, engine, sportWeights]);
+  }, [dailyFixtures, engine, historicalRows.length, sportWeights, isTrainedForActiveCorpus]);
 
   const crossSportTop10 = useMemo(
-    () => rankCrossSportTop10(dailyFixtures, engine, sportWeights, 10),
-    [dailyFixtures, engine, sportWeights]
+    () => isTrainedForActiveCorpus
+      ? rankCrossSportTop10(dailyFixtures, engine, sportWeights, 10)
+      : [],
+    [dailyFixtures, engine, historicalRows.length, sportWeights, isTrainedForActiveCorpus]
   );
 
   // Active Audit Card & Summary
@@ -521,6 +592,10 @@ export default function App() {
   };
 
   const handleAdaptNeuralNetwork = async () => {
+    if (!isTrainedForActiveCorpus) {
+      setLiveAuditMessage({ type: 'error', text: 'Adaptation blocked: explicitly train the current historical CSV corpus first. Audit adaptation cannot perform the initial training step.' });
+      return;
+    }
     const entries = auditCardsByDate[auditDate] ?? [];
     setIsAdapting(true);
     setLiveAuditMessage(null);
@@ -541,6 +616,7 @@ export default function App() {
       setHistoricalRows(result.nextCorpus);
       setHyperparams(result.nextHyperparams);
       setEngine(result.nextEngine);
+      setTrainedCorpusFingerprint(fingerprintHistoricalRows(result.nextCorpus));
       setAuditCardsByDate((prev) => ({
         ...prev,
         [auditDate]: result.updatedEntries,
@@ -600,28 +676,30 @@ export default function App() {
     });
   };
 
+  const handleLoadRows = (rows: HistoricalMatchRow[]) => {
+    setHistoricalRows(rows);
+    // A corpus import invalidates any previous model, even when row counts match.
+    setTrainedCorpusFingerprint(null);
+    setEngine(createUntrainedNeuralEngine(hyperparams));
+  };
+
   const handleTrainWithRows = (
     rows: HistoricalMatchRow[],
     nextParams: NeuralHyperparameters
   ) => {
-    setHistoricalRows(rows);
-    setHyperparams(nextParams);
+    if (rows.length < 8) {
+      setLiveAuditMessage({ type: 'error', text: 'Training blocked: import at least 8 valid historical rows first.' });
+      return;
+    }
     const nextEngine = trainNeuralNetworkOnCSV(
       rows,
       nextParams,
-      sportWeights,
-      engine.intelligencePayload
+      sportWeights
     );
+    setHistoricalRows(rows);
+    setHyperparams(nextParams);
     setEngine(nextEngine);
-  };
-
-  const handleResetDefaultDataset = () => {
-    const defaultRows = generateHistoricalTrainingDataset(60);
-    setHistoricalRows(defaultRows);
-    setHyperparams(DEFAULT_HYPERPARAMETERS);
-    setEngine(
-      trainNeuralNetworkOnCSV(defaultRows, DEFAULT_HYPERPARAMETERS, sportWeights)
-    );
+    setTrainedCorpusFingerprint(fingerprintHistoricalRows(rows));
   };
 
   const handleUpdateSportWeights = (
@@ -726,6 +804,9 @@ export default function App() {
   };
 
   const handleRecalibrateNotesAI = async () => {
+    if (!isTrainedForActiveCorpus) {
+      throw new Error('AI model notes are unavailable until the active historical corpus has been explicitly trained.');
+    }
     setIsCalibratingAI(true);
     try {
       const sampleTeams = Object.entries(engine.intelligencePayload.team_intelligence_matrices)
@@ -789,7 +870,7 @@ export default function App() {
         trackedCount={trackedList.length}
         readyAuditCount={activeAuditSummary.readyToAdaptCount}
         trainedRowsCount={historicalRows.length}
-        hybridAccuracy={engine.report.hybridValAccuracy}
+        hybridAccuracy={isTrainedForActiveCorpus ? engine.report.hybridValAccuracy : null}
         mobileOpen={mobileMenuOpen}
         onCloseMobile={() => setMobileMenuOpen(false)}
       />
@@ -860,7 +941,7 @@ export default function App() {
 
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-[1360px] w-full mx-auto space-y-4">
           <div role="note" className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-xs leading-5 text-amber-900">
-            <strong>Evidence status:</strong> Generated demo fixtures and synthetic training rows are not real-world evidence. Gemini-search candidates and estimated odds are not independently verified. Only manually verified or trusted-source final results may be used for learning; simulated outcomes are excluded.
+            <strong>Model status:</strong> {isTrainedForActiveCorpus ? `TRAINED on ${historicalRows.length} user-supplied historical rows; data authenticity is not independently verified.` : 'UNTRAINED or corpus/training settings changed — explicit training is required before predictions are available.'} OctaNet does not generate demo fixtures or synthetic training rows. AI-search fixture candidates and estimated odds are unverified. Simulated outcomes are excluded from learning.
           </div>
           {cloudBannerError && (
             <div
@@ -930,6 +1011,7 @@ export default function App() {
               isFetchingLiveResults={isFetchingLiveResults}
               liveAuditMessage={liveAuditMessage}
               onAdaptNeuralNetwork={handleAdaptNeuralNetwork}
+              isModelTrained={isTrainedForActiveCorpus}
               isAdapting={isAdapting}
               lastAdaptationReport={lastAdaptationReport}
               isCloudSynced={Boolean(currentUser)}
@@ -943,8 +1025,9 @@ export default function App() {
               hyperparams={hyperparams}
               sportWeights={sportWeights}
               onUpdateHyperparams={setHyperparams}
+              onLoadRows={handleLoadRows}
               onTrainWithRows={handleTrainWithRows}
-              onResetDefaultDataset={handleResetDefaultDataset}
+              trainedCorpusFingerprint={trainedCorpusFingerprint}
             />
           )}
 

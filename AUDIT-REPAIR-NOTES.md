@@ -8,17 +8,18 @@
 - Deterministic simulated settlements are explicitly prefixed `SIMULATED:` and excluded from real performance metrics and adaptation.
 - Gemini-generated settlement grades are prefixed `AI-UNVERIFIED:` and are not eligible for adaptation. Manual Won/Lost grading now asks for an official source URL; only records tagged `SOURCE-VERIFIED:` are eligible for real metrics and adaptation.
 - Startup and newly created historical audit cards are no longer auto-settled with generated outcomes.
-- When AI-search candidates are synced for a sport/date, that sport's generated demo fixtures are removed from the ranking pool rather than blended with them. Existing AI-search candidates are replaced per sport to avoid accumulating duplicates.
-- The UI now warns that generated data, AI-grounded candidates, and estimated odds are not independently verified real-world evidence.
+- The application no longer imports or generates demo fixtures at runtime. AI-search fixture candidates remain explicitly unverified and are not evidence that the fixture or market is real.
+- Startup now uses an empty corpus and an explicitly UNTRAINED engine. Performance metrics and daily predictions are blocked until the active corpus is explicitly trained. CSV uploads are user-supplied and not automatically source-verified.
 - AI API request bodies are size-limited and validated; a simple per-IP rate limit is included.
 
 ## Important remaining limitations
 
 - The Gemini Google Search workflow is not a verified fixture/results provider. Grounding sources are surfaced, but this app does not independently confirm event IDs, scores, market settlement, or live executable bookmaker odds. Treat these results as unverified until checked against trusted sources.
 - The rate limiter is only a basic abuse guard and is not authentication. Before exposing the server publicly, add real authentication/authorization (and ideally provider-side fixture/result APIs). Do not treat this package as production-secure.
-- Existing seeded historical rows remain synthetic. They are useful for UI/demo testing only and must not be used to claim real predictive performance. Start evaluation with an independently sourced, dated historical dataset.
-- The browser's training state is not yet a complete durable model checkpoint. Export/back up any genuine CSV corpus before changing versions; do not assume weights or the full uploaded corpus are restored from Firebase.
-- Accuracy and Brier scores are only meaningful when calculated on untouched, independently verified outcomes. A chronological split improves leakage control but does not make synthetic data representative.
+- Synthetic row/fixture generators remain referenced by engine unit tests only; the app and training UI no longer import them. Do not use test fixtures to claim real predictive performance. Start evaluation with an independently sourced, dated historical dataset.
+- The active corpus, hyperparameters and trained engine are stored in versioned browser local storage to survive refreshes on the same browser/device. This is not a durable server backup or cross-device sync. Export and separately back up genuine CSV data; storage errors are surfaced rather than silently reseeding the corpus.
+- Cloud training rows are accepted only when marked source-verified, include a source URL, and pass strict field validation; missing/invalid fields are rejected rather than filled with invented defaults. This flag records a manual verification claim, not automated proof that the linked source is authentic.
+- Accuracy and Brier scores are only meaningful when calculated on untouched, independently verified outcomes. A chronological split improves leakage control but does not make user-supplied data representative.
 
 ## Local checks
 
