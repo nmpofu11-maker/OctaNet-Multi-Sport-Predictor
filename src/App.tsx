@@ -78,6 +78,33 @@ function triggerCSVDownload(csvContent: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+const TRAINING_STATE_STORAGE_KEY = 'octanet-training-state-v1';
+
+interface PersistedTrainingState {
+  version: 1;
+  rows: HistoricalMatchRow[];
+  hyperparams: NeuralHyperparameters;
+  engine: TrainedNeuralEngine;
+  savedAt: string;
+}
+
+function readPersistedTrainingState(): PersistedTrainingState | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(TRAINING_STATE_STORAGE_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as Partial<PersistedTrainingState>;
+    if (
+      saved.version !== 1 || !Array.isArray(saved.rows) ||
+      !saved.hyperparams || !saved.engine || !saved.engine.report ||
+      !saved.engine.weights || saved.rows.length > 50000
+    ) return null;
+    return saved as PersistedTrainingState;
+  } catch {
+    return null;
+  }
+}
+
 function formatCloudErrorMessage(raw: string): { text: string; upgradeUrl?: string } {
   if (raw.includes("Free daily read units per project (free tier database)")) {
     const upgradeUrl = `https://console.firebase.google.com/project/${firebaseConfig.projectId}/firestore/databases/${firebaseConfig.firestoreDatabaseId}/data?openUpgradeDialog=true`;
@@ -106,20 +133,23 @@ export default function App() {
   const initialState = useMemo(() => {
     const weights = getDefaultSportWeights();
     const baseRows: HistoricalMatchRow[] = [];
-    const untrained = createUntrainedNeuralEngine(DEFAULT_HYPERPARAMETERS, weights);
+    const untrained = createUntrainedNeuralEngine(DEFAULT_HYPERPARAMETERS);
     const yesterdayDate = getPreviousDateISO(new Date().toISOString().slice(0, 10));
     const yesterdayCard: DailyAuditEntry[] = [];
     return { weights, baseRows, trained: untrained, yesterdayDate, yesterdayCard };
   }, []);
 
   const [sportWeights, setSportWeights] = useState<SportRuleWeights>(initialState.weights);
+  const savedTrainingState = useMemo(() => readPersistedTrainingState(), []);
   const [historicalRows, setHistoricalRows] = useState<HistoricalMatchRow[]>(
-    initialState.baseRows
+    savedTrainingState?.rows ?? initialState.baseRows
   );
   const [hyperparams, setHyperparams] = useState<NeuralHyperparameters>(
-    DEFAULT_HYPERPARAMETERS
+    savedTrainingState?.hyperparams ?? DEFAULT_HYPERPARAMETERS
   );
-  const [engine, setEngine] = useState<TrainedNeuralEngine>(initialState.trained);
+  const [engine, setEngine] = useState<TrainedNeuralEngine>(
+    savedTrainingState?.engine ?? initialState.trained
+  );
 
   // Daily Audit Cards & Adaptation State
   const [auditDate, setAuditDate] = useState<string>(initialState.yesterdayDate);
@@ -164,6 +194,22 @@ export default function App() {
   const [inspectedPrediction, setInspectedPrediction] = useState<PredictionResult | null>(
     null
   );
+
+  // Persist imported historical rows and explicitly trained weights across refreshes.
+  // This versioned key has no generated/demo seed data and never silently reseeds a corpus.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(TRAINING_STATE_STORAGE_KEY, JSON.stringify({
+        version: 1,
+        rows: historicalRows,
+        hyperparams,
+        engine,
+        savedAt: new Date().toISOString(),
+      } satisfies PersistedTrainingState));
+    } catch {
+      setCloudBannerError({ text: 'Local persistence failed. Export your active CSV corpus before leaving this session.' });
+    }
+  }, [historicalRows, hyperparams, engine]);
 
   // Subscribe to Firebase Auth & Firestore Workspace listeners when authenticated
   useEffect(() => {
@@ -264,7 +310,7 @@ export default function App() {
   const predictionsBySport = useMemo(() => {
     const map = {} as Record<SportId, PredictionResult[]>;
     for (const s of ALL_SPORTS) {
-      map[s] = engine.report.epochHistory.length >= 1 && historicalRows.length >= 8
+      map[s] = engine.report.epochHistory.length >= 1 && engine.report.totalRows === historicalRows.length && historicalRows.length >= 8
         ? rankTop10BetsForSport(dailyFixtures, s, engine, sportWeights, 10)
         : [];
     }
@@ -272,7 +318,7 @@ export default function App() {
   }, [dailyFixtures, engine, historicalRows.length, sportWeights]);
 
   const crossSportTop10 = useMemo(
-    () => engine.report.epochHistory.length >= 1 && historicalRows.length >= 8
+    () => engine.report.epochHistory.length >= 1 && engine.report.totalRows === historicalRows.length && historicalRows.length >= 8
       ? rankCrossSportTop10(dailyFixtures, engine, sportWeights, 10)
       : [],
     [dailyFixtures, engine, historicalRows.length, sportWeights]
@@ -592,6 +638,8 @@ export default function App() {
 
   const handleLoadRows = (rows: HistoricalMatchRow[]) => {
     setHistoricalRows(rows);
+    // Imported rows are not trained until the user explicitly starts training.
+    setEngine(createUntrainedNeuralEngine(hyperparams));
   };
 
   const handleTrainWithRows = (
@@ -778,7 +826,7 @@ export default function App() {
         trackedCount={trackedList.length}
         readyAuditCount={activeAuditSummary.readyToAdaptCount}
         trainedRowsCount={historicalRows.length}
-        hybridAccuracy={engine.report.epochHistory.length > 0 && historicalRows.length >= 8 ? engine.report.hybridValAccuracy : null}
+        hybridAccuracy={engine.report.epochHistory.length > 0 && engine.report.totalRows === historicalRows.length && historicalRows.length >= 8 ? engine.report.hybridValAccuracy : null}
         mobileOpen={mobileMenuOpen}
         onCloseMobile={() => setMobileMenuOpen(false)}
       />
