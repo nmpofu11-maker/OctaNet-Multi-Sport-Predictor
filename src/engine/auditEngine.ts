@@ -19,7 +19,7 @@ import {
   TrainedNeuralEngine,
   trainNeuralNetworkOnCSV,
 } from './neuralNetwork';
-import { generateDailyFixturesForDate } from './sampleData';
+
 
 function clamp(v: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, v));
