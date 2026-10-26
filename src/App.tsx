@@ -38,7 +38,7 @@ import {
   getPreviousDateISO,
   simulateDeterministicSettlement,
 } from './engine/auditEngine';
-import { exportPredictionsToCSV } from './engine/csvParser';
+import { exportPredictionsToCSV, fingerprintHistoricalRows } from './engine/csvParser';
 import {
   commitAdaptedPicksBatchToFirestore,
   ensureUserWorkspace,
@@ -86,6 +86,7 @@ interface PersistedTrainingState {
   hyperparams: NeuralHyperparameters;
   engine: TrainedNeuralEngine;
   savedAt: string;
+  trainedCorpusFingerprint?: string | null;
 }
 
 function readPersistedTrainingState(): PersistedTrainingState | null {
@@ -164,6 +165,20 @@ export default function App() {
   const [engine, setEngine] = useState<TrainedNeuralEngine>(
     savedTrainingState?.engine ?? initialState.trained
   );
+  const [trainedCorpusFingerprint, setTrainedCorpusFingerprint] = useState<string | null>(
+    savedTrainingState?.trainedCorpusFingerprint ?? null
+  );
+  const activeCorpusFingerprint = useMemo(
+    () => fingerprintHistoricalRows(historicalRows),
+    [historicalRows]
+  );
+  const isTrainedForActiveCorpus = Boolean(
+    trainedCorpusFingerprint &&
+    trainedCorpusFingerprint === activeCorpusFingerprint &&
+    engine.report.epochHistory.length > 0 &&
+    engine.report.totalRows === historicalRows.length &&
+    historicalRows.length >= 8
+  );
 
   // Daily Audit Cards & Adaptation State
   const [auditDate, setAuditDate] = useState<string>(initialState.yesterdayDate);
@@ -222,12 +237,13 @@ export default function App() {
         rows: historicalRows,
         hyperparams,
         engine,
+        trainedCorpusFingerprint,
         savedAt: new Date().toISOString(),
       } satisfies PersistedTrainingState));
     } catch {
       setCloudBannerError({ text: 'Local persistence failed. Export your active CSV corpus before leaving this session.' });
     }
-  }, [historicalRows, hyperparams, engine, persistenceAllowed]);
+  }, [historicalRows, hyperparams, engine, trainedCorpusFingerprint, persistenceAllowed]);
 
   // Subscribe to Firebase Auth & Firestore Workspace listeners when authenticated
   useEffect(() => {
@@ -328,7 +344,7 @@ export default function App() {
   const predictionsBySport = useMemo(() => {
     const map = {} as Record<SportId, PredictionResult[]>;
     for (const s of ALL_SPORTS) {
-      map[s] = engine.report.epochHistory.length >= 1 && engine.report.totalRows === historicalRows.length && historicalRows.length >= 8
+      map[s] = isTrainedForActiveCorpus
         ? rankTop10BetsForSport(dailyFixtures, s, engine, sportWeights, 10)
         : [];
     }
@@ -336,7 +352,7 @@ export default function App() {
   }, [dailyFixtures, engine, historicalRows.length, sportWeights]);
 
   const crossSportTop10 = useMemo(
-    () => engine.report.epochHistory.length >= 1 && engine.report.totalRows === historicalRows.length && historicalRows.length >= 8
+    () => isTrainedForActiveCorpus
       ? rankCrossSportTop10(dailyFixtures, engine, sportWeights, 10)
       : [],
     [dailyFixtures, engine, historicalRows.length, sportWeights]
@@ -595,6 +611,7 @@ export default function App() {
       setHistoricalRows(result.nextCorpus);
       setHyperparams(result.nextHyperparams);
       setEngine(result.nextEngine);
+      setTrainedCorpusFingerprint(fingerprintHistoricalRows(result.nextCorpus));
       setAuditCardsByDate((prev) => ({
         ...prev,
         [auditDate]: result.updatedEntries,
@@ -656,7 +673,8 @@ export default function App() {
 
   const handleLoadRows = (rows: HistoricalMatchRow[]) => {
     setHistoricalRows(rows);
-    // Imported rows are not trained until the user explicitly starts training.
+    // A corpus import invalidates any previous model, even when row counts match.
+    setTrainedCorpusFingerprint(null);
     setEngine(createUntrainedNeuralEngine(hyperparams));
   };
 
@@ -676,6 +694,7 @@ export default function App() {
     setHistoricalRows(rows);
     setHyperparams(nextParams);
     setEngine(nextEngine);
+    setTrainedCorpusFingerprint(fingerprintHistoricalRows(rows));
   };
 
   const handleUpdateSportWeights = (
@@ -780,7 +799,7 @@ export default function App() {
   };
 
   const handleRecalibrateNotesAI = async () => {
-    if (engine.report.epochHistory.length === 0 || engine.report.totalRows !== historicalRows.length || historicalRows.length < 8) {
+    if (!isTrainedForActiveCorpus) {
       throw new Error('AI model notes are unavailable until the active historical corpus has been explicitly trained.');
     }
     setIsCalibratingAI(true);
@@ -846,7 +865,7 @@ export default function App() {
         trackedCount={trackedList.length}
         readyAuditCount={activeAuditSummary.readyToAdaptCount}
         trainedRowsCount={historicalRows.length}
-        hybridAccuracy={engine.report.epochHistory.length > 0 && engine.report.totalRows === historicalRows.length && historicalRows.length >= 8 ? engine.report.hybridValAccuracy : null}
+        hybridAccuracy={isTrainedForActiveCorpus ? engine.report.hybridValAccuracy : null}
         mobileOpen={mobileMenuOpen}
         onCloseMobile={() => setMobileMenuOpen(false)}
       />
@@ -917,7 +936,7 @@ export default function App() {
 
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-[1360px] w-full mx-auto space-y-4">
           <div role="note" className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-xs leading-5 text-amber-900">
-            <strong>Model status:</strong> UNTRAINED until you explicitly train on imported historical results. OctaNet starts with an empty corpus and never generates demo fixtures or synthetic training rows. Uploaded CSV contents are user-supplied and are not independently verified by the app. AI-search fixture candidates and estimated odds are also unverified. Simulated outcomes are excluded from learning.
+            <strong>Model status:</strong> {isTrainedForActiveCorpus ? `TRAINED on ${historicalRows.length} user-supplied historical rows; data authenticity is not independently verified.` : 'UNTRAINED or active corpus changed — explicit training is required before predictions are available.'} OctaNet does not generate demo fixtures or synthetic training rows. AI-search fixture candidates and estimated odds are unverified. Simulated outcomes are excluded from learning.
           </div>
           {cloudBannerError && (
             <div
@@ -1002,6 +1021,7 @@ export default function App() {
               onUpdateHyperparams={setHyperparams}
               onLoadRows={handleLoadRows}
               onTrainWithRows={handleTrainWithRows}
+              trainedCorpusFingerprint={trainedCorpusFingerprint}
             />
           )}
 
