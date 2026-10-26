@@ -126,7 +126,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Date & Active Sport Selection
-  const [selectedDate, setSelectedDate] = useState<string>('2026-10-25');
+  const [selectedDate, setSelectedDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [selectedSport, setSelectedSport] = useState<SportId | 'cross-sport'>(SportId.Soccer);
 
   // Initial Seed Corpus, Weights & Neural Engine
