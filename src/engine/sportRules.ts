@@ -709,7 +709,7 @@ export function evaluateEightPointModel(
   rules: RuleScoreVector,
   weights: Record<RuleKey, number>,
   isHomeOrFavored: boolean,
-  decimalOdds: number,
+  _decimalOdds: number,
   homeMult = 1.0,
   formMult = 1.0,
   volatilityIndex = 0.24,
@@ -816,10 +816,8 @@ export function evaluateEightPointModel(
   const eightPointScore100 = clamp(dampedTen * 10, 0, 100);
   const eightPointScale8 = clamp((dampedTen / 10) * 8, 0, 8);
 
-  const impliedProb = clamp(1 / Math.max(1.05, decimalOdds), 0.05, 0.95);
-  const impliedLogit = Math.log(impliedProb / (1 - impliedProb));
   const ruleSignal = (dampedTen - 5.65) * 0.36;
-  const combinedLogit = impliedLogit * 0.72 + ruleSignal + (dampedTen - 5.0) * 0.14;
+  const combinedLogit = ruleSignal + (dampedTen - 5.0) * 0.14;
 
   // In watchlist volatile leagues or fierce derbies, shrink extreme probabilities toward equilibrium
   const rawProb = clamp(1 / (1 + Math.exp(-combinedLogit)), 0.04, 0.95);
