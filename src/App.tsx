@@ -26,6 +26,7 @@ import {
   rankCrossSportTop10,
   rankTop10BetsForSport,
   TrainedNeuralEngine,
+  createUntrainedNeuralEngine,
   trainNeuralNetworkOnCSV,
 } from './engine/neuralNetwork';
 import {
@@ -37,7 +38,6 @@ import {
   getPreviousDateISO,
   simulateDeterministicSettlement,
 } from './engine/auditEngine';
-import { generateHistoricalTrainingDataset } from './engine/sampleData';
 import { exportPredictionsToCSV } from './engine/csvParser';
 import {
   commitAdaptedPicksBatchToFirestore,
@@ -105,17 +105,11 @@ export default function App() {
   // Initial Seed Corpus, Weights & Neural Engine
   const initialState = useMemo(() => {
     const weights = getDefaultSportWeights();
-    const baseRows = generateHistoricalTrainingDataset(60);
-    const trained = trainNeuralNetworkOnCSV(baseRows, DEFAULT_HYPERPARAMETERS, weights);
-    const yesterdayDate = getPreviousDateISO('2026-10-25');
-    const yesterdayCard = buildLockedAuditCardForDate(
-      yesterdayDate,
-      trained,
-      weights,
-      [],
-      false
-    );
-    return { weights, baseRows, trained, yesterdayDate, yesterdayCard };
+    const baseRows: HistoricalMatchRow[] = [];
+    const untrained = createUntrainedNeuralEngine(DEFAULT_HYPERPARAMETERS, weights);
+    const yesterdayDate = getPreviousDateISO(new Date().toISOString().slice(0, 10));
+    const yesterdayCard: DailyAuditEntry[] = [];
+    return { weights, baseRows, trained: untrained, yesterdayDate, yesterdayCard };
   }, []);
 
   const [sportWeights, setSportWeights] = useState<SportRuleWeights>(initialState.weights);
@@ -209,16 +203,8 @@ export default function App() {
               const existingIds = new Set(prev.map((x) => x.id));
               const additions = freshRows.filter((r) => !existingIds.has(r.id));
               if (additions.length === 0) return prev;
-              const merged = [...prev, ...additions];
-              setEngine((prevEng) =>
-                trainNeuralNetworkOnCSV(
-                  merged,
-                  prevEng.hyperparams,
-                  sportWeights,
-                  prevEng.intelligencePayload
-                )
-              );
-              return merged;
+              // Cloud arrivals update the corpus only. Training is always an explicit user action.
+              return [...prev, ...additions];
             });
           },
           (msg) => setCloudBannerError(formatCloudErrorMessage(msg))
@@ -278,14 +264,18 @@ export default function App() {
   const predictionsBySport = useMemo(() => {
     const map = {} as Record<SportId, PredictionResult[]>;
     for (const s of ALL_SPORTS) {
-      map[s] = rankTop10BetsForSport(dailyFixtures, s, engine, sportWeights, 10);
+      map[s] = engine.report.epochHistory.length >= 1 && historicalRows.length >= 8
+        ? rankTop10BetsForSport(dailyFixtures, s, engine, sportWeights, 10)
+        : [];
     }
     return map;
-  }, [dailyFixtures, engine, sportWeights]);
+  }, [dailyFixtures, engine, historicalRows.length, sportWeights]);
 
   const crossSportTop10 = useMemo(
-    () => rankCrossSportTop10(dailyFixtures, engine, sportWeights, 10),
-    [dailyFixtures, engine, sportWeights]
+    () => engine.report.epochHistory.length >= 1 && historicalRows.length >= 8
+      ? rankCrossSportTop10(dailyFixtures, engine, sportWeights, 10)
+      : [],
+    [dailyFixtures, engine, historicalRows.length, sportWeights]
   );
 
   // Active Audit Card & Summary
@@ -600,28 +590,27 @@ export default function App() {
     });
   };
 
+  const handleLoadRows = (rows: HistoricalMatchRow[]) => {
+    setHistoricalRows(rows);
+  };
+
   const handleTrainWithRows = (
     rows: HistoricalMatchRow[],
     nextParams: NeuralHyperparameters
   ) => {
-    setHistoricalRows(rows);
-    setHyperparams(nextParams);
+    if (rows.length < 8) {
+      setLiveAuditMessage({ type: 'error', text: 'Training blocked: import at least 8 valid historical rows first.' });
+      return;
+    }
     const nextEngine = trainNeuralNetworkOnCSV(
       rows,
       nextParams,
       sportWeights,
       engine.intelligencePayload
     );
+    setHistoricalRows(rows);
+    setHyperparams(nextParams);
     setEngine(nextEngine);
-  };
-
-  const handleResetDefaultDataset = () => {
-    const defaultRows = generateHistoricalTrainingDataset(60);
-    setHistoricalRows(defaultRows);
-    setHyperparams(DEFAULT_HYPERPARAMETERS);
-    setEngine(
-      trainNeuralNetworkOnCSV(defaultRows, DEFAULT_HYPERPARAMETERS, sportWeights)
-    );
   };
 
   const handleUpdateSportWeights = (
@@ -789,7 +778,7 @@ export default function App() {
         trackedCount={trackedList.length}
         readyAuditCount={activeAuditSummary.readyToAdaptCount}
         trainedRowsCount={historicalRows.length}
-        hybridAccuracy={engine.report.hybridValAccuracy}
+        hybridAccuracy={engine.report.epochHistory.length > 0 && historicalRows.length >= 8 ? engine.report.hybridValAccuracy : null}
         mobileOpen={mobileMenuOpen}
         onCloseMobile={() => setMobileMenuOpen(false)}
       />
@@ -860,7 +849,7 @@ export default function App() {
 
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-[1360px] w-full mx-auto space-y-4">
           <div role="note" className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-xs leading-5 text-amber-900">
-            <strong>Evidence status:</strong> Generated demo fixtures and synthetic training rows are not real-world evidence. Gemini-search candidates and estimated odds are not independently verified. Only manually verified or trusted-source final results may be used for learning; simulated outcomes are excluded.
+            <strong>Model status:</strong> UNTRAINED until you explicitly train on imported historical results. OctaNet starts with an empty corpus and never generates demo fixtures or synthetic training rows. Uploaded CSV contents are user-supplied and are not independently verified by the app. AI-search fixture candidates and estimated odds are also unverified. Simulated outcomes are excluded from learning.
           </div>
           {cloudBannerError && (
             <div
@@ -943,8 +932,8 @@ export default function App() {
               hyperparams={hyperparams}
               sportWeights={sportWeights}
               onUpdateHyperparams={setHyperparams}
+              onLoadRows={handleLoadRows}
               onTrainWithRows={handleTrainWithRows}
-              onResetDefaultDataset={handleResetDefaultDataset}
             />
           )}
 
