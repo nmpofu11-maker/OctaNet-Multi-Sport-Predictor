@@ -236,7 +236,7 @@ export const DailyBetsView: React.FC<DailyBetsViewProps> = ({
           <div className="mt-1 text-xl font-semibold font-mono tabular-nums text-blue-700">
             {summaryStats.hasData ? summaryStats.highConvictionCount + ' of 10' : 'Unavailable'}
           </div>
-          <div className="mt-0.5 text-xs text-slate-500">{summaryStats.hasData ? 'Edge &ge; +6.5% &amp; Score &ge; 5.60' : 'Not trained or no eligible predictions'}</div>
+          <div className="mt-0.5 text-xs text-slate-500">{summaryStats.hasData ? 'Edge ≥ +6.5% and score ≥ 5.60' : 'Not trained or no eligible predictions'}</div>
         </div>
       </div>
 
