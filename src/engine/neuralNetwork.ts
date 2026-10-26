@@ -398,8 +398,7 @@ export function deriveTeamIntelligenceMatrices(
  * No generated rows are used and no performance metrics are claimed.
  */
 export function createUntrainedNeuralEngine(
-  hyperparams: NeuralHyperparameters = DEFAULT_HYPERPARAMETERS,
-  sportRuleWeights?: SportRuleWeights
+  hyperparams: NeuralHyperparameters = DEFAULT_HYPERPARAMETERS
 ): TrainedNeuralEngine {
   const h1Dim = clamp(Math.round(hyperparams.hiddenLayer1Size), 4, 64);
   const h2Dim = clamp(Math.round(hyperparams.hiddenLayer2Size), 4, 32);
