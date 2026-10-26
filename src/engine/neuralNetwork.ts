@@ -771,11 +771,12 @@ export function computeCorpusEvolutionCurve(
   // Competitor matrices for each milestone are derived only from that milestone's training rows.
   const indexedRows = rows.map((row, idx) => ({ row, idx }))
     .sort((a, b) => a.row.date.localeCompare(b.row.date) || a.idx - b.idx);
-  const holdoutSize = Math.max(0, Math.floor(indexedRows.length * 0.2));
+  const holdoutSize = Math.min(
+    Math.max(2, Math.floor(indexedRows.length * 0.2)),
+    indexedRows.length - 2
+  );
   const trainChronological = indexedRows.slice(0, indexedRows.length - holdoutSize).map((x) => x.row);
-  const valRaw = indexedRows.slice(indexedRows.length - holdoutSize).map((x) => x.row);
-
-  const evalRows = valRaw.length >= 2 ? valRaw : trainChronological;
+  const evalRows = indexedRows.slice(indexedRows.length - holdoutSize).map((x) => x.row);
   const totalTrain = trainChronological.length;
   if (totalTrain < 4) {
     return [];
