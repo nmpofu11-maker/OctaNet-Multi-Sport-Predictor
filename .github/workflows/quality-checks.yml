@@ -25,8 +25,10 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Report production dependency vulnerabilities
-        run: npm audit --omit=dev --audit-level=high || true
+      - name: Verify patched gRPC dependency is locked
+        run: node -e "const p=require('./package.json'); const l=require('./package-lock.json'); if(p.overrides?.['@grpc/grpc-js'] !== '1.13.6' || l.packages?.['node_modules/@grpc/grpc-js']?.version !== '1.13.6') { console.error('Expected @grpc/grpc-js 1.13.6 override and lock entry'); process.exit(1); }"
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
       - name: Run unit tests
         run: npm test
       - name: TypeScript check
