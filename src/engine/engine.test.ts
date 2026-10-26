@@ -9,6 +9,10 @@ import {
 } from './sportRules';
 import {
   DEFAULT_HYPERPARAMETERS,
+  DEFAULT_COEFFICIENTS,
+  buildFeatureVector,
+  deriveTeamIntelligenceMatrices,
+  predictFixture,
   createUntrainedNeuralEngine,
   computeCorpusEvolutionCurve,
   rankCrossSportTop10,
@@ -198,6 +202,43 @@ test('universal 8-rule guardrails enforce Squad Value cap (R6 <= Core Trio) and 
     'Volatile league watchlist should damp overconfident win probability'
   );
   assert.ok(volatileEval.cautionFlags.includes('High-Volatility League Watchlist'));
+});
+
+test('bookmaker odds never affect features, rule probabilities, learned team coefficients, or forecast probabilities', () => {
+  const rules = {
+    r1_motivation_stakes: 8.5,
+    r2_form_momentum: 8.2,
+    r3_h2h_standings_gap: 8.0,
+    r4_tier_classification: 8.0,
+    r5_derby_rivalry: 8.5,
+    r6_squad_value_vs_form: 7.8,
+    r7_continental_fatigue: 8.4,
+    r8_coach_volatility: 7.8,
+  };
+  const featureLow = buildFeatureVector(SportId.Soccer, rules, 1.10, DEFAULT_COEFFICIENTS, 'Premier League');
+  const featureHigh = buildFeatureVector(SportId.Soccer, rules, 25.0, DEFAULT_COEFFICIENTS, 'Premier League');
+  assert.deepEqual(featureLow, featureHigh);
+  assert.equal(featureLow[16], 0);
+
+  const weights = getDefaultSportWeights()[SportId.Soccer];
+  const lowOddsEval = evaluateEightPointModel(SportId.Soccer, rules, weights, true, 1.10, 1, 1, 0.24, 1, 'Premier League');
+  const highOddsEval = evaluateEightPointModel(SportId.Soccer, rules, weights, true, 25.0, 1, 1, 0.24, 1, 'Premier League');
+  assert.equal(lowOddsEval.ruleProbability, highOddsEval.ruleProbability);
+
+  const rows = generateSyntheticTestHistoricalRows(4);
+  const alteredOddsRows = rows.map((row, index) => ({ ...row, decimalOdds: index % 2 ? 1.12 : 40 }));
+  const matrixA = deriveTeamIntelligenceMatrices(rows, 'test', 0, 0).team_intelligence_matrices;
+  const matrixB = deriveTeamIntelligenceMatrices(alteredOddsRows, 'test', 0, 0).team_intelligence_matrices;
+  assert.deepEqual(matrixA, matrixB);
+
+  const engine = trainNeuralNetworkOnCSV(rows, { ...DEFAULT_HYPERPARAMETERS, epochs: 10 });
+  const fixture = generateSyntheticTestFixtures('2026-10-26')[0];
+  const lowOddsPrediction = predictFixture({ ...fixture, decimalOdds: 1.10 }, engine, getDefaultSportWeights()[fixture.sport]);
+  const highOddsPrediction = predictFixture({ ...fixture, decimalOdds: 25.0 }, engine, getDefaultSportWeights()[fixture.sport]);
+  assert.equal(lowOddsPrediction.ruleProbability, highOddsPrediction.ruleProbability);
+  assert.equal(lowOddsPrediction.neuralProbability, highOddsPrediction.neuralProbability);
+  assert.equal(lowOddsPrediction.hybridProbability, highOddsPrediction.hybridProbability);
+  assert.equal(lowOddsPrediction.confidenceTier, highOddsPrediction.confidenceTier);
 });
 
 test('CSV parser round-trips universal 8-rule multi-sport data and validates malformed inputs', () => {
