@@ -37,7 +37,7 @@ import {
  * [8]      Non-Linear Guardrail Neuron: Core Trio ((R1+R2+R3)/3) minus Raw Squad Value (R6)
  * [9]      Disruption & Volatility Gate: composite caution signal from Derby (R5), Fatigue (R7), & Watchlist (R8)
  * [10..15] One-hot Sport encoding (Soccer, Tennis, Basketball, Golf, Cricket, Rugby)
- * [16]     Implied Market Probability (1 / decimalOdds)
+ * [16]     Reserved zero — bookmaker odds are excluded from model features
  * [17]     Learned Home/Surface Advantage Multiplier
  * [18]     Learned Form Momentum Weight
  * [19]     Learned Volatility & Fatigue Composite
@@ -141,7 +141,7 @@ export function initializeMLP(
 export function buildFeatureVector(
   sport: SportId,
   rules: Record<RuleKey, number>,
-  decimalOdds: number,
+  _decimalOdds: number,
   coeffs: LearnedCoefficients,
   competition = ''
 ): number[] {
@@ -182,9 +182,8 @@ export function buildFeatureVector(
     vec[10 + sportIdx] = 1.0;
   }
 
-  // [16]: market implied probability
-  const implied = clamp(1 / Math.max(1.04, decimalOdds), 0.04, 0.96);
-  vec[16] = (implied - 0.5) * 2.0;
+  // [16] is intentionally zero. Odds are not team or competitor evidence.
+  vec[16] = 0;
 
   // [17..19]: learned competitor intelligence coefficients
   vec[17] = clamp(coeffs.home_advantage_multiplier - 1.0, -0.6, 0.6);
@@ -300,7 +299,7 @@ export function deriveTeamIntelligenceMatrices(
     awayWins: number;
     highFormWins: number;
     highFormCount: number;
-    squaredResiduals: number;
+    outcomeWins: number;
     fatigueSpotWins: number;
     fatigueSpotCount: number;
   }
@@ -320,7 +319,7 @@ export function deriveTeamIntelligenceMatrices(
         awayWins: 0,
         highFormWins: 0,
         highFormCount: 0,
-        squaredResiduals: 0,
+        outcomeWins: 0,
         fatigueSpotWins: 0,
         fatigueSpotCount: 0,
       };
@@ -328,8 +327,8 @@ export function deriveTeamIntelligenceMatrices(
     }
 
     acc.matches += 1;
-    const implied = clamp(1 / Math.max(1.05, row.decimalOdds), 0.05, 0.95);
-    acc.squaredResiduals += Math.pow(row.outcomeWon - implied, 2);
+    // Track observed outcomes only; bookmaker prices must not shape team coefficients.
+    acc.outcomeWins += row.outcomeWon;
 
     if (row.isHomeOrFavoredContext) {
       acc.homeMatches += 1;
@@ -362,8 +361,9 @@ export function deriveTeamIntelligenceMatrices(
     const formRate = (a.highFormWins + 2.4) / (a.highFormCount + 4);
     const formWeight = clamp(0.85 + formRate * 0.42, 0.80, 1.35);
 
+    const observedWinRate = (a.outcomeWins + 1) / (a.matches + 2);
     const volatility = clamp(
-      Math.sqrt(a.squaredResiduals / Math.max(1, a.matches)) * 0.58,
+      Math.sqrt(observedWinRate * (1 - observedWinRate)) * 0.58,
       0.11,
       0.55
     );
@@ -1061,16 +1061,11 @@ export function predictFixture(
     fixture.competition
   );
   const rawNeuralProb = forwardMLP(engine.weights, featureVec).prob;
+  // Forecast probabilities come from the trained model and sport rules only.
+  // Odds remain optional display/settlement context and never anchor the forecast.
   const impliedProbability = clamp(1 / Math.max(1.02, fixture.decimalOdds), 0.02, 0.98);
-
-  // Apply extra caution shrinkage when fixture is on the volatile-league watchlist (Rule 8) or fierce derby (Rule 5)
   const watchlist = isVolatileCompetition(fixture.competition);
-  const marketAnchorShare = watchlist ? 0.48 : 0.32;
-  const neuralProbability = clamp(
-    (1 - marketAnchorShare) * rawNeuralProb + marketAnchorShare * impliedProbability,
-    0.04,
-    0.95
-  );
+  const neuralProbability = clamp(rawNeuralProb, 0.04, 0.95);
 
   const alpha = clamp(engine.hyperparams.neuralBlendAlpha, 0, 1);
   const hybridProbability = clamp(
@@ -1110,7 +1105,7 @@ export function predictFixture(
   if (ruleEval.cautionFlags.length > 0 && (watchlist || ruleEval.eightPointScale8 < 5.3)) {
     confidenceTier = 'Caution / Damped';
   } else if (
-    edgePercent >= 6.5 &&
+    hybridProbability >= 0.62 &&
     ruleEval.eightPointScale8 >= 5.55 &&
     ruleEval.cautionFlags.length === 0
   ) {
@@ -1155,10 +1150,8 @@ export function rankTop10BetsForSport(
   scored.sort((a, b) => {
     const penaltyA = a.cautionFlags.length * 3.5;
     const penaltyB = b.cautionFlags.length * 3.5;
-    const scoreA =
-      a.edgePercent * 1.35 + (a.eightPointNormalized - 4.5) * 4.5 + a.hybridProbability * 11 - penaltyA;
-    const scoreB =
-      b.edgePercent * 1.35 + (b.eightPointNormalized - 4.5) * 4.5 + b.hybridProbability * 11 - penaltyB;
+    const scoreA = (a.eightPointNormalized - 4.5) * 4.5 + a.hybridProbability * 11 - penaltyA;
+    const scoreB = (b.eightPointNormalized - 4.5) * 4.5 + b.hybridProbability * 11 - penaltyB;
     return scoreB - scoreA;
   });
 
@@ -1183,10 +1176,8 @@ export function rankCrossSportTop10(
   scored.sort((a, b) => {
     const penaltyA = a.cautionFlags.length * 3.5;
     const penaltyB = b.cautionFlags.length * 3.5;
-    const scoreA =
-      a.edgePercent * 1.4 + (a.eightPointNormalized - 4.5) * 4.4 + a.hybridProbability * 10 - penaltyA;
-    const scoreB =
-      b.edgePercent * 1.4 + (b.eightPointNormalized - 4.5) * 4.4 + b.hybridProbability * 10 - penaltyB;
+    const scoreA = (a.eightPointNormalized - 4.5) * 4.4 + a.hybridProbability * 10 - penaltyA;
+    const scoreB = (b.eightPointNormalized - 4.5) * 4.4 + b.hybridProbability * 10 - penaltyB;
     return scoreB - scoreA;
   });
   return scored.slice(0, limit).map((item, idx) => ({
