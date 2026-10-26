@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Download, FileUp, Play, RotateCcw } from 'lucide-react';
+import { Download, FileUp, Play } from 'lucide-react';
 import {
   Area,
   CartesianGrid,
@@ -37,8 +37,8 @@ interface NeuralLabViewProps {
   hyperparams: NeuralHyperparameters;
   sportWeights?: SportRuleWeights;
   onUpdateHyperparams: (next: NeuralHyperparameters) => void;
+  onLoadRows: (rows: HistoricalMatchRow[]) => void;
   onTrainWithRows: (rows: HistoricalMatchRow[], nextParams: NeuralHyperparameters) => void;
-  onResetDefaultDataset: () => void;
 }
 
 interface EvolutionTooltipProps {
@@ -106,20 +106,12 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
   hyperparams,
   sportWeights,
   onUpdateHyperparams,
+  onLoadRows,
   onTrainWithRows,
-  onResetDefaultDataset,
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const sampleMultiSportSlice = (rows: HistoricalMatchRow[], perSport = 5) => {
-    const out: HistoricalMatchRow[] = [];
-    for (const s of ALL_SPORTS) {
-      out.push(...rows.filter((r) => r.sport === s).slice(0, perSport));
-    }
-    return out.length > 0 ? out : rows.slice(0, perSport * 6);
-  };
-
   const [csvEditorText, setCsvEditorText] = useState<string>(() =>
-    serializeHistoricalRowsToCSV(sampleMultiSportSlice(historicalRows, 3))
+    serializeHistoricalRowsToCSV([])
   );
   const [templateSport, setTemplateSport] = useState<SportId | 'all'>('all');
   const [evolutionViewMode, setEvolutionViewMode] = useState<
@@ -188,11 +180,11 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
       });
       return;
     }
-    onTrainWithRows(parsed.rows, hyperparams);
+    onLoadRows(parsed.rows);
     setParseFeedback({
       type: 'success',
       messages: [
-        `Trained MLP neural network on ${parsed.rows.length} uploaded CSV records from "${file.name}".`,
+        `Loaded ${parsed.rows.length} user-supplied CSV records from "${file.name}". No training has started; use the Train button when ready. The app cannot independently verify these records.`,
         ...parsed.warnings.slice(0, 2),
       ],
     });
@@ -217,20 +209,24 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
     setParseFeedback({
       type: 'success',
       messages: [
-        `Neural network retrained on ${parsed.rows.length} CSV editor rows across ${
+        `Explicitly trained the neural network on ${parsed.rows.length} user-supplied CSV rows across ${
           new Set(parsed.rows.map((r) => r.sport)).size
-        } sports.`,
+        } sports. Source authenticity has not been independently verified by the app.`,
         ...parsed.warnings.slice(0, 2),
       ],
     });
   };
 
   const handleRetrainFullCorpus = () => {
+    if (historicalRows.length < 8) {
+      setParseFeedback({ type: 'error', messages: ['Training blocked: import at least 8 valid historical rows first.'] });
+      return;
+    }
     onTrainWithRows(historicalRows, hyperparams);
     setParseFeedback({
       type: 'success',
       messages: [
-        `Completed ${hyperparams.epochs}-epoch backpropagation pass on ${historicalRows.length} historical multi-sport records. Daily Top 10 bets updated.`,
+        `Explicitly trained for ${hyperparams.epochs} epochs on ${historicalRows.length} user-supplied historical rows. Data authenticity is not independently verified by the app.`,
       ],
     });
   };
@@ -252,7 +248,7 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `octanet-historical-360-matches.csv`;
+    a.download = `octanet-active-training-corpus-${historicalRows.length}-rows.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -282,8 +278,7 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
             CSV Neural Network Training Workbench
           </h1>
           <p className="mt-1 text-sm text-slate-600 max-w-2xl">
-            Train a feed-forward Multi-Layer Perceptron (20 inputs &rarr; {engine.weights.h1Dim} &rarr;{' '}
-            {engine.weights.h2Dim} &rarr; Sigmoid) on historical CSV sports results governed by your Universal 8 Multi-Sport Rules.
+            Train a feed-forward Multi-Layer Perceptron on historical CSV sports results governed by your Universal 8 Multi-Sport Rules. The workbench starts empty; sample/demo records are not generated. CSV data is user-supplied and must be independently checked before you rely on results.
           </p>
         </div>
 
@@ -312,20 +307,7 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
             <Download className="w-3.5 h-3.5 text-slate-500" />
             Export Active CSV ({historicalRows.length} rows)
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              onResetDefaultDataset();
-              setParseFeedback({
-                type: 'success',
-                messages: ['Restored 360-match 6-sport benchmark CSV dataset and retrained MLP.'],
-              });
-            }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 rounded-lg transition-colors whitespace-nowrap shrink-0"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            Reset 360-Row Corpus
-          </button>
+
         </div>
       </div>
 
@@ -346,7 +328,13 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
         </div>
       )}
 
-      {/* Benchmark Comparison Strip: Pure 8-Rule vs Neural MLP vs Hybrid */}
+      {!epochHistory.length ? (
+        <div role="status" className="p-4 rounded-xl border border-amber-200 bg-amber-50 text-sm text-amber-900">
+          <strong>UNTRAINED — no performance metrics available.</strong> Import real historical match results, review their source and quality, then explicitly train. Uploading data alone does not train the model. The app does not verify the truth of user-supplied CSV contents.
+        </div>
+      ) : (
+      <>
+      {/* Benchmark metrics are only shown after explicit training */}
       <div className="bg-white border border-slate-200 rounded-xl grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
         <div className="p-4">
           <div className="text-xs text-slate-500">8-Point Rule Baseline Accuracy</div>
@@ -385,6 +373,8 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* Historical Corpus Size Learning Curve (Recharts) */}
       {evolutionCurve.length >= 2 && firstMilestone && latestMilestone && (
@@ -885,7 +875,7 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded-lg transition-colors whitespace-nowrap"
           >
             <Play className="w-3.5 h-3.5" />
-            Train Neural Engine ({historicalRows.length} Active CSV Rows)
+            Train Neural Engine ({historicalRows.length} Imported CSV Rows)
           </button>
         </div>
 
@@ -1054,14 +1044,10 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
         <div className="flex items-center justify-between gap-3">
           <button
             type="button"
-            onClick={() =>
-              setCsvEditorText(
-                serializeHistoricalRowsToCSV(sampleMultiSportSlice(historicalRows, 5))
-              )
-            }
+            onClick={() => setCsvEditorText(serializeHistoricalRowsToCSV([]))}
             className="text-xs font-medium text-slate-600 hover:text-slate-900 underline"
           >
-            Load 30 Sample Multi-Sport Rows into Editor
+            Clear editor
           </button>
           <button
             type="button"
