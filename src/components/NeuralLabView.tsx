@@ -123,7 +123,8 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
   } | null>(null);
 
   const { report } = engine;
-  const epochHistory = report.epochHistory;
+  const isTrainedForCorpus = report.epochHistory.length > 0 && report.totalRows === historicalRows.length && historicalRows.length >= 8;
+  const epochHistory = isTrainedForCorpus ? report.epochHistory : [];
 
   const evolutionCurve = useMemo(
     () =>
@@ -328,7 +329,7 @@ export const NeuralLabView: React.FC<NeuralLabViewProps> = ({
         </div>
       )}
 
-      {!epochHistory.length ? (
+      {!isTrainedForCorpus ? (
         <div role="status" className="p-4 rounded-xl border border-amber-200 bg-amber-50 text-sm text-amber-900">
           <strong>UNTRAINED — no performance metrics available.</strong> Import real historical match results, review their source and quality, then explicitly train. Uploading data alone does not train the model. The app does not verify the truth of user-supplied CSV contents.
         </div>
