@@ -38,7 +38,7 @@ npm run build
 
 The API includes payload validation, a body-size limit, and a basic per-IP rate limiter. **The API does not yet implement full authentication/authorization. Do not expose this server publicly or assume the rate limiter is a security boundary.** Add proper authentication, authorization, provider quota controls, and production deployment checks before public use.
 
-Gemini-assisted research is not a sports data provider. TheSportsDB is a community-maintained schedule source with incomplete coverage, not an official league feed. Its free schedule endpoint is rate-limited; the server caches each date and limits uncached requests. Source-listed fixtures still need independent identity checks and real form, standings, head-to-head, lineup/availability, and other rule evidence before forecasts are allowed.
+Gemini-assisted research is not a sports data provider. TheSportsDB is a community-maintained schedule source with incomplete coverage, not an official league feed. The free schedule-day endpoint returns only a small number of records per request (documented free limit: 3), so it cannot guarantee a complete slate. The server caches by date and sport. Source-listed fixtures still need independent identity checks and real form, standings, head-to-head, lineup/availability, and other rule evidence before forecasts are allowed.
 
 The app does not yet persist a complete model checkpoint and full training corpus as a durable, versioned artifact. Back up any genuine CSV corpus before changing versions. Do not assume browser memory or Firebase audit records restore the entire model state.
 
