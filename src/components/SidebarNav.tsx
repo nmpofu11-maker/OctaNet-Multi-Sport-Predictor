@@ -23,7 +23,7 @@ interface SidebarNavProps {
   trackedCount: number;
   readyAuditCount: number;
   trainedRowsCount: number;
-  hybridAccuracy: number;
+  hybridAccuracy: number | null;
   mobileOpen: boolean;
   onCloseMobile: () => void;
 }
@@ -125,7 +125,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
         <div className="flex items-center justify-between">
           <span>Validation Accuracy</span>
           <span className="font-mono tabular-nums font-medium text-emerald-700">
-            {(hybridAccuracy * 100).toFixed(1)}%
+            {hybridAccuracy === null ? 'Not trained' : `${(hybridAccuracy * 100).toFixed(1)}%`}
           </span>
         </div>
         <div className="pt-2 border-t border-slate-100 text-slate-500 leading-relaxed">
