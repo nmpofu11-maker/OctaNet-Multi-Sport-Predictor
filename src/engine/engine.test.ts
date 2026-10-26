@@ -233,7 +233,7 @@ test('daily prediction fixture selection never falls back to generated demo fixt
     supplied,
     SportId.Soccer,
     engine,
-    getDefaultSportWeights()[SportId.Soccer],
+    getDefaultSportWeights(),
     10
   );
   assert.equal(predictions.length, 0);
