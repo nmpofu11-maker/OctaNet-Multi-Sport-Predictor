@@ -10,6 +10,7 @@ import {
 import {
   DEFAULT_HYPERPARAMETERS,
   createUntrainedNeuralEngine,
+  computeCorpusEvolutionCurve,
   rankCrossSportTop10,
   rankTop10BetsForSport,
   trainNeuralNetworkOnCSV,
@@ -79,6 +80,19 @@ test('minimum-size training keeps at least two newest rows out of the training s
   assert.equal(engine.report.trainRows, 6);
   assert.equal(engine.report.valRows, 2);
   assert.ok(engine.report.trainRows < engine.report.totalRows);
+});
+
+test('corpus evolution uses a chronological holdout instead of training rows', () => {
+  const rows = generateSyntheticTestHistoricalRows(2).slice(0, 8);
+  const curve = computeCorpusEvolutionCurve(rows, {
+    ...DEFAULT_HYPERPARAMETERS,
+    epochs: 10,
+  });
+  assert.ok(curve.length > 0);
+  for (const point of curve) {
+    assert.equal(point.holdoutRows, 2);
+    assert.ok(point.trainRows < point.corpusSize);
+  }
 });
 
 test('all 6 sports adapt the universal 8 rules with normalized weights summing to 1.0', () => {
