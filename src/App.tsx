@@ -653,8 +653,7 @@ export default function App() {
     const nextEngine = trainNeuralNetworkOnCSV(
       rows,
       nextParams,
-      sportWeights,
-      engine.intelligencePayload
+      sportWeights
     );
     setHistoricalRows(rows);
     setHyperparams(nextParams);
