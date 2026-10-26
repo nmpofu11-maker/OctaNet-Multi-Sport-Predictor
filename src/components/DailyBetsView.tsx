@@ -116,7 +116,9 @@ export const DailyBetsView: React.FC<DailyBetsViewProps> = ({
               : `${SPORT_LABELS[selectedSport]} · Daily 10 Best Bets`}
           </h1>
           <p className="mt-1 text-sm text-slate-600 max-w-2xl">
-            Ranked by hybrid expected value combining sport-adapted 8-point fundamentals ({Math.round((1 - neuralBlendAlpha) * 100)}% prior) with CSV-trained neural probabilities ({Math.round(neuralBlendAlpha * 100)}% MLP).
+            {(selectedSport === 'cross-sport' ? crossSportTop10.length > 0 : (predictionsBySport[selectedSport] ?? []).length > 0)
+              ? `Ranked by hybrid expected value combining sport-adapted 8-point fundamentals (${Math.round((1 - neuralBlendAlpha) * 100)}% prior) with explicitly trained CSV neural probabilities (${Math.round(neuralBlendAlpha * 100)}% MLP).`
+              : 'No predictions available. The model must be explicitly trained on imported historical rows, and supplied fixture candidates must be available. No demo predictions are generated.'}
           </p>
         </div>
 
