@@ -160,6 +160,17 @@ export function createLockedAuditCardFromPredictions(
 }
 
 /**
+ * Selects only fixtures explicitly supplied for the requested date.
+ * Generated demo fixtures must never be silently added to an operational prediction pool.
+ */
+export function selectSuppliedFixturesForDate(
+  date: string,
+  suppliedFixtures: DailyFixture[]
+): DailyFixture[] {
+  return suppliedFixtures.filter((fixture) => fixture.date === date);
+}
+
+/**
  * Builds the 60-pick locked audit card for any given YYYY-MM-DD date directly from the engine
  */
 export function buildLockedAuditCardForDate(
@@ -171,7 +182,7 @@ export function buildLockedAuditCardForDate(
 ): DailyAuditEntry[] {
   // Audit cards must only contain caller-supplied fixtures. Never silently substitute
   // generated demo fixtures when live fixture ingestion is empty or incomplete.
-  const fixtures = extraFixtures.filter((fixture) => fixture.date === auditDate);
+  const fixtures = selectSuppliedFixturesForDate(auditDate, extraFixtures);
   const map = {} as Record<SportId, PredictionResult[]>;
   for (const s of ALL_SPORTS) {
     map[s] = rankTop10BetsForSport(fixtures, s, engine, sportWeights, 10);

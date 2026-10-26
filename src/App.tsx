@@ -31,15 +31,13 @@ import {
 import {
   adaptNeuralEngineFromAudit,
   buildLockedAuditCardForDate,
+  selectSuppliedFixturesForDate,
   computeDailyAuditSummary,
   createLockedAuditCardFromPredictions,
   getPreviousDateISO,
   simulateDeterministicSettlement,
 } from './engine/auditEngine';
-import {
-  generateDailyFixturesForDate,
-  generateHistoricalTrainingDataset,
-} from './engine/sampleData';
+import { generateHistoricalTrainingDataset } from './engine/sampleData';
 import { exportPredictionsToCSV } from './engine/csvParser';
 import {
   commitAdaptedPicksBatchToFirestore,
@@ -272,12 +270,10 @@ export default function App() {
     };
   }, [currentUser]);
 
-  const dailyFixtures = useMemo(() => {
-    const base = generateDailyFixturesForDate(selectedDate);
-    const liveExtras = customFixturesByDate[selectedDate] ?? [];
-    const liveSports = new Set(liveExtras.map((fixture) => fixture.sport));
-    return [...liveExtras, ...base.filter((fixture) => !liveSports.has(fixture.sport))];
-  }, [selectedDate, customFixturesByDate]);
+  const dailyFixtures = useMemo(
+    () => selectSuppliedFixturesForDate(selectedDate, customFixturesByDate[selectedDate] ?? []),
+    [selectedDate, customFixturesByDate]
+  );
 
   const predictionsBySport = useMemo(() => {
     const map = {} as Record<SportId, PredictionResult[]>;
