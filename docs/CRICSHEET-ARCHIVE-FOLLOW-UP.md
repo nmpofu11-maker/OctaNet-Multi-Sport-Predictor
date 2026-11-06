@@ -68,3 +68,11 @@ This is still a documentation-only assessment. No OctaNet source code, browser s
 - Cricsheet Format: https://cricsheet.org/format/
 - Cricsheet Licensing: https://cricsheet.org/licensing/
 - Cricsheet licensing announcement (7 October 2026): https://cricsheet.org/article/licensing-and-venues-registry/
+
+## 6. Isolated local audit utility prepared
+
+A standard-library-only audit utility is now available at `scripts/cricsheet-archive-audit.py`, with instructions in `docs/CRICSHEET-LOCAL-AUDIT-RUNBOOK.md`.
+
+The utility downloads the SA20 and CSA T20 Challenge JSON ZIPs to a temporary directory, calculates SHA-256 hashes, parses the match records, checks structural fields and reports dates, seasons, teams, venues, innings, overs, deliveries, wickets, missing fields, duplicate IDs and malformed records. It removes the downloaded archives at the end and writes only an aggregate JSON report under `cricsheet-audit-output/`.
+
+**Execution status: NOT RUN in this hosted session.** The hosted environment could not retrieve the ZIP binary; the archive parser has therefore not been executed against real Cricsheet records. The script is committed for execution on a machine with outbound HTTPS access to cricsheet.org. A successful structural PASS would still not approve production ingestion.
