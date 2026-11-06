@@ -28,12 +28,12 @@ This is a recommended launch scope, not a claim that the current application or 
 
 ### Why these South African priorities
 
-- The PSL identifies the Betway Premiership and its domestic cup competitions, plus the Motsepe Foundation Championship, as core South African club competitions; its published 2026/27 calendar confirms the season and cup schedule. <Cite refs={["turn537252search0","turn537252search1"]}/>
-- Cricket South Africa lists its men's Division 1 formats (4-Day Series, One-Day Cup and T20 Challenge), alongside women's competitions. The first release prioritises men's formats to constrain the initial data model; this is a scope choice, not a statement that women's cricket is unimportant. <Cite refs={["turn537252search3","turn537252search4"]}/>
-- SA Rugby identifies the URC, domestic competitions, Springbok internationals, women's and junior competitions as distinct coverage areas. SuperSport's broadcast rights are not a data API licence; obtain data access separately. <Cite refs={["turn537252search2","turn537252search5"]}/>
-- The official BNL site publishes separate men's and women's league seasons, fixtures, standings and results, so OctaNet should model them as separate competitions. <Cite refs={["turn515076search0"]}/>
-- The Sunshine Tour publishes its own tournament schedule and leaderboards, providing an official reference for South African golf event identity and results. <Cite refs={["turn515076search2","turn515076search3"]}/>
-- The official SA20 site publishes fixtures, results and standings; treat it as a separate T20 franchise competition rather than combining it with international T20Is or other domestic T20 tournaments. <Cite refs={["turn515076search1"]}/>
+- The PSL identifies the Betway Premiership and its domestic cup competitions, plus the Motsepe Foundation Championship, as core South African club competitions; its published 2026/27 calendar confirms the season and cup schedule. [PSL official 2026/27 calendar](https://www.psl.co.za/news/article/5615294-psl-confirms-the-202627-season-calend).
+- Cricket South Africa lists its men's Division 1 formats (4-Day Series, One-Day Cup and T20 Challenge), alongside women's competitions. The first release prioritises men's formats to constrain the initial data model; this is a scope choice, not a statement that women's cricket is unimportant. [Cricket South Africa domestic leagues](https://cricket.co.za/domestic-leagues-2/).
+- SA Rugby identifies the URC, domestic competitions, Springbok internationals, women's and junior competitions as distinct coverage areas. SuperSport's broadcast rights are not a data API licence; obtain data access separately. [SA Rugby / URC rights and competition coverage](https://springboks.rugby/news-features/articles/2026/6/3/supersport-and-dstv-extend-exclusive-vodacom-urc-rights-in-sub-saharan-africa).
+- The official BNL site publishes separate men's and women's league seasons, fixtures, standings and results, so OctaNet should model them as separate competitions. [Basketball National League](https://bnlsa.com/).
+- The Sunshine Tour publishes its own tournament schedule and leaderboards, providing an official reference for South African golf event identity and results. [Sunshine Tour schedule](https://sunshinetour.com/Schedule).
+- The official SA20 site publishes fixtures, results and standings; treat it as a separate T20 franchise competition rather than combining it with international T20Is or other domestic T20 tournaments. [SA20 fixtures](https://www.sa20.co.za/matches).
 
 ## 3. Enablement matrix required before coding each adapter
 
