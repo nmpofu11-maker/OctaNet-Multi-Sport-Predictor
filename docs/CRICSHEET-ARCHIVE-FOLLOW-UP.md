@@ -76,3 +76,45 @@ A standard-library-only audit utility is now available at `scripts/cricsheet-arc
 The utility downloads the SA20 and CSA T20 Challenge JSON ZIPs to a temporary directory, calculates SHA-256 hashes, parses the match records, checks structural fields and reports dates, seasons, teams, venues, innings, overs, deliveries, wickets, missing fields, duplicate IDs and malformed records. It removes the downloaded archives at the end and writes only an aggregate JSON report under `cricsheet-audit-output/`.
 
 **Execution status: NOT RUN in this hosted session.** The hosted environment could not retrieve the ZIP binary; the archive parser has therefore not been executed against real Cricsheet records. The script is committed for execution on a machine with outbound HTTPS access to cricsheet.org. A successful structural PASS would still not approve production ingestion.
+
+## 7. Actual GitHub Actions archive audit — 6 November 2026
+
+The manually dispatched GitHub Actions run completed successfully (run ID `42297220314`). Both archives were downloaded and all JSON records parsed. The aggregate report was retrieved and inspected; the raw archives were not retained.
+
+| Measure | SA20 | CSA T20 Challenge |
+|---|---:|---:|
+| Archive size | 533,101 bytes | 1,255,675 bytes |
+| SHA-256 | `6db3a8654554be05d3da5a28e687385c1a494636a741a926abf03cc90383fb55` | `f3144a7b39d05c0803a57d46d855e7436a362dc0bffc09e8a050dee3c27e2817` |
+| JSON files / valid matches | 130 / 130 | 314 / 314 |
+| Invalid JSON | 0 | 0 |
+| Duplicate filename-based IDs | 0 | 0 |
+| Format version | 1.3.0 (130) | 1.3.0 (314) |
+| Date range | 2023-01-10 to 2026-01-25 | 2012-02-15 to 2024-10-27 |
+| Innings | 255 | 620 |
+| Overs | 4,698 | 11,547 |
+| Deliveries | 29,020 | 71,230 |
+| Wickets | 1,596 | 3,645 |
+| Matches with declared missing metadata | 0 | 34 |
+| No-result matches | 7 | 14 |
+| Draw/tie results | 1 | 5 |
+| Structural field anomalies | 0 | 0 |
+
+SA20 has 33 matches in each of the first three seasons (2022/23, 2023/24, 2024/25) and 31 in 2025/26. The six franchises appear across 130 records. The archive ends on 25 January 2026; it is not a live 2026/27 feed.
+
+CSA T20 Challenge has 13 represented seasons from 2011/12 through 2024/25, with a gap in the listed season sequence. Its 34 records declaring missing metadata need a second-stage field-level review before feature use. The archive ends on 27 October 2024, so it is historical rather than current coverage. Its team labels span changing provincial/franchise identities; canonical team mapping is a separate required task.
+
+**Interpretation:** the run proves that both downloaded ZIPs are readable JSON archives with no parse failures, duplicate filename IDs or detected structural anomalies under this audit's checks. It does not prove that every match in the real-world competitions is present, that all metadata is complete, or that match outcomes/ball-by-ball events are semantically correct. No-result and draw/tie records are legitimate edge cases that downstream settlement logic must handle explicitly.
+
+### Audit status semantics tightened
+
+The first run labelled both archives `PASS` because it only treated parse failures, duplicate IDs and explicit structural anomalies as blockers. That label was too permissive for CSA's 34 metadata-gap records. The audit script has therefore been tightened: any declared missing metadata or counted missing field now produces `REVIEW`, not `PASS`. This does not invalidate the successful parsing result; it separates syntactic integrity from completeness. A fresh run against the updated script is required to produce the revised status labels.
+
+### Next validation gate
+
+1. Re-run the workflow using the updated script; expected status is SA20 `PASS` and CSA T20 Challenge `REVIEW` unless the newer archive differs.
+2. Inspect representative CSA records with declared missing metadata and document exactly which fields are absent.
+3. Verify competition/season coverage and team aliases against independent official records.
+4. Add chronology/cutoff tests and explicit no-result/tie handling before considering any training use.
+5. Complete attribution/licence review. Do not ingest either archive into the production training corpus yet.
+
+Artifact from run `42297220314` was retained by GitHub for 14 days and has since been retrieved for this assessment. No raw match archive was committed to the repository.
