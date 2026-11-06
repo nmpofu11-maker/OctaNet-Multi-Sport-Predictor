@@ -1,0 +1,165 @@
+# Stage 1 — Provider Proof-of-Coverage
+
+**Assessment date:** 2026-11-06  
+**Status:** Documentation-based screening; no authenticated provider payloads or account entitlements verified  
+**Related PR:** #11 — Six-sport data collection strategy  
+**Purpose:** Decide which provider/competition combinations are worth a controlled sample-data test before any production adapter or subscription is approved.
+
+> **Important:** A provider's product documentation is evidence that an API capability exists, not proof that a particular South African competition, season, field, or data-rights use is included in a specific account. No row below is marked production-approved.
+
+## 1. Executive finding
+
+There is not yet sufficient evidence to approve one provider for all six sports and the complete first-release competition scope.
+
+- **Sportradar** is the strongest documented multi-sport candidate across soccer, tennis, golf, cricket, and rugby, with basketball also listed in its general/league-specific product catalogue. It is a paid, package-specific candidate; exact competition coverage, history, fields, price, and rights must be checked in the account coverage matrix and contract.
+- **SportsDataIO** documents NBA, soccer, and golf products, plus a Global API for competition/season discovery. The documentation reviewed does not establish BNL, Sunshine Tour, or the required coverage for the other sports.
+- **Football-Data.org** is a useful low-cost soccer candidate for supported competitions and basic match/standing data. Its authenticated competition catalogue and plan permissions must be checked for the PSL, MTN8, Nedbank Cup, Carling Knockout, and UEFA Champions League before it is selected.
+- **Cricsheet** is a useful historical cricket bulk-data candidate, not a live fixture/results provider. Its current download catalogue lists 23,241 matches and explicitly withholds 386 matches.
+- **TheSportsDB** is already integrated for fixture discovery only. Its free-key limits make it unsuitable as the sole operational source for this launch scope.
+- Official competition websites are valuable independent references for schedule/result reconciliation, but public web pages are not automatically API licences or permission for automated scraping.
+
+**Decision:** No new provider adapter, subscription, or production data flow is authorised by this assessment. Proceed to controlled sample tests only after the user confirms available provider accounts/entitlements and permitted use.
+
+## 2. Evidence labels
+
+| Label | Meaning |
+|---|---|
+| Documented | Provider documentation describes the API/product or data type. |
+| Account check required | Exact competition, season, field depth, package, quota, or historical availability must be checked in an authenticated account. |
+| Sample not tested | No authenticated raw response has been captured and validated by this project. |
+| Rights not confirmed | Storage, display, commercial use, caching, and redistribution rights have not been reviewed/approved. |
+| Not established | The reviewed evidence does not establish the claimed coverage. This is not proof that the provider has no such data. |
+
+## 3. Provider screening
+
+| Provider / source | Relevant documented capabilities | Limitations / unresolved points | Screening decision |
+|---|---|---|---|
+| Sportradar | Soccer historical seasons/statistics; tennis schedules, scores, rankings, stats and 4,000+ competitions; golf tournament schedules, leaderboards, scorecards and historical tour data; cricket schedules, results, lineups, match statistics and ball-by-ball feeds; rugby competitions, seasons, lineups, results and team/player statistics. Basketball products appear in its league/general sports catalogue. | Separate packages and coverage tiers; actual competition availability must be checked in the interactive coverage matrix. Some sports/competitions have limited historical seasons or optional statistics. No account access, sample payload, quote, or rights review is available in this assessment. | **Primary multi-sport candidate for account-level proof**, not approved. |
+| SportsDataIO | Documented NBA and soccer/golf products; Global API exposes competition, phase and season discovery. | Documentation reviewed does not establish BNL, Sunshine Tour, tennis, cricket, rugby, or complete target competition/field coverage. Confirm package-specific terms and historical depth. | **Secondary candidate** for NBA and selected soccer/golf comparisons. |
+| Football-Data.org | Competition, season, match, team, standings and player resources; former-season match queries are documented. | Competition access is plan-gated. Historical standings and advanced player/stat fields are limited relative to specialist feeds. South African PSL/cup coverage not confirmed. | **Soccer-only candidate** for EPL/UCL and any South African competition actually present in the account catalogue. |
+| Cricsheet | Downloadable historical ball-by-ball data in JSON/YAML and other formats; files can be filtered by match type, country, team, year and gender. | Historical dataset only; not a live schedule/results API. 386 matches are withheld. Verify attribution/licence and suitability for commercial use before import. | **Historical research candidate** for cricket only. |
+| TheSportsDB | Existing OctaNet integration; day/league/season schedule endpoints and broad sport/event catalogue. | Free API limits vary by endpoint; docs state day schedule free limit 3 versus premium 1,500, season schedule 15 versus premium 3,000, and team next/previous free access only shows home events. Not a reliable authoritative evidence feed. | **Keep as discovery fallback only**; never promote its candidate event directly to evidence-eligible. |
+| Official league/governing-body sites | Useful independent schedule, standings, leaderboard and final-result references for PSL, BNL, Sunshine Tour, CSA/SA20, SA Rugby/URC and international bodies. | Public pages do not establish API availability, bulk access, automated polling permission, or redistribution rights. | **Reconciliation references**, unless an explicit data feed/licence is obtained. |
+
+## 4. First-release competition coverage matrix
+
+All competition-level statuses below are **not yet verified**. Provider documentation alone does not prove coverage for the exact competition and season.
+
+| Sport / competition group | Candidate source(s) to test first | What must be proven | Current decision |
+|---|---|---|---|
+| Soccer — Betway Premiership, Motsepe Foundation Championship, MTN8, Nedbank Cup, Carling Knockout | Sportradar Soccer; Football-Data.org; SportsDataIO Global; official PSL reference | Competition/season IDs; full fixture and final-result coverage; standings; team IDs; historical seasons; match statistics; kickoff timezone; rights | Discovery-only pending account catalogue and sample payload |
+| Soccer — EPL and UEFA Champions League | Football-Data.org; Sportradar Soccer; SportsDataIO Soccer | Exact plan permissions, season depth, match IDs, results, standings, and required stats | Strong candidate set; no provider approved |
+| Tennis — ATP/WTA singles and four Grand Slams | Sportradar Tennis; official tour/tournament data | Draws, rounds, player IDs, surface, rankings snapshots, match stats, retirement/walkover states, corrections, historical depth by competition tier | Strong documented technical candidate; account check required |
+| Basketball — BNL men and women | Sportradar Basketball products; official BNL reference | Separate men's/women's competition IDs; full schedules, results, standings, team/player stats and historical seasons | Not established by reviewed vendor evidence; official reference only until proven |
+| Basketball — NBA | Sportradar Basketball; SportsDataIO NBA; official NBA stats reference | Game/season IDs; schedules, box scores, standings, historical depth, roster/availability fields and rights | Strong candidate set; account/sample check required |
+| Golf — Sunshine Tour | Direct Sunshine Tour feed/licence; Sportradar Golf only if the tour appears in coverage matrix | Event/field IDs; tee times; round and hole scores; cut/withdrawal status; leaderboard; historical seasons; data rights | Not established by reviewed Sportradar tour list; do not assume inclusion |
+| Golf — PGA Tour, DP World Tour and four men's majors | Sportradar Golf; SportsDataIO Golf; official tour references | Event IDs; fields; tee times; rounds/scorecards; player statistics; historical depth; major championship coverage and rights | Strong documented candidate for PGA/DP World Tour; majors need event-by-event check |
+| Cricket — Proteas men's internationals, SA20, CSA men's Division 1 formats | Sportradar Cricket; Cricsheet for historical matches; CSA/SA20 official references | Format-specific event IDs; scorecards; innings/overs/wickets; toss/XI; DLS; results; tournament tables; historical depth by format | Sportradar is documented for cricket, but SA20/CSA competition coverage is not confirmed; Cricsheet is historical only |
+| Cricket — ICC men's senior events and IPL | Sportradar Cricket; Cricsheet where applicable; official ICC/IPL references | Competition/season IDs; match coverage levels; ball-by-ball/scorecards; player stats; result corrections; format boundaries | Strong documented candidate; verify exact events and tier |
+| Rugby — Springbok men's internationals, URC, Currie Cup Premier Division | Sportradar Rugby Union; SA Rugby/URC/competition references | Competition/season/event IDs; team/player IDs; fixtures/results; lineups; boxscore flags; match statistics; history; rights | Strong documented technical candidate; exact South African competitions remain account-check items |
+| Rugby — Six Nations and Rugby Championship | Sportradar Rugby Union; official competition references | Same checks as above, including season history and event coverage flags | Strong documented candidate; sample and rights not verified |
+
+## 5. Sport-by-sport evidence and caveats
+
+### Soccer
+
+Football-Data.org documents competition catalogues, seasons, matches, teams, standings and player resources. The API returns the competitions available to an authenticated client, and permissions/plan tiers affect access. This makes an authenticated catalogue export the first low-effort test; do not infer PSL coverage from its general football catalogue.
+
+Sportradar's soccer historical-data guidance says coverage varies by competition tier and season, and recommends checking the Seasons feed, Coverage Matrix and Season Info before retrieval. It notes that some competition history may reach 2007, but this is not a universal guarantee.
+
+### Tennis
+
+Sportradar's Tennis API documentation describes schedules, live scores, point-by-point timelines, rankings, player profiles, historical results and match statistics across more than 4,000 competitions. Coverage is tiered: Grand Slams and top ATP events have stronger coverage than lower-tier competitions; qualification rounds may have reduced coverage. The exact target competition and match coverage object must be inspected before selecting features.
+
+### Basketball
+
+SportsDataIO lists NBA and basketball products and documents a Global API competition/season catalogue. Sportradar also lists NBA and other basketball products in its API catalogue. Neither source reviewed here proves BNL men/women coverage. BNL's own published fixtures, standings and results can be used as a manual reconciliation reference, but an authorised machine-readable feed remains unproven.
+
+### Golf
+
+Sportradar documents PGA Tour historical data from 2013, DP World Tour from 2016, LPGA and other tours from later start dates, plus tournament schedule, leaderboard, scorecard and player-stat feeds. Its documented tour enum includes PGA, DP World Tour, LPGA, LIV, Champions and Korn Ferry, but the reviewed list does not establish Sunshine Tour coverage. Sunshine Tour must therefore be checked directly or via a separately licensed source.
+
+### Cricket
+
+Sportradar documents schedules, results, tournament seasons, lineups, summaries, standings, historical results and ball-by-ball data. Its upgraded Cricket v2 documentation specifically identifies official data for ICC, ECB and Caribbean Premier League; that statement does not establish SA20 or CSA coverage. Cricsheet provides historical ball-by-ball downloads, but it is not a live feed and has explicit withheld-match exclusions.
+
+### Rugby
+
+Sportradar documents Rugby Union, Rugby League and Sevens packages, with competition/season discovery, results, lineups, timelines and team/player statistics. Its Rugby FAQ explains that statistics vary by event coverage flags; some boxscore data is available only when the relevant coverage property is true. The Seasons endpoint documentation describes a maximum of three seasons in its season list response, so the historical retrieval workflow and actual target-season availability must be tested rather than assuming deep history.
+
+## 6. Controlled sample-test protocol
+
+Run this protocol for each provider/competition combination before writing an adapter.
+
+1. **Entitlement:** record account/product tier, package, quota, and provider support confirmation for the exact competition.
+2. **Rights:** record permitted use for internal modelling, user display, storage, caching, derived statistics, retention, and redistribution. If unclear, mark blocked.
+3. **Catalogue:** retrieve the provider's competition and season list. Save the raw response and retrieval timestamp.
+4. **Upcoming sample:** capture at least one upcoming event with stable event ID, participants, scheduled time and competition/season identifiers.
+5. **Completed sample:** capture at least one completed event with final status and result.
+6. **Historical sample:** retrieve at least one prior season and record earliest available date, event count and missing seasons.
+7. **Evidence sample:** capture the actual sport-specific fields needed by the feature plan. Record null/missing fields rather than filling them.
+8. **Corrections and edge cases:** inspect postponed/cancelled events and sport-specific cases such as tennis retirement/walkover, golf cut/withdrawal, cricket DLS/no-result, and rugby abandoned/postponed events.
+9. **Identity:** test provider IDs, canonical mapping, participant aliases, duplicate ingestion, and same-participant events on different dates.
+10. **Timestamp safety:** verify that every feature used for a pre-event prediction was observed before the prediction cutoff.
+11. **Independent check:** compare final results with the official organiser or another approved source.
+12. **Decision:** mark PASS, PARTIAL, or FAIL with test date, reviewer, exact package, source URLs, raw payload hashes, known gaps and rights evidence.
+
+A test response from a trial account may prove schema and event availability, but it does not prove production quota, service-level guarantees, commercial rights, or production package coverage.
+
+## 7. Proposed first test order
+
+To reduce cost and avoid signing up for six vendors:
+
+1. **Export existing provider entitlements first.** If no paid provider account is available, stop before any purchase and continue with public documentation only.
+2. **Soccer:** check Football-Data.org's authenticated competition catalogue for EPL/UCL and each PSL competition; compare the exact target set with Sportradar's Soccer Coverage Matrix.
+3. **Tennis:** inspect Sportradar's Tennis Coverage Matrix for ATP, WTA and Grand Slams; verify tier and historical season depth.
+4. **Cricket:** inspect Sportradar for SA20, Proteas fixtures and CSA domestic formats; separately evaluate Cricsheet's historical files and terms.
+5. **Rugby:** inspect Sportradar Rugby Union for URC, Currie Cup, Springbok tests, Six Nations and Rugby Championship; record event-level coverage flags.
+6. **Golf:** check whether Sunshine Tour is explicitly listed by a licensed provider; evaluate Sportradar PGA/DP World Tour data separately.
+7. **Basketball:** test NBA through SportsDataIO or Sportradar, and treat BNL as unsupported until a reliable feed is demonstrated.
+
+Do not purchase a multi-sport bundle solely because a provider advertises these sports. Obtain a quote against the exact competition list and required data categories first.
+
+## 8. Current OctaNet implementation boundary
+
+The current server integration remains TheSportsDB schedule discovery only. The endpoint returns candidate events and explicitly does not generate odds, rule scores or prediction evidence. It uses the public/demo key and an in-memory 12-hour cache. It does not provide durable raw-payload storage, ingestion-run history, canonical cross-provider identity, or verified outcomes.
+
+Therefore, this assessment does **not** change application code or model behaviour. Keep the existing safeguards:
+
+- Discovery candidates remain separate from prediction inputs.
+- Do not treat a provider-listed fixture as evidence-eligible.
+- No generated or guessed statistics, scores, odds, or synthetic live data.
+- No AI-generated settlement as authoritative verification.
+- No provider key in browser code, client bundles, logs, or commits.
+- Preserve UNTRAINED startup, explicit training, provenance, and chronological holdouts.
+
+## 9. Exit criteria for Stage 1
+
+Stage 1 is complete only when:
+
+- Every first-release competition has a named source and exact product/package.
+- At least one upcoming and one completed sample payload have been captured for every approved competition.
+- Historical depth and sport-specific field coverage are measured, not assumed.
+- Stable event/participant identity and edge-case handling are tested.
+- Data rights and intended-use permissions are documented.
+- A PASS/PARTIAL/FAIL decision is recorded for each provider/competition pair.
+
+Until then, the competition remains discovery-only or unsupported. No production adapter or training import should be enabled from this document alone.
+
+## 10. Source documentation reviewed
+
+- Football-Data.org API reference: https://www.football-data.org/documentation/api
+- Football-Data.org quickstart: https://www.football-data.org/documentation/quickstart
+- Sportradar general API coverage guidance: https://developer.sportradar.com/getting-started/docs/get-started
+- Sportradar soccer historical data: https://developer.sportradar.com/soccer/docs/soccer-ig-historical-data
+- Sportradar tennis overview: https://developer.sportradar.com/tennis/reference/overview
+- Sportradar tennis coverage tiers: https://developer.sportradar.com/tennis/docs/tennis-ig-data-coverage-tiers
+- SportsDataIO developer catalogue: https://sportsdata.io/developers
+- SportsDataIO Global API: https://sportsdata.io/developers/api-documentation/global
+- Sportradar golf historical data: https://developer.sportradar.com/golf/docs/golf-ig-historical-data
+- Sportradar cricket overview: https://developer.sportradar.com/cricket/reference/cricket-overview
+- Cricsheet downloads: https://cricsheet.org/downloads/
+- Sportradar rugby statistics summary: https://developer.sportradar.com/rugby/reference/rugby-statistics-summary
+- Sportradar rugby FAQ: https://developer.sportradar.com/rugby/reference/rugby-faqs
+- TheSportsDB API documentation: https://www.thesportsdb.com/docs/api
+- Official competition references are linked in FIRST-RELEASE-COMPETITION-SCOPE.md.
