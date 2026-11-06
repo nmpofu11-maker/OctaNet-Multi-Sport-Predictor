@@ -136,7 +136,7 @@ def audit_archive(competition: str, url: str, archive: Path) -> dict:
     report["venues"] = dict(sorted(venues.items()))
     report["format_versions"] = dict(sorted(versions.items()))
     report["missing_field_counts"] = dict(sorted(missing.items()))
-    report["status"] = "PASS" if report["valid_matches"] and not report["invalid_json_files"] and not report["field_anomalies"] and not report["duplicate_match_ids"] else "REVIEW"
+    report["status"] = "PASS" if report["valid_matches"] and not report["invalid_json_files"] and not report["field_anomalies"] and not report["duplicate_match_ids"] and not report["missing_metadata_matches"] and not report["missing_field_counts"] else "REVIEW"
     return report
 
 
@@ -154,7 +154,7 @@ def main() -> int:
                 report = {"competition": competition, "source_url": url, "status": "NOT RUN", "error": str(exc)}
             reports.append(report)
             print(f"\n{competition}: {report['status']}")
-            for key in ("archive_bytes", "archive_sha256", "json_files", "valid_matches", "date_min", "date_max", "deliveries_total", "invalid_json_files", "duplicate_match_ids", "field_anomalies", "error"):
+            for key in ("archive_bytes", "archive_sha256", "json_files", "valid_matches", "date_min", "date_max", "deliveries_total", "missing_metadata_matches", "missing_field_counts", "invalid_json_files", "duplicate_match_ids", "field_anomalies", "error"):
                 if key in report:
                     print(f"  {key}: {report[key]}")
     result = {
