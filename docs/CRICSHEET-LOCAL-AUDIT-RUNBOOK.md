@@ -36,7 +36,7 @@ The script uses only Python's standard library and writes the report to `cricshe
 - missing delivery-required fields and result categories;
 - declared missing metadata and structural anomalies.
 
-A `PASS` is only a structural archive check. It does **not** establish complete competition coverage, official settlement authority, pre-match feature safety, rights clearance, or production readiness. Inspect the report and representative match files before any later integration. In particular, validate event/competition labels, match dates and season coverage against official competition records.
+A `PASS` means the archive parsed without invalid JSON, duplicate filename-based IDs, detected structural anomalies, declared missing metadata or counted missing fields. Any declared metadata gap or counted missing field produces `REVIEW`. Neither status establishes complete real-world competition coverage, official settlement authority, pre-match feature safety, rights clearance, or production readiness. Inspect the report and representative match files before any later integration. In particular, validate event/competition labels, match dates and season coverage against official competition records. No-result and draw/tie matches are counted separately and require explicit downstream handling.
 
 ## Licence and safety boundary
 
