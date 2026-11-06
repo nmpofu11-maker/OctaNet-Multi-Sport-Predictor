@@ -1,28 +1,29 @@
 # Running the isolated Cricsheet archive audit
 
-The repository now includes `scripts/cricsheet-archive-audit.py`. It is a standalone research utility, not an application provider or training-data importer.
+The repository includes `scripts/cricsheet-archive-audit.py`. It is a standalone research utility, not an application provider or training-data importer. **You do not need a local clone or local repository.** The preferred route is GitHub Actions.
 
-## Run on Windows PowerShell
+## Run it in GitHub (no local setup)
 
-From the OctaNet repository root:
+The workflow is `.github/workflows/cricsheet-archive-audit.yml`.
+
+1. Open the [OctaNet pull request #11](https://github.com/nmpofu11-maker/OctaNet-Multi-Sport-Predictor/pull/11).
+2. Open the **Checks** tab and look for **Cricsheet archive audit**. The pull-request workflow should start automatically after the workflow file is present on the PR branch and GitHub Actions is enabled for the repository.
+3. Open the audit run when it appears. The workflow downloads the SA20 and CSA T20 Challenge JSON archives, inspects them, and uploads an artifact named **cricsheet-archive-audit-report**.
+4. In the workflow run's **Artifacts** section, download that report ZIP and open `cricsheet-audit-report.json`.
+
+If the workflow does not appear, open the repository's **Actions** tab and check whether Actions are enabled and whether the workflow is listed. A manual `workflow_dispatch` run is also defined, once GitHub exposes the workflow in that repository.
+
+The workflow uses a GitHub-hosted runner; no provider credentials or repository write permissions are required. It does need outbound HTTPS access to `cricsheet.org`. The downloaded raw ZIPs stay on the temporary runner and are not uploaded as artifacts; only the aggregate report is retained for 14 days.
+
+## Optional local run
+
+If you later obtain a local clone, run from its root:
 
 ```powershell
 py -3 scripts/cricsheet-archive-audit.py
 ```
 
-If the Python launcher is unavailable but Python is installed:
-
-```powershell
-python scripts/cricsheet-archive-audit.py
-```
-
-The script uses only Python's standard library. It downloads the SA20 and CSA T20 Challenge JSON ZIPs directly from Cricsheet, calculates SHA-256 hashes, inspects JSON metadata and ball-by-ball structure, and writes a machine-readable report to:
-
-```text
-cricsheet-audit-output/cricsheet-audit-report.json
-```
-
-The downloaded ZIP files are held in a temporary directory and removed when the run ends. No raw match records are written to the repository. The output directory is local research output and should not be committed.
+The script uses only Python's standard library and writes the report to `cricsheet-audit-output/cricsheet-audit-report.json`.
 
 ## What the report checks
 
@@ -35,14 +36,10 @@ The downloaded ZIP files are held in a temporary directory and removed when the 
 - missing delivery-required fields and result categories;
 - declared missing metadata and structural anomalies.
 
-A `PASS` is only a structural archive check. It does **not** establish complete competition coverage, official settlement authority, pre-match feature safety, rights clearance, or production readiness. Inspect the report and representative match files before any later integration. In particular, validate the event/competition labels, match dates and season coverage against official competition records.
+A `PASS` is only a structural archive check. It does **not** establish complete competition coverage, official settlement authority, pre-match feature safety, rights clearance, or production readiness. Inspect the report and representative match files before any later integration. In particular, validate event/competition labels, match dates and season coverage against official competition records.
 
-## Expected environment
+## Licence and safety boundary
 
-The machine running the command must have outbound HTTPS access to `cricsheet.org`. If a corporate firewall or DNS policy blocks the download, the script reports `NOT RUN`; this is a connectivity limitation, not proof of a bad archive or invalid provider.
+Cricsheet's JSON match data is covered by ODC-BY 1.0. Read the full licence and implement required attribution and notices before public or product use. XML is separately licensed under CC BY 4.0. See https://cricsheet.org/licensing/.
 
-Cricsheet's JSON match data is covered by ODC-BY 1.0. Read the full licence and implement the required attribution and notices before public or product use. XML is separately licensed under CC BY 4.0. See https://cricsheet.org/licensing/.
-
-## Safety boundary
-
-This script does not change OctaNet application code paths, browser storage, Firebase, prediction logic, model weights, training data, or fixture discovery. It must remain an isolated audit until separately reviewed and approved.
+This audit does not change OctaNet application code paths, browser storage, Firebase, prediction logic, model weights, training data, or fixture discovery. It must remain isolated until separately reviewed and approved.
