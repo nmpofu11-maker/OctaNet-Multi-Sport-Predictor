@@ -1,11 +1,6 @@
 name: Cricsheet archive audit
 
 on:
-  pull_request:
-    paths:
-      - "scripts/cricsheet-archive-audit.py"
-      - "docs/CRICSHEET-LOCAL-AUDIT-RUNBOOK.md"
-      - ".github/workflows/cricsheet-archive-audit.yml"
   workflow_dispatch:
 
 permissions:
@@ -16,15 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Check out repository
+      - name: Check out the reviewed audit utility
         uses: actions/checkout@v4
+        with:
+          ref: docs/six-sport-data-collection-blueprint
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
 
-      - name: Download and inspect Cricsheet archives
+      - name: Run isolated Cricsheet archive audit
         id: audit
         continue-on-error: true
         run: python scripts/cricsheet-archive-audit.py
@@ -38,19 +35,19 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Summarize audit outcome
+      - name: Print audit outcome
         if: always()
         run: |
           if [ -f cricsheet-audit-output/cricsheet-audit-report.json ]; then
             python - <<'PY'
           import json
           from pathlib import Path
-          data = json.loads(Path("cricsheet-audit-output/cricsheet-audit-report.json").read_text())
-          for report in data.get("reports", []):
-              print(f"{report.get('competition')}: {report.get('status')}")
-              if report.get("error"):
-                  print(f"  {report['error']}")
+          report = json.loads(Path("cricsheet-audit-output/cricsheet-audit-report.json").read_text())
+          for item in report.get("reports", []):
+              print(f"{item.get('competition')}: {item.get('status')}")
+              if item.get("error"):
+                  print(f"  {item['error']}")
           PY
           else
-            echo "No audit report was produced."
+            echo "No aggregate report was produced."
           fi
