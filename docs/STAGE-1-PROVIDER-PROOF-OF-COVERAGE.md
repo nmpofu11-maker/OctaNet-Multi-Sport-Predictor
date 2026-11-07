@@ -218,3 +218,33 @@ Public source pages reviewed:
 - Sportradar interactive Coverage Matrix: https://coverage-matrix.sportradar.com/
 
 The next controlled test, once an authorised account is available, is to export the complete sports/competition catalogue, retain pagination and retrieval timestamps, then query a small sample of upcoming events for each sport and verify bookmaker, event ID, market ID, selection, market status and observed time. For Sportradar, export the selected package's competition/season coverage and the exact required sporting fields. Capture raw response hashes and rights evidence. Until those tests are completed, all account-level coverage remains **NOT TESTED** and all production decisions remain **BLOCKED**.
+
+
+## 14. Additional odds-catalogue endpoint finding — 7 November 2026
+
+A closer review of Sportradar's Odds Comparison documentation identifies a useful, more direct market-coverage test than relying on its general sports list:
+
+- The **Sport Competitions** endpoint returns competitions for a sport that have available odds.
+- Competition records include country/category, competition ID and name, and flags for pre-match markets, futures and player props.
+- The endpoint documentation says the catalogue changes as competitions gain or lose odds coverage, with a five-minute cache TTL.
+- This makes it a candidate for discovering the competitions that actually carry odds in the configured Sportradar Odds Comparison feed. It still does not prove that a particular event has a currently open market, that a desired market/selection exists, or that the account is entitled to all competitions.
+
+Reference: https://developer.sportradar.com/odds/reference/oc-live-odds-sport-competitions
+
+**Important product separation:** Sportradar's Odds Comparison API and Sportradar's sport-specific data APIs are separate products and must be tested independently. A competition appearing in the odds catalogue does not establish the availability or depth of sporting evidence for that competition. Conversely, a sport-specific schedule/statistics package does not establish bookmaker odds coverage.
+
+### Updated comparison and interpretation
+
+The Odds API's current public homepage advertises 100+ sports and 100+ bookmakers and describes broad coverage across soccer, basketball, cricket, tennis and selected golf and rugby-league competitions. Its examples include golf majors and NRL, but do not establish broad Rugby Union coverage or all six OctaNet sports at competition level. The detailed sports catalogue and the authenticated `/sports` response must be treated as the authoritative discovery starting points for an account; public marketing claims are not event-level proof.
+
+Reference: https://the-odds-api.com/
+
+This refines, but does not reverse, the earlier screening: The Odds API remains a market-feed candidate; Sportradar remains a sporting-data candidate and may also be evaluated as a distinct market-feed candidate through Odds Comparison. Neither is approved without account-specific catalogue, event/market samples, entitlements and rights evidence.
+
+### Revised controlled test order
+
+1. If a Sportradar account is available, enumerate its Odds Comparison sports and Sport Competitions endpoints first. Record each competition's country, ID, market/futures/player-props flags, retrieval time and account/package.
+2. Separately export the Sportradar sport-specific Coverage Matrix for the same competitions and record schedules, results, statistics, lineups and play-by-play depth.
+3. If The Odds API account is available, export its authenticated sports catalogue, then query upcoming events by sport and region. Record the returned bookmaker, market, selection and last-update timestamps.
+4. Reconcile both market feeds independently to sports-event identities. Never infer that an event is bettable from a sport/competition catalogue alone.
+5. Keep all six sports in the report. Where no supported event-market endpoint is demonstrated (notably broad golf match markets or Rugby Union in a given account), report the gap instead of silently substituting a different sport/code or market type.
