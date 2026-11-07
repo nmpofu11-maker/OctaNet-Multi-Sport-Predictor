@@ -79,3 +79,37 @@ These require downloading and inspecting actual archives or making authenticated
 
 This register contains a small set of public checks and South African examples because those were the sources inspected in this audit. It is not a worldwide event list, a bookmaker-market catalogue, a ranking of target countries, or a first-release competition whitelist. The next coverage exercise must enumerate all available countries and competitions for each supported sport from the actual permitted provider accounts, then independently inspect configured bookmaker market listings. Report results and gaps by sport, country, competition, provider, bookmaker and date window. A source that exposes fixtures only (including the current TheSportsDB use) does not prove that those fixtures are offered for betting. No bookmaker odds may be used as sporting evidence.
 
+## 8. Public bookmaker-catalogue findings — 7 November 2026
+
+**Assessment type:** public documentation review only. These findings do not represent authenticated account calls, current event-market samples, verified account entitlements, commercial rights approval, or production coverage.
+
+### The Odds API — market-feed candidate
+
+The provider's public sports catalogue and homepage describe bookmaker odds across a broad range of sports, including soccer, tennis, basketball and cricket, with selected golf-major and rugby-league examples. The published examples do not establish complete worldwide competition coverage, broad golf matchup markets, or Rugby Union coverage. The provider's authenticated sports catalogue and actual event responses remain the required account-level test.
+
+- Documentation/catalogue: https://the-odds-api.com/sports-odds-data/sports-apis
+- API guide: https://the-odds-api.com/liveapi/guides/v4/
+
+### Sportradar Odds Comparison — separate market-feed candidate
+
+The Odds Comparison **Sport Competitions** endpoint is a more direct public-documented route to enumerate competitions for a sport that have available odds. Its competition records include country/category, competition ID/name and indicators for pre-match markets, futures and player props. The documented catalogue is dynamic and has a five-minute cache TTL.
+
+This is a competition-level market-catalogue signal only. It does not prove that a specific upcoming event currently has an open market, that a desired market or selection is offered, or that a particular account is entitled to every listed competition. Sportradar Odds Comparison must be tested separately from its sport-specific data APIs and Coverage Matrix.
+
+- Sport Competitions endpoint: https://developer.sportradar.com/odds/reference/oc-live-odds-sport-competitions
+- Sportradar Coverage Matrix: https://coverage-matrix.sportradar.com/
+
+### Register updates
+
+| Test ID | Source / scope | Status | Evidence captured | Next action |
+|---|---|---|---|---|
+| PUB-ODDS-01 | The Odds API public sports catalogue and API guide | **DOCUMENTATION CHECKED** | Publicly documented broad sport catalogue and selected competition examples; no authenticated response or event/market payload | With authorised access, export the complete account-visible sports catalogue and query upcoming events by sport/region; record bookmaker, event, market, selection and update timestamps. |
+| PUB-SPR-ODDS-01 | Sportradar Odds Comparison Sport Competitions endpoint | **DOCUMENTATION CHECKED** | Endpoint documents odds-bearing competition discovery and pre-match/futures/player-props flags; no account response or entitlement verified | With authorised access, enumerate sports and competitions; preserve country, IDs, flags, retrieval time, package and pagination; then query event-level markets. |
+
+### Gate interpretation
+
+- These public findings improve the test plan; they do **not** change the existing **LIVE-SAMPLES: NOT RUN** status.
+- Keep Sportradar sport-data coverage and Sportradar Odds Comparison market coverage as separate verification tracks.
+- Keep The Odds API as a market-feed candidate only; it is not a sporting-evidence source.
+- A competition catalogue entry is not an event-level market, and an event-level market is not verified sporting evidence.
+- No provider, bookmaker, subscription, production adapter, model, or training flow is approved by these documentation checks.
