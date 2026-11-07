@@ -28,20 +28,13 @@ Before product use, retain the exact licence file shipped with the downloaded ar
 
 ## 3. Payload sample test status
 
-**Result: NOT EXECUTED — raw ZIP payload could not be retrieved in this run.**
+**Result: EXECUTED through GitHub Actions on 6 November 2026.**
 
-The public Match Data and Downloads pages were inspected, but the download link did not expose a retrievable archive payload through the available session tools. Therefore no claim is made that a JSON file was downloaded, parsed, validated, or hash-verified. Do not mark this as a sample-payload PASS.
+The workflow downloaded both competition ZIPs, parsed all 444 JSON match records, calculated archive hashes and produced an aggregate report. The raw ZIPs were removed after the run and were not committed. Detailed counts and hashes are recorded in Section 7.
 
-The next local test should retrieve the CSA T20 Challenge JSON archive and the SA20 JSON archive separately. For each, record:
-- exact source URL, retrieval timestamp, archive byte size and SHA-256;
-- archive file list and number of JSON match records;
-- earliest/latest match dates and season distribution;
-- stable Cricsheet match IDs, competition/season metadata, venue and team names;
-- innings count, overs, deliveries, batter/bowler identities, runs, extras and dismissals;
-- missing/null fields, duplicate IDs, malformed records and incomplete/abandoned/no-result matches;
-- attribution/licence files included in the archive.
+The first audit report did not identify which metadata fields were declared missing in the 34 CSA records. The follow-up script now aggregates the declared missing-field names and records up to ten representative Cricsheet match IDs per field. This is a targeted diagnostic only; it does not persist raw match payloads.
 
-Do not add the downloaded raw archive or licensed dataset to the Git repository. Keep it in a local staging area unless the repository owner explicitly chooses a compliant storage strategy.
+Do not add the downloaded raw archive or licensed dataset to the Git repository. Keep any future sample staging isolated unless the repository owner explicitly chooses a compliant storage strategy.
 
 ## 4. Data suitability boundaries
 
@@ -69,13 +62,13 @@ This is still a documentation-only assessment. No OctaNet source code, browser s
 - Cricsheet Licensing: https://cricsheet.org/licensing/
 - Cricsheet licensing announcement (7 October 2026): https://cricsheet.org/article/licensing-and-venues-registry/
 
-## 6. Isolated local audit utility prepared
+## 6. Isolated archive audit utility
 
-A standard-library-only audit utility is now available at `scripts/cricsheet-archive-audit.py`, with instructions in `docs/CRICSHEET-LOCAL-AUDIT-RUNBOOK.md`.
+A standard-library-only audit utility is available at `scripts/cricsheet-archive-audit.py`, with instructions in `docs/CRICSHEET-LOCAL-AUDIT-RUNBOOK.md`.
 
-The utility downloads the SA20 and CSA T20 Challenge JSON ZIPs to a temporary directory, calculates SHA-256 hashes, parses the match records, checks structural fields and reports dates, seasons, teams, venues, innings, overs, deliveries, wickets, missing fields, duplicate IDs and malformed records. It removes the downloaded archives at the end and writes only an aggregate JSON report under `cricsheet-audit-output/`.
+The utility downloads the SA20 and CSA T20 Challenge JSON ZIPs to a temporary directory, calculates SHA-256 hashes, parses the match records, checks structural fields and reports dates, seasons, teams, venues, innings, overs, deliveries, wickets, missing fields, duplicate IDs and malformed records. It removes the downloaded archives at the end and writes an aggregate JSON report under `cricsheet-audit-output/`.
 
-**Execution status: NOT RUN in this hosted session.** The hosted environment could not retrieve the ZIP binary; the archive parser has therefore not been executed against real Cricsheet records. The script is committed for execution on a machine with outbound HTTPS access to cricsheet.org. A successful structural PASS would still not approve production ingestion.
+The utility has been executed successfully in GitHub Actions against the real archives. Its latest revision also groups declared missing-metadata fields and provides up to ten representative public match IDs per field. The revised field-level output has not yet been run against the archives. A structural PASS would still not approve production ingestion.
 
 ## 7. Actual GitHub Actions archive audit — 6 November 2026
 
@@ -107,7 +100,9 @@ CSA T20 Challenge has 13 represented seasons from 2011/12 through 2024/25, with 
 
 ### Audit status semantics tightened
 
-The first run labelled both archives `PASS` because it only treated parse failures, duplicate IDs and explicit structural anomalies as blockers. That label was too permissive for CSA's 34 metadata-gap records. The audit script has therefore been tightened: any declared missing metadata or counted missing field now produces `REVIEW`, not `PASS`. This does not invalidate the successful parsing result; it separates syntactic integrity from completeness. A fresh run against the updated script is required to produce the revised status labels.
+The first run labelled both archives `PASS` because it only treated parse failures, duplicate IDs and explicit structural anomalies as blockers. That label was too permissive for CSA's 34 metadata-gap records. The audit script has therefore been tightened: any declared missing metadata or counted missing field now produces `REVIEW`, not `PASS`. This does not invalidate the successful parsing result; it separates syntactic integrity from completeness.
+
+The script has now also been extended to aggregate the names of fields declared in each match's `info.missing` metadata and include up to ten representative match IDs per field. This will show whether the CSA gap concerns optional officials/awards or fields material to a future feature pipeline, without retaining raw match records. The revised diagnostic has not yet been executed; a new workflow run is required.
 
 ### Next validation gate
 
