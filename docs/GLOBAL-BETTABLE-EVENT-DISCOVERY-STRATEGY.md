@@ -109,3 +109,29 @@ No provider, bookmaker, country, competition, data licence, production adapter, 
 - No provider credentials in client bundles, logs or Git.
 - No automatic training; preserve the empty-corpus / UNTRAINED state and explicit training approval.
 - Preserve provenance, event reconciliation, timestamp cutoffs, chronological holdouts and explicit eligibility blocks.
+
+## 11. Zero-subscription operating policy — 7 November 2026
+
+**Budget constraint: OctaNet's provider and bookmaker discovery work must operate at zero subscription cost unless the owner explicitly changes this policy.** Do not purchase Sportradar, The Odds API, SportsDataIO or any other paid plan. Do not start a paid trial, accept a minimum commitment, enter payment details, enable auto-renewal or incur usage charges. A no-cost trial may only be considered later if it is genuinely free, requires no payment method or commitment, and cannot convert into a charge without fresh explicit approval. No such trial is currently requested.
+
+### Source-selection order
+
+1. Existing no-cost access already available to the project, subject to checking actual quota and terms.
+2. Official governing-body, league, tournament and team public schedules/results, where automated access and intended use are permitted.
+3. Free API tiers and public datasets with explicit limits and compatible licences/terms.
+4. Historical open archives for research only, with provenance, completeness and rights documented.
+5. Manual/public-page spot checks only where site terms permit; these do not become an assumed scalable feed.
+
+### Evidence and market rules
+
+- Maintain separate inventories for event discovery, sporting evidence, bookmaker market availability, verified outcomes and prediction eligibility.
+- A public schedule or free fixture API does not prove that an event has a bookmaker market.
+- A bookmaker page or permitted free market endpoint must identify the actual event and market at an observed time before market availability can be marked VERIFIED.
+- If no lawful, free market source is available for an event, record market availability as NOT VERIFIED; do not label it bettable.
+- Odds remain market context only and never become sporting evidence or model features.
+- Respect source terms, robots/access controls, rate limits, attribution, retention and licensing. No scraping behind logins, CAPTCHA bypass, paywall circumvention or redistribution without rights.
+- Free-tier limits, missing competitions, geographic restrictions and stale feeds must be reported rather than hidden. Global scope is the discovery objective, not a claim of complete coverage.
+
+### Commercial gate
+
+Any paid product or chargeable overage is out of scope. Reconsidering a paid service requires a separate, explicit owner decision after documenting the free-source coverage gap and the exact cost. No provider, bookmaker, integration, model or training approval is granted by this policy.
