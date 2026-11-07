@@ -127,3 +127,20 @@ At the time of review, PR #11 remained open, draft and unmerged. GitHub Actions 
 ## 8. Next execution step
 
 The next meaningful proof step is to run the provider and market sample protocol using authorised account access. Do not paste API keys into chat or commit them. If credentials are later made available through an approved private secret store, use read-only catalogue/sample requests first and retain only permitted metadata and hashes in this repository. If access is not available, keep the relevant rows BLOCKED rather than simulating success.
+
+## 9. Additional market-provider finding — Sportradar OC Core (7 November 2026)
+
+The current Sportradar Odds Comparison documentation distinguishes **OC Core** from its US-focused tier. OC Core is described as a global pipeline with 140+ global bookmakers and documented support for soccer, basketball, golf, cricket, rugby and tennis. This is a material improvement over the earlier general-product screening: it identifies a specific global market-data tier that covers all six OctaNet sport categories at the product-documentation level.
+
+References:
+- OC Core overview: https://developer.sportradar.com/odds/reference/oc-core-overview
+- Odds Comparison v2 overview: https://developer.sportradar.com/odds/docs/oc-ig-overview
+
+### Revised Stage 0 interpretation
+
+- Sportradar **OC Core** is now the leading public-documentation candidate for a single global six-sport bookmaker-market feed, subject to actual account entitlement, bookmaker configuration, competition/event markets and rights.
+- Sportradar sport-specific data APIs remain a separate sporting-event/evidence-provider assessment. OC Core market coverage does not prove schedules, results, statistics or prediction-grade evidence.
+- The Odds API remains a useful independent market-feed candidate, but its public catalogue shows narrower golf and rugby examples in the reviewed material.
+- The 140+ bookmaker and six-sport statements are vendor documentation, not OctaNet coverage measurements. No event-level market sample has yet been tested.
+
+**Decision remains PARTIAL / BLOCKED:** no authenticated account, catalogue export, event-market payload, entitlement, quote or licence has been verified. No purchase, integration, model or training action is authorised by this research.
