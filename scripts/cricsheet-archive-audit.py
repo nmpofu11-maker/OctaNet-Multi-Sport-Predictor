@@ -60,6 +60,8 @@ def audit_archive(competition: str, url: str, archive: Path) -> dict:
         "deliveries_total": 0,
         "wickets_total": 0,
         "missing_metadata_matches": 0,
+        "missing_metadata_field_counts": {},
+        "missing_metadata_match_samples": {},
         "no_result_matches": 0,
         "draw_or_tie_matches": 0,
         "missing_field_counts": {},
@@ -68,6 +70,8 @@ def audit_archive(competition: str, url: str, archive: Path) -> dict:
     }
     dates, match_ids = [], set()
     seasons, teams, venues, versions, missing = Counter(), Counter(), Counter(), Counter(), Counter()
+    declared_missing_fields = Counter()
+    declared_missing_samples: dict[str, list[str]] = {}
 
     with zipfile.ZipFile(archive) as zf:
         infos = [i for i in zf.infolist() if not i.is_dir()]
@@ -104,8 +108,38 @@ def audit_archive(competition: str, url: str, archive: Path) -> dict:
                     venues[str(game["venue"])] += 1
                 else:
                     missing["venue"] += 1
-                if game.get("missing"):
+                declared_missing = game.get("missing", [])
+                if declared_missing:
                     report["missing_metadata_matches"] += 1
+                    if isinstance(declared_missing, dict):
+                        declared_fields = [str(name) for name, present in declared_missing.items() if present]
+                    elif isinstance(declared_missing, list):
+                        declared_fields = []
+                        for item in declared_missing:
+                            if isinstance(item, str) and item.strip():
+                                declared_fields.append(item.strip())
+                            elif isinstance(item, dict):
+                                name = item.get("field") or item.get("name")
+                                if isinstance(name, str) and name.strip():
+                                    declared_fields.append(name.strip())
+                                else:
+                                    report["field_anomalies"].append(
+                                        f"{info.filename}: unrecognised missing-metadata entry"
+                                    )
+                            else:
+                                report["field_anomalies"].append(
+                                    f"{info.filename}: unrecognised missing-metadata entry"
+                                )
+                    else:
+                        declared_fields = []
+                        report["field_anomalies"].append(
+                            f"{info.filename}: missing metadata declaration is not a list or object"
+                        )
+                    for field_name in set(declared_fields):
+                        declared_missing_fields[field_name] += 1
+                        samples = declared_missing_samples.setdefault(field_name, [])
+                        if len(samples) < 10:
+                            samples.append(match_id)
                 outcome = game.get("outcome", {})
                 if outcome.get("result") == "no result":
                     report["no_result_matches"] += 1
@@ -136,6 +170,10 @@ def audit_archive(competition: str, url: str, archive: Path) -> dict:
     report["venues"] = dict(sorted(venues.items()))
     report["format_versions"] = dict(sorted(versions.items()))
     report["missing_field_counts"] = dict(sorted(missing.items()))
+    report["missing_metadata_field_counts"] = dict(sorted(declared_missing_fields.items()))
+    report["missing_metadata_match_samples"] = {
+        name: sorted(ids) for name, ids in sorted(declared_missing_samples.items())
+    }
     report["status"] = "PASS" if report["valid_matches"] and not report["invalid_json_files"] and not report["field_anomalies"] and not report["duplicate_match_ids"] and not report["missing_metadata_matches"] and not report["missing_field_counts"] else "REVIEW"
     return report
 
@@ -154,7 +192,7 @@ def main() -> int:
                 report = {"competition": competition, "source_url": url, "status": "NOT RUN", "error": str(exc)}
             reports.append(report)
             print(f"\n{competition}: {report['status']}")
-            for key in ("archive_bytes", "archive_sha256", "json_files", "valid_matches", "date_min", "date_max", "deliveries_total", "missing_metadata_matches", "missing_field_counts", "invalid_json_files", "duplicate_match_ids", "field_anomalies", "error"):
+            for key in ("archive_bytes", "archive_sha256", "json_files", "valid_matches", "date_min", "date_max", "deliveries_total", "missing_metadata_matches", "missing_metadata_field_counts", "missing_metadata_match_samples", "missing_field_counts", "invalid_json_files", "duplicate_match_ids", "field_anomalies", "error"):
                 if key in report:
                     print(f"  {key}: {report[key]}")
     result = {
