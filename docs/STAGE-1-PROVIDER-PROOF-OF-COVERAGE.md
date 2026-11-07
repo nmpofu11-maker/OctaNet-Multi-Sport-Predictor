@@ -19,7 +19,7 @@ There is not yet sufficient evidence to approve one provider for all six sports 
 - **SportsDataIO** documents NBA, soccer, and golf products, plus a Global API for competition/season discovery. The documentation reviewed does not establish BNL, Sunshine Tour, or the required coverage for the other sports.
 - **Football-Data.org** is a useful low-cost soccer candidate for supported competitions and basic match/standing data. Its authenticated competition catalogue and plan permissions must be checked for the PSL, MTN8, Nedbank Cup, Carling Knockout, and UEFA Champions League before it is selected.
 - **Cricsheet** is a useful historical cricket bulk-data candidate, not a live fixture/results provider. Its current download catalogue lists 23,241 matches and explicitly withholds 386 matches.
-- **TheSportsDB** is already integrated for fixture discovery only. Its free-key limits make it unsuitable as the sole operational source for this launch scope.
+- **TheSportsDB** is already integrated for fixture discovery only. Its free-key limits make it unsuitable as the sole operational source for worldwide discovery.
 - Official competition websites are valuable independent references for schedule/result reconciliation, but public web pages are not automatically API licences or permission for automated scraping.
 
 **Decision:** No new provider adapter, subscription, or production data flow is authorised by this assessment. Proceed to controlled sample tests only after the user confirms available provider accounts/entitlements and permitted use.
