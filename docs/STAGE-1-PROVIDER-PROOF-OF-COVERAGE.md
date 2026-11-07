@@ -248,3 +248,22 @@ This refines, but does not reverse, the earlier screening: The Odds API remains 
 3. If The Odds API account is available, export its authenticated sports catalogue, then query upcoming events by sport and region. Record the returned bookmaker, market, selection and last-update timestamps.
 4. Reconcile both market feeds independently to sports-event identities. Never infer that an event is bettable from a sport/competition catalogue alone.
 5. Keep all six sports in the report. Where no supported event-market endpoint is demonstrated (notably broad golf match markets or Rugby Union in a given account), report the gap instead of silently substituting a different sport/code or market type.
+
+## 15. Sportradar Odds Comparison Core — global bookmaker tier clarified (7 November 2026)
+
+A review of the current Odds Comparison v2 documentation identifies an important distinction that was not explicit in the earlier screening: **OC Core is a global access tier**, configured on the API key, rather than simply assuming the default US-focused Odds Comparison coverage.
+
+The public documentation states that OC Core uses a global Core Crawlers pipeline and can return data from **140+ global bookmakers** across a broad range of sports and competitions. Its documented sports include all six OctaNet target sports: soccer, basketball, golf, cricket, rugby and tennis. Coverage depth still depends on bookmaker feed availability. The documentation also distinguishes OC US (curated US-focused coverage) from OC Core (global coverage).
+
+References:
+- OC Core overview: https://developer.sportradar.com/odds/reference/oc-core-overview
+- Odds Comparison v2 overview: https://developer.sportradar.com/odds/docs/oc-ig-overview
+- Sport Competitions endpoint: https://developer.sportradar.com/odds/reference/oc-live-odds-sport-competitions
+
+**Interpretation:** this materially strengthens Sportradar Odds Comparison as a global market-feed candidate and gives us a concrete package/tier to ask about. It does not establish that any particular OctaNet account has OC Core enabled, that every sport has useful markets, or that all countries/competitions/bookmakers are covered. The Sport Competitions and Books feeds for the actual key, followed by event-level market responses, remain mandatory. Sporting-data Coverage Matrix entitlements remain a separate test.
+
+### Revised market-provider screening
+
+- **Sportradar OC Core:** elevate to first global market-feed candidate for an entitlement/catalogue/sample test, because its documented global pipeline explicitly lists all six target sports and 140+ bookmakers.
+- **The Odds API:** retain as a second market-feed candidate; test its authenticated sports and event catalogue, with golf and Rugby Union coverage gaps explicitly measured.
+- Do not infer price competitiveness or recommend a purchase from public documentation. Request a written quote and exact bookmaker/sport/competition schedule before any commercial decision.
