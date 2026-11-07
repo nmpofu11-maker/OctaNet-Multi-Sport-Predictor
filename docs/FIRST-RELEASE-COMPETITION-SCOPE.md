@@ -1,100 +1,77 @@
-# OctaNet First-Release Competition Scope
+# OctaNet Global Event and Betting-Market Scope
 
-**Status:** Proposed scope for Stage 0 provider proof-of-coverage  
-**Decision basis:** South Africa-first, with a deliberately limited international set  
+**Status:** Proposed product scope and Stage 0 proof-of-coverage target  
+**Decision basis:** Worldwide discovery across all six supported sports  
 **Related PR:** #11 — Six-sport data collection strategy
 
-This is a recommended launch scope, not a claim that the current application or any provider subscription covers these competitions. Every competition must pass the provider/rights/field-coverage gate before being enabled for ingestion or predictions.
+## 1. Governing scope
 
-## 1. Scope principles
+OctaNet should discover sporting events worldwide in soccer, tennis, basketball, golf, cricket and rugby, then identify which events have actual betting markets at configured bookmakers. South Africa is included as one market, not the default boundary or a restriction.
 
-- Start with South African competitions where an official organiser or usable licensed feed can be identified.
-- Add a small set of internationally important competitions to test broader coverage.
-- Separate sport code, competition, season, gender, age group, and format. Do not merge men's/women's, senior/junior, Union/Sevens, or cricket formats into one competition identity.
-- A competition is **enabled** only when its source, identifiers, required fields, history, update frequency, and permitted use have been tested.
-- If no suitable data source is approved, show the competition as **not yet supported**. Do not substitute scraped or synthetic fixtures.
-- Start with fixtures, event identity, final results, standings/rankings and a modest set of pre-event features. Add detailed live statistics later.
+There is no fixed first-release country or competition whitelist. The event universe should follow verified provider and bookmaker coverage, with competition and geographic coverage reported transparently. This is a product direction; it does not claim that current integrations or subscriptions provide complete global coverage.
 
-## 2. Recommended first-release scope
+## 2. What qualifies as a bettable event
 
-| Sport | South African priority | International benchmark | Format boundary / initial exclusions |
-|---|---|---|---|
-| Soccer | Betway Premiership; Motsepe Foundation Championship; MTN8; Nedbank Cup; Carling Knockout | English Premier League; UEFA Champions League | Senior men's first. Add SA women's, youth, CAF club competitions and other European leagues only after separate source validation. |
-| Tennis | South African players only when they appear in covered tour/draw data; no standalone local circuit commitment initially | ATP Tour singles; WTA Tour singles; Australian Open, Roland-Garros, Wimbledon, US Open | Singles first. Doubles, Challenger/ITF, juniors, wheelchair and exhibitions remain separate later phases. |
-| Basketball | Basketball National League (BNL) men and women | NBA | Keep men's and women's leagues separate. WNBA, BAL, EuroLeague, college and youth competitions are later additions. |
-| Golf | Sunshine Tour events | PGA Tour; DP World Tour; four men's major championships | Individual stroke-play tournaments first. Team formats, match play, amateur events, LPGA and other tours need separate feature/settlement handling. |
-| Cricket | Proteas men's internationals; SA20; CSA men's Division 1 4-Day Series, One-Day Cup and T20 Challenge | ICC men's senior tournaments; IPL | Test/4-Day, ODI/One-Day, and T20 are distinct formats. Women's, Division 2, provincial and franchise women's competitions are later phases unless the chosen feed provides them with sufficient history. |
-| Rugby | Springbok men's internationals; United Rugby Championship; Currie Cup Premier Division | Six Nations; Rugby Championship | Rugby Union 15s first. Women's, U20, Varsity, club lower divisions, Rugby Sevens and league-specific variations remain separate later phases. |
+A candidate is labelled **bettable** only when a configured bookmaker or licensed market-data source returns a current, identifiable market for the event. Store source, bookmaker, bookmaker event/market IDs, market type, observed timestamp and status.
 
-### Why these South African priorities
+A sports fixture feed by itself only establishes a fixture candidate. It does not establish bookmaker availability. Conversely, a bookmaker listing must be reconciled to a real sporting event before it is treated as a valid event.
 
-- The PSL identifies the Betway Premiership and its domestic cup competitions, plus the Motsepe Foundation Championship, as core South African club competitions; its published 2026/27 calendar confirms the season and cup schedule. [PSL official 2026/27 calendar](https://www.psl.co.za/news/article/5615294-psl-confirms-the-202627-season-calend).
-- Cricket South Africa lists its men's Division 1 formats (4-Day Series, One-Day Cup and T20 Challenge), alongside women's competitions. The first release prioritises men's formats to constrain the initial data model; this is a scope choice, not a statement that women's cricket is unimportant. [Cricket South Africa domestic leagues](https://cricket.co.za/domestic-leagues-2/).
-- SA Rugby identifies the URC, domestic competitions, Springbok internationals, women's and junior competitions as distinct coverage areas. SuperSport's broadcast rights are not a data API licence; obtain data access separately. [SA Rugby / URC rights and competition coverage](https://springboks.rugby/news-features/articles/2026/6/3/supersport-and-dstv-extend-exclusive-vodacom-urc-rights-in-sub-saharan-africa).
-- The official BNL site publishes separate men's and women's league seasons, fixtures, standings and results, so OctaNet should model them as separate competitions. [Basketball National League](https://bnlsa.com/).
-- The Sunshine Tour publishes its own tournament schedule and leaderboards, providing an official reference for South African golf event identity and results. [Sunshine Tour schedule](https://sunshinetour.com/Schedule).
-- The official SA20 site publishes fixtures, results and standings; treat it as a separate T20 franchise competition rather than combining it with international T20Is or other domestic T20 tournaments. [SA20 fixtures](https://www.sa20.co.za/matches).
+Market availability and sporting prediction eligibility are separate:
+- Market listed + insufficient sporting evidence = visible as market-listed, but prediction blocked.
+- Fixture discovered + no verified market = fixture candidate, not labelled bettable.
+- Market listed + identity and evidence gates passed = may become prediction-eligible under the existing safety rules.
 
-## 3. Enablement matrix required before coding each adapter
+## 3. Global discovery categories by sport
 
-For every row above, Stage 0 must record:
+| Sport | Worldwide discovery categories | Required identity boundaries |
+|---|---|---|
+| Soccer | Domestic leagues/cups, continental competitions, international fixtures and covered lower divisions | Country, competition, season, gender/age group, teams, round, kickoff |
+| Tennis | ATP, WTA, Challenger, ITF, Grand Slams and other covered events | Tour, singles/doubles, gender, tournament, draw, round, surface, player IDs |
+| Basketball | Professional leagues, cups and international competitions with verified source coverage | League, season, gender/age group, teams, game, periods/overtime |
+| Golf | Professional tours, majors and other covered tournaments | Tour, event, course, round, field, player IDs, cut/withdrawal |
+| Cricket | International and domestic competitions across Test, ODI, T20 and other covered formats | Competition, season, gender, teams, format, innings, DLS/tie/no-result |
+| Rugby | Rugby Union, Rugby League and Sevens where event/market coverage exists | Code, competition, union/league, gender/age group, teams, match periods |
 
-1. Official competition name and organiser.
-2. Stable competition ID, season ID, and event ID from each proposed provider.
-3. Provider and exact subscription/product tier (or documented public-data terms).
-4. Coverage of fixtures, results, standings/rankings, participants, and sport-specific statistics.
-5. Historical depth by season and whether corrected historical records are available.
-6. Update cadence, latency, rate limits, pagination, and outage/correction policy.
-7. Commercial use, caching, display, retention, and redistribution permissions.
-8. Example raw payloads for upcoming, in-progress, completed, postponed/abandoned, and exceptional events where applicable.
-9. Reconciliation source and settlement policy.
-10. Pass/fail decision, test date, reviewer, and unresolved gaps.
+These are categories to search, not claims of coverage. Every provider/bookmaker combination must be tested for exact competitions, seasons, event types, markets, fields, update latency, quotas and rights.
 
-A competition can be partially supported. For example, fixture discovery may be enabled while form, player availability, or advanced statistics remain unavailable. The UI and eligibility audit must show those missing evidence categories rather than imply full coverage.
+## 4. Geographic and competition policy
 
-## 4. Recommended implementation waves
+- No South Africa-only filter or fixed national launch list.
+- Include South African events whenever discoverable and market-listed; do not give them automatic preference over other countries.
+- Do not exclude smaller leagues or competitions merely because they were absent from the earlier South Africa-first proposal.
+- Use provider catalogues and market listings to discover coverage dynamically.
+- Record country/competition/provider/bookmaker gaps and the last time each catalogue was checked.
+- If coverage is not proven, mark it `not established` or `unsupported`; do not claim worldwide completeness.
+- Do not scrape or bypass access controls. Respect source terms and rights for API access, storage, display, caching and redistribution.
 
-### Wave A — prove South African coverage
+## 5. Historical sources do not define live scope
 
-1. Soccer: Betway Premiership and domestic cups.
-2. Cricket: SA20 and Proteas men's internationals; add CSA domestic formats once sample payloads and history are verified.
-3. Rugby: URC and Springbok men's internationals; add Currie Cup after coverage confirmation.
-4. Basketball: BNL men and women.
-5. Golf: Sunshine Tour.
-6. Tennis: ATP/WTA draw coverage for South African players is not enough to train a local-only model; use the full tour draw/results if tennis predictions are in scope.
+Historical datasets (including Cricsheet's SA20 and CSA T20 Challenge archives) are optional research inputs. They can support carefully validated historical feature work within their coverage and licence boundaries. They do not determine which events OctaNet discovers, do not prove bookmaker market availability, and are not live fixture or settlement feeds.
 
-### Wave B — international breadth
+## 6. Stage 0 global proof-of-coverage matrix
 
-- Soccer: English Premier League and UEFA Champions League.
-- Tennis: ATP/WTA singles tours and four Grand Slams.
-- Basketball: NBA.
-- Golf: PGA Tour, DP World Tour and men's majors.
-- Cricket: ICC men's senior events and IPL.
-- Rugby: Six Nations and Rugby Championship.
+For each sport, provider and configured bookmaker, record:
 
-### Wave C — extensions
+1. Available countries, competitions, tours/leagues and seasons from the actual catalogue/account.
+2. Upcoming and completed event samples with stable IDs and participant identities.
+3. Bookmaker market/event IDs, market types, market status and observed timestamps.
+4. Market refresh, suspension/closure behaviour, latency, quotas and pagination.
+5. Sport-specific evidence fields, historical depth, null rates and correction policy.
+6. Event identity reconciliation and duplicate/collision behaviour across sources.
+7. Official/independent result verification and sport/market-specific settlement rules.
+8. Storage, display, caching, derived-data and redistribution rights.
+9. Geographic and competition gaps, sample hashes, test date, reviewer and PASS/PARTIAL/FAIL decision.
 
-Only after Wave A/B are stable: women's and junior competitions, Challenger/ITF tennis, WNBA, BAL, LPGA, Sevens, more rugby unions, additional football leagues and wider domestic cricket coverage.
+A provider's general marketing claim is not proof of account-level coverage. A successful event sample does not establish full competition coverage or production entitlement.
 
-## 5. Sport-specific minimum usable dataset
+## 7. Prediction and data-safety gates
 
-- **Soccer:** fixture/result identity, season/competition, home/away teams, kickoff, standings snapshot, last-five completed results per team, and verified final score. Lineups/injuries are optional evidence until a reliable feed exists.
-- **Tennis:** player IDs, tournament/draw/round, surface, best-of format, match time, ranking snapshot, recent surface-specific results, and verified score including retirement/walkover status.
-- **Basketball:** team IDs, game/season, period and final scores, standings, recent results, rest days, and roster availability only if reliably sourced. Player box scores are a later feature tier.
-- **Golf:** event/course/round, full field, tee time, player IDs, round and total strokes, cut/withdrawal status, and verified final leaderboard. Do not model golf as a two-team match.
-- **Cricket:** format, teams, venue, toss, playing XI when available, innings scorecards, overs, wickets, target/DLS details, and result. Test/4-Day, ODI/One-Day, and T20 must not share unqualified form aggregates.
-- **Rugby:** Union 15s event identity, team/competition, kickoff, squad when available, score, tries, penalties/cards where sourced, and verified final result.
+Keep these data classes separate: sporting events, bookmaker markets, sporting evidence and verified outcomes. Odds may establish market availability and be shown as market context; they must never populate team/player form, statistics, evidence scores or prediction features.
 
-## 6. Explicit launch gate
+Require independently verified event identity and timestamped pre-event evidence. Missing, stale, conflicted or post-event evidence blocks prediction eligibility. Apply sport-specific rules for all relevant participants/fields, not just two-team formats. Keep outcomes out of pre-event features and require trusted-source verification before settlement or training use.
 
-A sport/competition must remain **discovery-only** until it has:
+## 8. Rollout principle
 
-- A tested source for fixtures and final results.
-- Stable IDs or a tested canonical identity/reconciliation method.
-- Enough historical depth for the planned evaluation window.
-- Required sport-specific fields with documented missingness.
-- Timestamped pre-event evidence that passes the no-leakage rule.
-- A documented settlement policy and independently checked outcomes.
-- Data rights approved for the intended application use.
+First measure what is genuinely available worldwide across the six sports and configured bookmakers. Then prioritise integration work based on verified coverage, evidence quality, rights, cost and user value—not on geography or which historical archive happens to be easiest to obtain.
 
-Only then may it be marked evidence-eligible. Model training remains a separate explicit action and must retain the repository's existing minimum-row, provenance, and chronological holdout controls.
+No production provider integration, subscription, model change, training import or settlement approval is authorised by this scope document. Existing UNTRAINED, provenance, chronological holdout, no-fabrication and explicit-training safeguards remain unchanged.
