@@ -45,9 +45,9 @@ There is not yet sufficient evidence to approve one provider for all six sports 
 | TheSportsDB | Existing OctaNet integration; day/league/season schedule endpoints and broad sport/event catalogue. | Free API limits vary by endpoint; docs state day schedule free limit 3 versus premium 1,500, season schedule 15 versus premium 3,000, and team next/previous free access only shows home events. Not a reliable authoritative evidence feed. | **Keep as discovery fallback only**; never promote its candidate event directly to evidence-eligible. |
 | Official league/governing-body sites | Useful independent schedule, standings, leaderboard and final-result references for PSL, BNL, Sunshine Tour, CSA/SA20, SA Rugby/URC and international bodies. | Public pages do not establish API availability, bulk access, automated polling permission, or redistribution rights. | **Reconciliation references**, unless an explicit data feed/licence is obtained. |
 
-## 4. First-release competition coverage matrix
+## 4. Illustrative competition coverage matrix (not a whitelist)
 
-All competition-level statuses below are **not yet verified**. Provider documentation alone does not prove coverage for the exact competition and season.
+All competition-level statuses below are **not yet verified**. Provider documentation alone does not prove coverage for the exact competition and season. These South African and international examples are illustrative test cases retained from the earlier research; they are not the global event universe, a South Africa-first priority order, or a whitelist. Worldwide scope is defined in `GLOBAL-BETTABLE-EVENT-DISCOVERY-STRATEGY.md`.
 
 | Sport / competition group | Candidate source(s) to test first | What must be proven | Current decision |
 |---|---|---|---|
@@ -110,17 +110,17 @@ Run this protocol for each provider/competition combination before writing an ad
 
 A test response from a trial account may prove schema and event availability, but it does not prove production quota, service-level guarantees, commercial rights, or production package coverage.
 
-## 7. Proposed first test order
+## 7. Proposed provider test sequence (coverage-led, worldwide)
 
 To reduce cost and avoid signing up for six vendors, begin with the provider accounts and market feeds already available. The order below is a test workflow, not a South Africa-first coverage priority. For every sport, enumerate the actual global catalogue and bookmaker markets before narrowing to samples:
 
-1. **Export existing provider entitlements first.** If no paid provider account is available, stop before any purchase and continue with public documentation only.
-2. **Soccer:** check Football-Data.org's authenticated competition catalogue for EPL/UCL and each PSL competition; compare the exact target set with Sportradar's Soccer Coverage Matrix.
-3. **Tennis:** inspect Sportradar's Tennis Coverage Matrix for ATP, WTA and Grand Slams; verify tier and historical season depth.
-4. **Cricket:** inspect Sportradar for SA20, Proteas fixtures and CSA domestic formats; separately evaluate Cricsheet's historical files and terms.
-5. **Rugby:** inspect Sportradar Rugby Union for URC, Currie Cup, Springbok tests, Six Nations and Rugby Championship; record event-level coverage flags.
-6. **Golf:** check whether Sunshine Tour is explicitly listed by a licensed provider; evaluate Sportradar PGA/DP World Tour data separately.
-7. **Basketball:** test NBA through SportsDataIO or Sportradar, and treat BNL as unsupported until a reliable feed is demonstrated.
+1. **Export existing provider entitlements first.** If no paid provider account is available, stop before any purchase and continue with public documentation only. For each of the six sports, enumerate the full country/competition catalogue and available bookmaker market feed before selecting event samples.
+2. **Soccer:** enumerate Football-Data.org's authenticated global competition catalogue; compare available competitions and seasons with Sportradar's Soccer Coverage Matrix. Include EPL/UCL and South African competitions where actually available, without restricting discovery to them.
+3. **Tennis:** enumerate available tours, countries, tournament tiers and seasons in the Tennis Coverage Matrix; include ATP, WTA and Grand Slams where covered, and verify tier and historical depth.
+4. **Cricket:** enumerate international and domestic competition coverage across countries and formats; inspect SA20, Proteas and CSA formats where available, and separately evaluate Cricsheet's historical files and terms.
+5. **Rugby:** enumerate Rugby Union, Rugby League and Sevens coverage worldwide; include URC, Currie Cup, Springbok tests, Six Nations and Rugby Championship where available, and record event-level coverage flags.
+6. **Golf:** enumerate available tours and tournaments worldwide; check Sunshine Tour explicitly where relevant and evaluate PGA/DP World Tour and other covered tours separately.
+7. **Basketball:** enumerate available leagues and countries; test NBA and BNL where relevant, and treat any league as unsupported until a reliable feed is demonstrated.
 
 Do not purchase a multi-sport bundle solely because a provider advertises these sports. Obtain a quote against the exact competition list and required data categories first.
 
@@ -174,3 +174,8 @@ Until then, the competition remains discovery-only or unsupported. No production
 The competition examples in Section 4 are a starting test register only. They must not be treated as a whitelist or as the boundaries of OctaNet. Stage 1 should report coverage by sport, country, competition, date window, provider and bookmaker, including discovered fixtures, market-listed events, identity-reconciled events, evidence-eligible events and blocked events. A global search result is not complete unless its source catalogue, bookmaker set, time window, pagination and last successful retrieval are disclosed. Unknown coverage must be reported as unknown rather than inferred from a provider's marketing page.
 
 The existing TheSportsDB integration remains fixture discovery only. It does not establish a bookmaker market and cannot make an event bettable by itself. Any future market-data source requires its own entitlement, rights and sample validation. Odds remain isolated from sporting evidence and model features.
+
+
+## 12. Worldwide discovery and bookmaker-market proof
+
+The coverage exercise is worldwide across soccer, tennis, basketball, golf, cricket and rugby. The competition examples in Section 4 are retained as concrete test cases only. They do not constrain discovery to South Africa, a set of major leagues, or the listed tournaments. For each sport, record the actual countries, competitions, seasons and event types exposed by the provider account. Separately record bookmaker market availability and its event/market identifiers, status and observation time. A fixture-only source cannot establish that an event is bettable; market odds cannot establish sporting form or evidence. Report catalogue pagination, date windows, freshness, bookmaker set and known coverage gaps so a partial response is never described as worldwide completeness.
