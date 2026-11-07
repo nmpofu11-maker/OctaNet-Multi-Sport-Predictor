@@ -267,3 +267,37 @@ References:
 - **Sportradar OC Core:** elevate to first global market-feed candidate for an entitlement/catalogue/sample test, because its documented global pipeline explicitly lists all six target sports and 140+ bookmakers.
 - **The Odds API:** retain as a second market-feed candidate; test its authenticated sports and event catalogue, with golf and Rugby Union coverage gaps explicitly measured.
 - Do not infer price competitiveness or recommend a purchase from public documentation. Request a written quote and exact bookmaker/sport/competition schedule before any commercial decision.
+
+
+## 16. OC Core access, trial and commercial gate — 7 November 2026
+
+The public access documentation now clarifies the practical route to an account-backed test:
+
+1. **Create/use a Sportradar developer account and application.** API keys are available in the account's application credentials. The general account guide says many products can be trialled through the Sportradar Marketplace; standard trials are described as 30 days, with lower request limits than production. Trial availability is product-specific and must not be assumed for every Odds Comparison package.
+2. **Request OC Core enablement explicitly.** OC Core is not the default OC US pipeline. Sportradar Support or the account representative must configure Core on the API key. Ask for a trial of OC Core and confirmation of the enabled packages (Prematch, Player Props, Futures and Live Odds) rather than assuming one trial automatically enables all four.
+3. **Verify the key's actual pipeline.** The OC API returns an `X-Origin-Id` response header. `MARKET_ORIGIN_CORE_CRAWLERS` identifies OC Core; `MARKET_ORIGIN_MAGIC_CRAWLERS` identifies OC US. Record this header for each test run.
+4. **Run read-only discovery first.** The API uses the `x-api-key` request header. Keep the key server-side and never put it in source code, browser bundles, chat, issue comments or Actions logs. Begin with the Books and Sports feeds, then Sport Competitions, and only then retrieve a small set of event/market samples.
+5. **Treat Live Odds separately.** Current Live Odds documentation says this product is not available as a self-issued trial and requires access through a sales representative. Do not assume Live Odds is included in an OC Core trial or quote.
+6. **Request a written commercial proposal.** No public OC Core price was found in the official documentation reviewed. Request a quote that itemises the Core access tier, each package, sports/competitions, bookmaker list and regions, request quotas/rate limits, refresh cadence, historical snapshots, support/SLA, trial length, and permitted internal modelling, storage, display, caching and derived-data use.
+
+Official access references:
+- API authentication, package-specific base URLs and shared discovery feeds: https://developer.sportradar.com/odds/docs/oc-ig-api-basics
+- OC Core enablement, response header and supported sports: https://developer.sportradar.com/odds/reference/oc-core-overview
+- OC Core access FAQ and trial request route: https://developer.sportradar.com/odds/reference/oc-core-faqs
+- Sportradar Marketplace, trial access and standard trial terms: https://developer.sportradar.com/getting-started/docs/your-account
+- Live Odds trial requires sales access: https://developer.sportradar.com/odds/reference/oc-live-odds-overview
+
+### Access and pricing status
+
+| Item | Publicly verified position | OctaNet status |
+|---|---|---|
+| OC Core pipeline | Support enables it at API-key level | NOT REQUESTED / NOT VERIFIED |
+| Trial route | Ask account representative or Support to trial OC Core | NOT REQUESTED |
+| Standard trial duration | General account guide says 30 days for standard trials; product exceptions apply | OC Core-specific duration NOT CONFIRMED |
+| Live Odds trial | Not self-issued; sales representative required | NOT REQUESTED |
+| Public OC Core price | No official public price located | QUOTE REQUIRED |
+| Exact configured bookmakers | Available from the authenticated Books feed | NOT TESTED |
+| Exact sports/competitions | Available from authenticated Sports and Sport Competitions feeds | NOT TESTED |
+| Production rights and SLA | Must be confirmed in contract/quote | NOT REVIEWED |
+
+**Decision:** Do not purchase or integrate on the strength of the public 140+ bookmaker claim. The next low-risk action is a no-obligation request for an OC Core trial and written quote, followed by a read-only catalogue test. If trial access is declined or the commercial terms are unsuitable, retain The Odds API as the alternative candidate and do not treat either vendor as approved.
