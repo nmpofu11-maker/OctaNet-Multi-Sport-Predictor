@@ -113,3 +113,16 @@ This is a competition-level market-catalogue signal only. It does not prove that
 - Keep The Odds API as a market-feed candidate only; it is not a sporting-evidence source.
 - A competition catalogue entry is not an event-level market, and an event-level market is not verified sporting evidence.
 - No provider, bookmaker, subscription, production adapter, model, or training flow is approved by these documentation checks.
+
+## 9. Sportradar OC Core global odds tier — 7 November 2026
+
+A further public-documentation check found that Sportradar Odds Comparison has two materially different access tiers. **OC Core** is configured on the API key and uses a global bookmaker pipeline; the public documentation describes 140+ global bookmakers and lists soccer, basketball, golf, cricket, rugby and tennis among supported sports. OC US is a curated US-focused tier and should not be used as a proxy for OC Core coverage.
+
+- OC Core overview: https://developer.sportradar.com/odds/reference/oc-core-overview
+- Odds Comparison v2 overview: https://developer.sportradar.com/odds/docs/oc-ig-overview
+
+This is stronger public evidence for a six-sport global market-feed candidate, but not proof of account entitlement, actual competition availability, event-level markets, or rights. The existing PUB-SPR-ODDS-01 test must explicitly request and record the access tier (OC Core vs OC US), configured bookmaker set, all six sport catalogues, competition flags and event-level market samples. Keep sporting-data API/Coverage Matrix checks independent.
+
+| Test ID | Source / scope | Status | Evidence captured | Next action |
+|---|---|---|---|---|
+| PUB-SPR-CORE-01 | Sportradar Odds Comparison OC Core public documentation | **DOCUMENTATION CHECKED** | OC Core described as global pipeline with 140+ bookmakers and support listing across all six target sports; no account entitlement or raw response | Ask whether OC Core can be enabled on the authorised account; export Books, Sports and Sport Competitions feeds, then verify upcoming event markets for each sport. |
