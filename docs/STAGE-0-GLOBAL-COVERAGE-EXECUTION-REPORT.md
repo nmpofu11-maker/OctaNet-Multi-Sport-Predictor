@@ -152,3 +152,23 @@ After the OC Core access-gate update, GitHub Actions **Quality Checks run #85** 
 Run: https://github.com/nmpofu11-maker/OctaNet-Multi-Sport-Predictor/actions/runs/42338583323
 
 This is software quality evidence only. It does not change the Stage 0 decision: account-level OC Core access, worldwide competition/bookmaker catalogues, live event-market samples and data-use rights remain NOT TESTED or BLOCKED. PR #11 remains open, draft and unmerged.
+
+## 11. Zero-budget decision and revised next step — 7 November 2026
+
+**Owner budget constraint: no money is available for subscriptions.** This supersedes the earlier recommendation to request an OC Core trial/quote as the next execution priority. OctaNet's provider and bookmaker research must now follow a zero-subscription policy.
+
+- Do not purchase Sportradar OC Core, The Odds API, SportsDataIO or another paid package.
+- Do not initiate a paid trial, provide payment details, accept a minimum term, enable auto-renewal or incur chargeable overages.
+- A genuinely no-cost trial with no payment method, commitment or automatic conversion may be reconsidered only after explicit owner approval. No trial request is currently authorised.
+- Reclassify Sportradar OC Core as **PAID-CANDIDATE / DEFERRED — NOT AN EXECUTION DEPENDENCY**. Its public six-sport/bookmaker claims remain vendor documentation, not verified OctaNet coverage.
+- Prioritise official public schedules/results, existing free access, free API tiers and openly licensed historical datasets. Verify each source's actual free quota, geographic/competition coverage, permitted automated access and licence before use.
+- Do not treat a fixture feed as proof of a bookmaker market. If a real market cannot be verified through a lawful free source, record market status as **NOT VERIFIED** and do not label the event bettable.
+- Keep the six-sport worldwide objective, while publishing actual sport/country/competition gaps. Do not substitute South Africa-only coverage or fabricate completeness to make the matrix look full.
+- Odds remain market context only; all sporting evidence, identity, timestamps, outcomes and eligibility checks remain independent.
+- No production integration, paid service, model change, training import or deployment is authorised.
+
+### Revised next execution step
+
+Build a source-by-source **free-access feasibility register** for soccer, tennis, basketball, golf, cricket and rugby. For each candidate record the public endpoint/page, access method, authentication requirement, free quota/cost, sport/country/competition coverage, pagination, freshness, historical depth, rights/terms, sample-test status and known gaps. Test only sources with no charge and permitted use. Keep all untested fields NOT TESTED or BLOCKED.
+
+**Stage 0 remains PARTIAL.** No sport has yet passed complete event/evidence plus actual bookmaker-market verification. The zero-budget policy changes vendor selection priority; it does not weaken the evidence threshold.
