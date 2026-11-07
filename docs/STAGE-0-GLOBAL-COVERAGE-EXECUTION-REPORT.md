@@ -144,3 +144,11 @@ References:
 - The 140+ bookmaker and six-sport statements are vendor documentation, not OctaNet coverage measurements. No event-level market sample has yet been tested.
 
 **Decision remains PARTIAL / BLOCKED:** no authenticated account, catalogue export, event-market payload, entitlement, quote or licence has been verified. No purchase, integration, model or training action is authorised by this research.
+
+## 10. Latest PR-head quality check — 7 November 2026
+
+After the OC Core access-gate update, GitHub Actions **Quality Checks run #85** (run ID `42338583323`) completed successfully against PR #11 head `fb69bf7ca71a1523486ebe8aac22359d2f828ddc`. The `Test, typecheck, and production build` job passed all steps: dependency installation, patched gRPC lock verification, production dependency audit, unit tests, TypeScript check and production build.
+
+Run: https://github.com/nmpofu11-maker/OctaNet-Multi-Sport-Predictor/actions/runs/42338583323
+
+This is software quality evidence only. It does not change the Stage 0 decision: account-level OC Core access, worldwide competition/bookmaker catalogues, live event-market samples and data-use rights remain NOT TESTED or BLOCKED. PR #11 remains open, draft and unmerged.
