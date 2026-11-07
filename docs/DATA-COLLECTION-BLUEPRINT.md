@@ -1,10 +1,12 @@
 # Six-Sport Data Collection Blueprint
 
-**Status:** Proposed implementation plan (documentation only)  
+**Status:** Proposed implementation plan (documentation only)    
 **Scope:** Soccer, tennis, basketball, golf, cricket, rugby  
 **Branch:** `docs/six-sport-data-collection-blueprint`
 
 This document assigns collection methods to the existing OctaNet prototype. It does not claim that any provider account, licence, API key, or integration is already available. Provider choice must be confirmed against the exact competitions, seasons, fields, update latency, redistribution rights, and cost required by the project.
+
+> **Global scope correction (7 November 2026):** OctaNet is worldwide-first across all six sports. Discover events wherever configured bookmakers list markets; South Africa is included but is not the scope boundary or default priority. The authoritative event/market discovery rules are in [GLOBAL-BETTABLE-EVENT-DISCOVERY-STRATEGY.md](GLOBAL-BETTABLE-EVENT-DISCOVERY-STRATEGY.md). The earlier South Africa-first competition shortlist is superseded by [the global scope](FIRST-RELEASE-COMPETITION-SCOPE.md). Historical archives such as CSA T20 Challenge are supplementary research sources, not limits on live event discovery.
 
 ## 1. Decisions and non-negotiable safeguards
 
@@ -137,14 +139,15 @@ These are proposed starting intervals, not provider guarantees. Enforce provider
 
 ## 7. Delivery sequence
 
-### Stage 0 — prerequisites and provider coverage (no production ingestion yet)
+### Stage 0 — global event and market coverage proof (no production ingestion yet)
 
-- List target competitions and seasons for each sport, including the actual leagues/tours the app is expected to cover.
+- Discover the available countries, competitions and seasons across all six sports from actual provider catalogues and configured bookmaker market feeds; do not apply a South Africa-only or fixed competition filter.
+- Separate fixture discovery from verified bookmaker market availability and from sporting-evidence eligibility.
 - Confirm provider account, licence, key availability, quota, historical depth, and data rights.
 - Create a field-coverage matrix and sample-response fixtures from each approved provider.
 - Document event identity and settlement edge cases per sport.
 
-**Exit:** at least one approved source and a tested sample payload for each sport/competition in the first release scope. A sport without a provider remains explicitly unsupported for live ingestion.
+**Exit:** tested event-discovery and market-availability samples for each sport, documented geographic/competition coverage and gaps, and at least one rights-cleared source path for any capability proposed for enablement. Unsupported coverage remains explicit; global completeness must not be implied.
 
 ### Stage 1 — ingestion foundation
 
