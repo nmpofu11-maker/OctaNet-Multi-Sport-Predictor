@@ -126,3 +126,47 @@ This is stronger public evidence for a six-sport global market-feed candidate, b
 | Test ID | Source / scope | Status | Evidence captured | Next action |
 |---|---|---|---|---|
 | PUB-SPR-CORE-01 | Sportradar Odds Comparison OC Core public documentation | **DOCUMENTATION CHECKED** | OC Core described as global pipeline with 140+ bookmakers and support listing across all six target sports; no account entitlement or raw response | Ask whether OC Core can be enabled on the authorised account; export Books, Sports and Sport Competitions feeds, then verify upcoming event markets for each sport. |
+
+## 10. Zero-cost source shortlist — 7 November 2026
+
+**Review type:** public documentation review only. No authenticated provider calls, live bookmaker-market requests, production ingestion or licence approval were performed. A source being advertised as free does not automatically make it suitable for OctaNet's intended deployment.
+
+| Sport / data class | Free candidate | Publicly documented access | Limits and assessment | Register status |
+|---|---|---|---|---|
+| Soccer — fixtures/results | Football-Data.org | Free plan listed at €0; 12 competitions, delayed scores/schedules, fixtures and tables; 10 calls/minute. | Competition scope is restricted; public coverage page lists selected leagues and international competitions. No worldwide completeness and no bookmaker market feed. | FREE CANDIDATE / SAMPLE NOT RUN |
+| Soccer, basketball, cricket, tennis — fixtures/results/stats | SportScore | Public docs describe free REST JSON, no key, ~10,000 requests/24h/IP, including live scores, historical fixtures, standings, scorers and player stats. | Attribution/backlink required. Independently test sport/competition catalogue, identifiers, freshness, pagination, reliability and exact terms before use. It does not establish bookmaker markets. | FREE CANDIDATE / SAMPLE NOT RUN |
+| Multi-sport metadata / events | TheSportsDB | Free API; 30 requests/minute. | Endpoint-level free limits can be very restrictive (e.g. one result for some search endpoints); current terms prohibit app-store publication unless paid subscriber. Do not treat as a free production-app solution without confirming intended distribution and rights. | FREE RESEARCH CANDIDATE / DEPLOYMENT RIGHTS RESTRICTED |
+| Cricket — historical ball-by-ball | Cricsheet | Public JSON/YAML/CSV/XML downloads; current download page lists 23,241 matches. | Historical archive only, not live schedules or bookmaker markets. Preserve ODC-BY/format-specific licensing, withheld-match and completeness caveats. Existing OctaNet archive audits remain separate evidence. | HISTORICAL RESEARCH CANDIDATE |
+| Cricket — fixtures/results | Play-Cricket Match Summary API | Official documentation describes fixture and result-summary endpoints using a site ID and API token. | Token/account access and permitted scope/cost not yet established; coverage is site/competition scoped, not a global cricket feed. | ACCESS / TERMS NOT VERIFIED |
+| Golf — tournament schedules | tourdata.golf | Open schedule/tour/course endpoints, no key; 100 requests/day/IP; attribution required. | Public scope is junior golf tournament schedules, tours and courses. Player, results, leaderboard and roster/field data require partner API key; not a free professional-tour evidence feed. Refresh is weekly for new events and monthly for full schedule refresh. | LIMITED FREE SCHEDULE CANDIDATE |
+| Golf — pro tour data | DataGolf | Public API access page documents schedule and player/stat endpoints. | API key required; no zero-cost entitlement established in this review. Do not activate a paid plan. | FREE ACCESS NOT VERIFIED |
+| Rugby Union/League/Sevens — fixtures/results | rugbyAPI | Free key advertised at $0 forever, no card; current/upcoming fixtures, results, tables and competition catalogue; 50 lookups/day. Competition catalogue distinguishes Union, League and Sevens. | Historical archive, extended lineups/timelines and analytics require paid plans. Verify each competition's current free coverage and terms; no bookmaker markets. | FREE CANDIDATE / SAMPLE NOT RUN |
+| Tennis — schedules/results | Official ATP/WTA/ITF public pages; third-party APIs require separate review | Public schedule/results pages can be used for manual spot verification where terms permit. | No official, unrestricted, free global API entitlement was verified in this review. Avoid unofficial scraping or assuming third-party API free tiers are stable/licensed. | FREE AUTOMATED FEED NOT VERIFIED |
+| Golf/rugby/tennis — bookmaker markets | No suitable source approved | None verified in this review. | No event-level bookmaker market feed across all six sports has passed a free-access and rights test. | NOT VERIFIED |
+
+### Official/public references checked
+
+- Football-Data.org free coverage: https://www.football-data.org/coverage
+- Football-Data.org pricing and free limits: https://www.football-data.org/pricing
+- SportScore developer access and terms: https://sportscore.com/developers/
+- TheSportsDB API docs: https://www.thesportsdb.com/docs_api
+- TheSportsDB terms: https://api.thesportsdb.com/docs_terms_of_use.php
+- Cricsheet downloads: https://cricsheet.org/downloads/
+- Play-Cricket Match Summary API: https://play-cricket.ecb.co.uk/hc/en-us/articles/360000130385-Match-Summary-API
+- tourdata.golf API, access and usage terms: https://www.tourdata.golf/docs
+- DataGolf API access: https://datagolf.com/api-access
+- rugbyAPI free pricing: https://rugbyapi.com/pricing
+- rugbyAPI competition catalogue: https://rugbyapi.com/documentation/competitions/list
+- ATP/WTA/ITF official public schedules should be checked competition-by-competition; no unrestricted official API is claimed here.
+
+### Immediate test priority
+
+1. Test SportScore's public catalogue and one upcoming plus one completed event for soccer, basketball, cricket and tennis; verify IDs, timestamps, scores, pagination, attribution and terms.
+2. Test Football-Data.org's free competition catalogue independently and record the exact 12-completion limit and delayed-data fields.
+3. Test rugbyAPI's no-card free key only if account creation is genuinely free; inspect Union, League and Sevens catalogue rows and one upcoming/completed sample within the 50-lookups/day limit.
+4. Test tourdata.golf schedules as a junior-golf-only discovery source; do not represent it as professional tour coverage or sporting evidence.
+5. Keep Cricsheet as historical cricket research; do not re-run archive downloads unless a specific audit gap requires it.
+6. Continue searching for lawful, genuinely free tennis and professional golf event/evidence sources.
+7. Search for a free bookmaker-market source separately. Do not infer market availability from any event provider.
+
+**No source in this section is approved for production or prediction eligibility.** These are research candidates only; actual samples, quality and rights remain to be verified.
