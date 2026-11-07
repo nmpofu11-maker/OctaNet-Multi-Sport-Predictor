@@ -179,3 +179,42 @@ The existing TheSportsDB integration remains fixture discovery only. It does not
 ## 12. Worldwide discovery and bookmaker-market proof
 
 The coverage exercise is worldwide across soccer, tennis, basketball, golf, cricket and rugby. The competition examples in Section 4 are retained as concrete test cases only. They do not constrain discovery to South Africa, a set of major leagues, or the listed tournaments. For each sport, record the actual countries, competitions, seasons and event types exposed by the provider account. Separately record bookmaker market availability and its event/market identifiers, status and observation time. A fixture-only source cannot establish that an event is bettable; market odds cannot establish sporting form or evidence. Report catalogue pagination, date windows, freshness, bookmaker set and known coverage gaps so a partial response is never described as worldwide completeness.
+
+
+## 13. Public bookmaker-catalogue comparison — 7 November 2026
+
+**Assessment type:** public documentation/catalogue review only. No authenticated API requests, account entitlements, live event payloads, bookmaker identities for a particular event, commercial rights, or current market prices were verified. This section does not change any provider approval or production status.
+
+### The Odds API — market-feed candidate
+
+The provider's published sports catalogue states that coverage applies when a sport is in season and lists the following relevant catalogue groups:
+
+| OctaNet sport | Publicly listed examples | Important qualification |
+|---|---|---|
+| Soccer | Numerous domestic and international leagues across Europe, the Americas, Asia and international competitions | The published list is not exhaustive proof of country-wide coverage. South African PSL/cup competitions were not visible in the reviewed catalogue. |
+| Tennis | Named ATP and WTA tournaments, including selected Grand Slams and tour events | Coverage is tournament-specific; do not infer all ATP/WTA/ITF events from the general Tennis label. |
+| Basketball | NBA, WNBA, NCAAB, WNCAAB, EuroLeague and Australia's NBL | Broad named coverage, but other countries/leagues remain unestablished until they appear in the live account catalogue. |
+| Cricket | Named international and domestic competitions including ICC events, IPL, Big Bash, PSL, The Hundred and international formats | The catalogue lists markets, but the Scores & Results column is not marked for the listed cricket rows. This must not be mistaken for a verified results/evidence feed. |
+| Golf | Masters, PGA Championship, The Open and US Open winner markets | These are outright-winner market entries, not evidence of broad round-by-round or head-to-head event-market coverage. |
+| Rugby | Six Nations (Rugby Union) and NRL (Rugby League) | The published catalogue is narrow; it does not establish URC, Currie Cup, Rugby Championship or worldwide rugby coverage. |
+
+**Screening decision:** retain The Odds API as a potential bookmaker-market discovery source, not as a sporting-evidence provider. Its public catalogue suggests useful coverage for soccer, tennis, basketball and cricket, but golf and rugby are materially narrower in the reviewed list. Every sport and competition still requires a live authenticated catalogue and event/market sample. The provider's own page says coverage is in-season; a catalogue row alone does not prove a current event has an available market.
+
+### Sportradar — sporting-data candidate and separate betting products
+
+Sportradar's developer documentation lists soccer, tennis, golf, cricket and rugby as popular sports, and global basketball among its general/league-specific basketball offerings. It explicitly says coverage varies by league, competition and event, and directs customers to its interactive Coverage Matrix to inspect package, tier and data category. The matrix exposes competition/season identifiers and coverage dimensions such as schedules, results, statistics, lineups and play-by-play.
+
+Sportradar also documents separate Odds APIs (including live odds, pre-match, player props and futures). Therefore, the existence of a Sportradar sporting-data API for a sport must not be treated as proof that the relevant Sportradar odds product includes the same sport, competition, bookmaker or market. Evaluate the relevant sporting-data and odds packages independently.
+
+**Screening decision:** retain Sportradar as a strong multi-sport sporting-data candidate for account-level proof. Use the Coverage Matrix to test exact competition/season and field depth, then separately verify any odds package if it is proposed for market discovery. No account-specific entitlement or event sample has been checked.
+
+### Evidence and next test
+
+Public source pages reviewed:
+
+- The Odds API sports catalogue: https://the-odds-api.com/sports-odds-data/sports-apis
+- The Odds API documentation: https://the-odds-api.com/liveapi/guides/v4/
+- Sportradar developer overview: https://developer.sportradar.com/getting-started/docs/get-started
+- Sportradar interactive Coverage Matrix: https://coverage-matrix.sportradar.com/
+
+The next controlled test, once an authorised account is available, is to export the complete sports/competition catalogue, retain pagination and retrieval timestamps, then query a small sample of upcoming events for each sport and verify bookmaker, event ID, market ID, selection, market status and observed time. For Sportradar, export the selected package's competition/season coverage and the exact required sporting fields. Capture raw response hashes and rights evidence. Until those tests are completed, all account-level coverage remains **NOT TESTED** and all production decisions remain **BLOCKED**.
