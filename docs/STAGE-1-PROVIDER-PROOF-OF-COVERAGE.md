@@ -7,6 +7,10 @@
 
 > **Important:** A provider's product documentation is evidence that an API capability exists, not proof that a particular South African competition, season, field, or data-rights use is included in a specific account. No row below is marked production-approved.
 
+> **Scope correction (7 November 2026):** This assessment must be read as a worldwide coverage investigation, not a South Africa-first launch gate. For each of soccer, tennis, basketball, golf, cricket and rugby, test the actual countries/competitions exposed by the provider account and the events/markets listed by configured bookmakers. The global target is defined in [GLOBAL-BETTABLE-EVENT-DISCOVERY-STRATEGY.md](GLOBAL-BETTABLE-EVENT-DISCOVERY-STRATEGY.md). South African rows below remain useful test examples only; they are not the complete or preferred event universe.
+
+> **Critical distinction:** provider fixture coverage does not prove bookmaker market availability. A market listing does not prove sporting-evidence sufficiency. Capture both independently and never use odds as sporting evidence.
+
 ## 1. Executive finding
 
 There is not yet sufficient evidence to approve one provider for all six sports and the complete first-release competition scope.
@@ -108,7 +112,7 @@ A test response from a trial account may prove schema and event availability, bu
 
 ## 7. Proposed first test order
 
-To reduce cost and avoid signing up for six vendors:
+To reduce cost and avoid signing up for six vendors, begin with the provider accounts and market feeds already available. The order below is a test workflow, not a South Africa-first coverage priority. For every sport, enumerate the actual global catalogue and bookmaker markets before narrowing to samples:
 
 1. **Export existing provider entitlements first.** If no paid provider account is available, stop before any purchase and continue with public documentation only.
 2. **Soccer:** check Football-Data.org's authenticated competition catalogue for EPL/UCL and each PSL competition; compare the exact target set with Sportradar's Soccer Coverage Matrix.
@@ -163,3 +167,10 @@ Until then, the competition remains discovery-only or unsupported. No production
 - Sportradar rugby FAQ: https://developer.sportradar.com/rugby/reference/rugby-faqs
 - TheSportsDB API documentation: https://www.thesportsdb.com/docs/api
 - Official competition references are linked in FIRST-RELEASE-COMPETITION-SCOPE.md.
+
+
+## 11. Global coverage interpretation
+
+The competition examples in Section 4 are a starting test register only. They must not be treated as a whitelist or as the boundaries of OctaNet. Stage 1 should report coverage by sport, country, competition, date window, provider and bookmaker, including discovered fixtures, market-listed events, identity-reconciled events, evidence-eligible events and blocked events. A global search result is not complete unless its source catalogue, bookmaker set, time window, pagination and last successful retrieval are disclosed. Unknown coverage must be reported as unknown rather than inferred from a provider's marketing page.
+
+The existing TheSportsDB integration remains fixture discovery only. It does not establish a bookmaker market and cannot make an event bettable by itself. Any future market-data source requires its own entitlement, rights and sample validation. Odds remain isolated from sporting evidence and model features.
