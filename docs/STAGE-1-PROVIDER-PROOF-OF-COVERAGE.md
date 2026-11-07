@@ -301,3 +301,24 @@ Official access references:
 | Production rights and SLA | Must be confirmed in contract/quote | NOT REVIEWED |
 
 **Decision:** Do not purchase or integrate on the strength of the public 140+ bookmaker claim. The next low-risk action is a no-obligation request for an OC Core trial and written quote, followed by a read-only catalogue test. If trial access is declined or the commercial terms are unsuitable, retain The Odds API as the alternative candidate and do not treat either vendor as approved.
+
+### Support contact and trial-limit clarification
+
+Sportradar's current OC Core Overview identifies `support@sportradar.com` as the 24/7 Support contact for requesting OC Core enablement on an API key. The OC Core FAQ likewise directs customers to their account representative or Support to request a trial.
+
+The general Sportradar account guide currently describes default trial limits of **30 days, 1,000 requests per rolling 30 days and 1 query per second**. These are general API-trial defaults, not a confirmed OC Core-specific entitlement. Ask Support to confirm the actual OC Core and package-specific trial limits in writing. Live Odds remains a separate sales-mediated access request.
+
+The support request should explicitly ask for:
+- OC Core enablement and the `MARKET_ORIGIN_CORE_CRAWLERS` response-header confirmation;
+- configured bookmaker names and bookmaker-country/region coverage;
+- sports and full competition catalogue for soccer, tennis, basketball, golf, cricket and rugby;
+- separate entitlement and trial status for Prematch, Player Props, Futures and Live Odds;
+- trial quota, QPS, duration, endpoint access, market refresh cadence and historical snapshots;
+- itemised pricing, support/SLA and written permitted-use terms for internal modelling, storage, caching, user display and derived data.
+
+References:
+- OC Core Overview and support contact: https://developer.sportradar.com/odds/reference/oc-core-overview
+- OC Core FAQ: https://developer.sportradar.com/odds/reference/oc-core-faqs
+- General account and trial limits: https://developer.sportradar.com/getting-started/docs/your-account
+
+**Status remains NOT REQUESTED / NOT VERIFIED.** This documentation update is not evidence that Support has been contacted, a trial has been granted, or an API key has been configured.
