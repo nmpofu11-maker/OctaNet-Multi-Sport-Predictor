@@ -1,6 +1,6 @@
 # Cricsheet Cricket Archive — Follow-up Coverage Check
 
-**Checked:** 2026-11-06  
+**Checked:** 2026-11-07  
 **Project:** OctaNet-Multi-Sport-Predictor  
 **Branch:** docs/six-sport-data-collection-blueprint  
 **Scope:** Public archive coverage and sample-ingestion feasibility; no application integration.
@@ -28,7 +28,7 @@ Before product use, retain the exact licence file shipped with the downloaded ar
 
 ## 3. Payload sample test status
 
-**Result: EXECUTED through GitHub Actions on 6 November 2026.**
+**Result: EXECUTED and field-level diagnostic completed through GitHub Actions on 7 November 2026.**
 
 The workflow downloaded both competition ZIPs, parsed all 444 JSON match records, calculated archive hashes and produced an aggregate report. The raw ZIPs were removed after the run and were not committed. Detailed counts and hashes are recorded in Section 7.
 
@@ -46,8 +46,8 @@ SA20 and CSA T20 Challenge should be modelled as distinct competitions/seasons a
 
 ## 5. Updated decision
 
-- **SA20 historical coverage:** DOCUMENTED in public catalogue (130 matches); raw sample not yet parsed.
-- **CSA T20 Challenge historical coverage:** DOCUMENTED in public catalogue (314 matches); raw sample not yet parsed.
+- **SA20 historical coverage:** 130/130 archive records parsed; structural audit PASS. Archive coverage is historical only.
+- **CSA T20 Challenge historical coverage:** 314/314 archive records parsed; structural audit REVIEW solely because 34 matches omit player_of_match metadata.
 - **Mzansi Super League:** DOCUMENTED in public catalogue (56 matches); legacy context only.
 - **CSA Pro20:** DOCUMENTED (6 matches); too small to serve as a primary dataset.
 - **Live SA20/CSA fixture and result feed:** NOT ESTABLISHED by Cricsheet.
@@ -68,11 +68,11 @@ A standard-library-only audit utility is available at `scripts/cricsheet-archive
 
 The utility downloads the SA20 and CSA T20 Challenge JSON ZIPs to a temporary directory, calculates SHA-256 hashes, parses the match records, checks structural fields and reports dates, seasons, teams, venues, innings, overs, deliveries, wickets, missing fields, duplicate IDs and malformed records. It removes the downloaded archives at the end and writes an aggregate JSON report under `cricsheet-audit-output/`.
 
-The utility has been executed successfully in GitHub Actions against the real archives. Its latest revision also groups declared missing-metadata fields and provides up to ten representative public match IDs per field. The revised field-level output has not yet been run against the archives. A structural PASS would still not approve production ingestion.
+The utility has been executed successfully in GitHub Actions against the real archives. Its latest revision also groups declared missing-metadata fields and provides up to ten representative public match IDs per field. The field-level output has now been run; the only declared missing field is player_of_match in 34 CSA records. A structural PASS would still not approve production ingestion.
 
-## 7. Actual GitHub Actions archive audit — 6 November 2026
+## 7. Initial GitHub Actions archive audit — 6 November 2026
 
-The manually dispatched GitHub Actions run completed successfully (run ID `42297220314`). Both archives were downloaded and all JSON records parsed. The aggregate report was retrieved and inspected; the raw archives were not retained.
+The initial manually dispatched GitHub Actions run (run ID `42297220314`) downloaded both archives and parsed all JSON records. Its first status rule was subsequently tightened; see the follow-up run below. Both archives were downloaded and all JSON records parsed. The aggregate report was retrieved and inspected; the raw archives were not retained.
 
 | Measure | SA20 | CSA T20 Challenge |
 |---|---:|---:|
@@ -102,7 +102,7 @@ CSA T20 Challenge has 13 represented seasons from 2011/12 through 2024/25, with 
 
 The first run labelled both archives `PASS` because it only treated parse failures, duplicate IDs and explicit structural anomalies as blockers. That label was too permissive for CSA's 34 metadata-gap records. The audit script has therefore been tightened: any declared missing metadata or counted missing field now produces `REVIEW`, not `PASS`. This does not invalidate the successful parsing result; it separates syntactic integrity from completeness.
 
-The script has now also been extended to aggregate the names of fields declared in each match's `info.missing` metadata and include up to ten representative match IDs per field. This will show whether the CSA gap concerns optional officials/awards or fields material to a future feature pipeline, without retaining raw match records. The revised diagnostic has not yet been executed; a new workflow run is required.
+The script has now also been extended to aggregate the names of fields declared in each match's `info.missing` metadata and include up to ten representative match IDs per field. The follow-up run below confirms that the only declared gap is player_of_match, an optional post-match award field.
 
 ### Next validation gate
 
@@ -113,3 +113,28 @@ The script has now also been extended to aggregate the names of fields declared 
 5. Complete attribution/licence review. Do not ingest either archive into the production training corpus yet.
 
 Artifact from run `42297220314` was retained by GitHub for 14 days and has since been retrieved for this assessment. No raw match archive was committed to the repository.
+
+
+## 8. Follow-up field-level audit — 7 November 2026
+
+**Run:** https://github.com/nmpofu11-maker/OctaNet-Multi-Sport-Predictor/actions/runs/42336221388  
+**Checked-out audit commit:** `6e874e0af429b843fa6b2a1d3af41513f6f63404`  
+**Artifact:** `cricsheet-archive-audit-report` (artifact ID `13559697342`, 14-day retention)
+
+| Measure | SA20 | CSA T20 Challenge |
+|---|---:|---:|
+| Valid matches | 130 / 130 | 314 / 314 |
+| Invalid JSON / duplicate IDs | 0 / 0 | 0 / 0 |
+| Declared missing metadata | 0 | 34 |
+| Missing metadata field | None | `player_of_match` (34 records) |
+| Counted missing required fields | 0 | 0 |
+| Structural anomalies | 0 | 0 |
+| Audit status | PASS | REVIEW |
+
+The CSA report includes ten representative match IDs for the missing award metadata: `1003867`, `1003869`, `1124669`, `1334895`, `1334896`, `1334897`, `1334898`, `1334899`, `1334900`, and `1334901`.
+
+**Interpretation:** `player_of_match` is a post-match award field, not a core ball-by-ball delivery, innings, team, or result field. Its absence should block player-of-the-match feature/evaluation use for those 34 records, but does not by itself invalidate the underlying deliveries for other carefully validated historical features. Do not impute or infer the award. Preserve the field as missing and propagate feature-specific eligibility.
+
+The workflow's overall GitHub run is marked successful because the audit step uses `continue-on-error: true` so the report can still be uploaded. The audit script itself returned exit code 2 because CSA status is `REVIEW`; this is the intended review signal, not a JSON parsing failure. GitHub's Node 20 deprecation and Ubuntu runner migration annotations are maintenance notices, not data-audit findings.
+
+The artifact contains aggregate diagnostics only. The downloaded raw archives were removed after the run and were not committed. This follow-up does not grant production ingestion, model-training, or settlement approval.
