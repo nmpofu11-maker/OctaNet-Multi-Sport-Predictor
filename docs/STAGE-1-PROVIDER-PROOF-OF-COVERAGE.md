@@ -322,3 +322,34 @@ References:
 - General account and trial limits: https://developer.sportradar.com/getting-started/docs/your-account
 
 **Status remains NOT REQUESTED / NOT VERIFIED.** This documentation update is not evidence that Support has been contacted, a trial has been granted, or an API key has been configured.
+
+## 17. Zero-subscription provider-selection policy — 7 November 2026
+
+The project owner has confirmed that subscription spending is not affordable. **No paid provider or bookmaker subscription is to be pursued.** This policy supersedes the earlier OC Core trial/quote as the next execution priority.
+
+| Candidate/source | Revised disposition |
+|---|---|
+| Sportradar OC Core | PAID-CANDIDATE / DEFERRED. No trial request, purchase or integration. Reconsider only if a genuinely no-cost, no-card, no-commitment trial is explicitly approved by the owner. |
+| The Odds API | FREE-TIER CANDIDATE ONLY. Verify current free allowance, eligible sports/markets, geographic coverage and terms before any test; no paid upgrade or overage. |
+| SportsDataIO | FREE-ACCESS STATUS UNKNOWN. Do not request or activate a paid package; investigate only documented no-cost access. |
+| Official governing-body, league and tournament sources | PRIORITY CANDIDATES for schedules/results and sport-specific evidence, subject to permitted automated access and use terms. |
+| Existing public/open datasets and archives | RESEARCH CANDIDATES. Validate licence, provenance, completeness and sport/competition scope; historical data is not a live market feed. |
+
+### Required zero-cost controls
+
+1. Record the exact free-tier allowance and whether a payment card is required before enabling an account or making requests.
+2. Do not allow paid overages, auto-upgrades, recurring billing or trial-to-paid conversion.
+3. Keep request volumes within the confirmed free quota; stop before a quota boundary if charges could result.
+4. Check terms for automated access, attribution, storage, caching, internal modelling, display and redistribution.
+5. Do not bypass logins, CAPTCHAs, paywalls, rate limits or other access controls.
+6. For each sport, test event schedules/results and sporting evidence independently from bookmaker markets.
+7. Mark bookmaker availability VERIFIED only from a lawful, timestamped source showing the actual event and market. Otherwise use NOT VERIFIED.
+8. Preserve the six-sport worldwide discovery objective and publish gaps; free-source limitations are not grounds to invent coverage.
+9. Do not use bookmaker odds as sporting evidence, features or a substitute for missing player/team statistics.
+10. No production integration, model/training change, purchase or deployment is authorised by this policy.
+
+### Revised Stage 1 execution
+
+The next work item is a **free-source feasibility and coverage register**, organised by sport and by data class (events, sporting evidence, outcomes, bookmaker markets). Each entry must record source, endpoint, access method, authentication, free quota/cost, supported countries/competitions, pagination, freshness, sample evidence, licence/terms and gaps. Start with sources that can be tested without payment and without violating their terms. Keep unknown coverage NOT TESTED.
+
+**Status:** zero-cost strategy approved as project direction; no free provider or bookmaker is approved until its actual access, coverage, data quality and rights pass the documented tests.
