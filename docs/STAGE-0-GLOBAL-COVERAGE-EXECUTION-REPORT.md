@@ -268,3 +268,43 @@ Run: https://github.com/nmpofu11-maker/OctaNet-Multi-Sport-Predictor/actions/run
 ### 13.6 Next practical step
 
 Use read-only, no-charge tests only. First obtain permitted no-key API samples for SportScore and tourdata.golf, and an authorised no-card rugbyAPI free key if the owner chooses to create one. For The Odds API, do not register until its free-tier payment-method requirement is confirmed as no-card; if confirmed, use only the 500-credit free allowance and inspect the actual account sports/bookmaker catalogue before event-market queries. If no lawful free market response is available, keep market status NOT VERIFIED. Do not purchase, integrate, train or deploy.
+
+## 14. Additional no-card odds feeds and rights gate — 8 November 2026
+
+**Review type:** public documentation and terms review only. No accounts were created, no credentials were used, and no live API payload was retrieved.
+
+### TheRundown Free — constrained private market evaluation
+
+The official API documentation advertises $0/no-card access, 20,000 data points/day and 200,000/month, one request/second, and five-minute-delayed pre-match moneyline/spread/total prices from only DraftKings, FanDuel and BetMGM. Free excludes props, alternate markets, in-play, WebSocket and odds history. Its public sports catalogue shows soccer, tennis, basketball and cricket; rugby is not listed, and golf appears only as futures (not a Free feature).
+
+**Licence boundary:** Free and Starter are internal/personal use only. Commercial end-user display begins at Pro ($149/month); Starter is $49/month and still internal/personal use. It can support a narrow private evaluation if an authorised no-card key is made available, but it is not a free production odds source for a customer-facing OctaNet app.
+
+References: https://therundown.io/api · https://therundown.io/free-sports-data-api · https://therundown.io/docs/quickstart
+
+### ParlayAPI Free — broad catalogue claims, strict non-commercial licence
+
+Official docs advertise 1,000 credits/month at $0/no card, 30+ sources and 90+ sport keys. `/v1/sports` and `/v1/sports/{key}/events` are documented as zero-credit; odds calls consume credits according to markets and regions. The response contract documents canonical event IDs, `commence_time`, `commence_time_reported`, bookmaker `last_update_ms` and `stale_seconds`. Free historical lookback is only 48 hours.
+
+**Licence boundary:** Terms last updated 14 October 2026 restrict Free to personal evaluation and non-commercial research. Public/customer-facing display, commercial derived products, redistribution, resale and sublicensing require a separate signed agreement. Terms also restrict model training intended to replicate/compete with the service and line-level retention beyond 90 days without written consent. The documented sandbox uses deterministic synthetic data and must never count as real evidence.
+
+Decision: internal non-commercial evaluation only, and only after owner-authorised account access. Not approved for OctaNet production/public display under standard Free terms. No account was created and no API call was made.
+
+References: https://www.parlay-api.com/docs · https://www.parlay-api.com/free-sports-odds-api · https://www.parlay-api.com/legal/terms · https://www.parlay-api.com/historical-coverage
+
+### Odds-API.io and Unabated/Gambly
+
+Odds-API.io advertises a 100-request/hour, 500/day free tier across 34 sports and two recreational books, but its current official pricing page says **new free keys are paused indefinitely**; existing keys only. Paid Solo starts at £49/month. It is not an obtainable free option for a new account.
+
+Unabated/Gambly free publisher access is conditional on tracked sportsbook deeplinks and monthly partner traffic targets; its public examples focus on US operators. It is not a neutral global odds feed.
+
+References: https://odds-api.io/pricing/free · https://unabated.com/odds-api/free · https://docs.unabated.com/guides/deep-links
+
+### Revised market-provider decision
+
+- TheRundown Free: clearest no-card private odds-evaluation option for selected soccer, tennis, basketball and cricket competitions; only three US books, five-minute delay, no customer-facing display rights, and no golf/rugby proof.
+- ParlayAPI Free: broadest advertised sport-key catalogue and useful ID/freshness schema, but no customer-facing/commercial OctaNet use without a separate signed agreement; internal evaluation only after owner approval.
+- The Odds API Starter: still advertises 500 credits/month at $0, but payment-card requirement remains unstated and public regions/sports have gaps; do not register until no-card status is confirmed.
+- Odds-API.io: new free keys paused; remove from the obtainable-free shortlist.
+- Sportradar OC Core: global candidate remains unverified; no free entitlement established.
+
+**Evidence status remains unchanged:** no actual bookmaker/event/market/selection response has been captured for any provider. No provider has passed the global six-sport event-and-market protocol; no sport is prediction-eligible by this report.
