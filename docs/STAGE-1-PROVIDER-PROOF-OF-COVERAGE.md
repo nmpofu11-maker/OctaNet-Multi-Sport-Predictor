@@ -353,3 +353,34 @@ The project owner has confirmed that subscription spending is not affordable. **
 The next work item is a **free-source feasibility and coverage register**, organised by sport and by data class (events, sporting evidence, outcomes, bookmaker markets). Each entry must record source, endpoint, access method, authentication, free quota/cost, supported countries/competitions, pagination, freshness, sample evidence, licence/terms and gaps. Start with sources that can be tested without payment and without violating their terms. Keep unknown coverage NOT TESTED.
 
 **Status:** zero-cost strategy approved as project direction; no free provider or bookmaker is approved until its actual access, coverage, data quality and rights pass the documented tests.
+
+## 18. Zero-cost source screening update — 8 November 2026
+
+This update refines the Stage 1 free-source shortlist using current official public documentation and terms. It does not add any authenticated API sample or production approval.
+
+| Data class / sport | Candidate | Free-access evidence | Coverage/quality boundary | Decision |
+|---|---|---|---|---|
+| Event/evidence — soccer, tennis, basketball, cricket | SportScore | No-key REST API; ~10,000 requests/24h/IP; 8 GET endpoints; 60-second cache. Terms last updated 23 April 2026. | Four sports only; attribution badge required on every data-bearing surface; no SLA; source disclaims guaranteed accuracy; no bulk raw-feed redistribution. | **FREE CANDIDATE / SAMPLE NOT RUN** |
+| Event/evidence — rugby | rugbyAPI | $0 forever, no card, Google sign-in; 50 lookups/day; free key has 11/31 endpoints and current-season depth. | Public page lists 42 competitions across club/international/sevens; sample pages show uneven detail and sparse Sevens history. Rugby League coverage and full account catalogue remain unverified. | **FREE CANDIDATE / KEY AND SAMPLE NOT RUN** |
+| Bookmaker markets — multiple sports | The Odds API Starter | Official public page lists FREE, 500 credits/month, all sports, most bookmakers, all betting markets, no historical odds. | Payment-card requirement not stated. Public bookmaker regions list US/UK/EU/AU/CA/FR/SE/FI, not ZA. Public sport examples include Rugby League/NRL, not broad Rugby Union; golf examples are majors. Actual free-key `/sports`, bookmaker and event-market responses are untested. | **FREE MARKET CANDIDATE / KEY NOT REQUESTED** |
+| Event/evidence — soccer | Football-Data.org | Anonymous competition/area lists: 100 requests/24h; registered free tier: 12 competitions, 10 requests/minute, delayed schedules/scores. | Soccer only, narrow fixed free competition set, delayed data and no free bookmaker market. | **FREE CANDIDATE / SAMPLE NOT RUN** |
+| Event discovery — golf | tourdata.golf | No-key junior schedules/tours/courses; 100 requests/day/IP; paginated; commercial schedule use with attribution. | Junior schedules only; players, results, leaderboards and fields require partner key; event dates have no time/timezone; refresh is weekly/monthly. | **LIMITED SCHEDULE CANDIDATE / SAMPLE NOT RUN** |
+| Historical evidence — cricket | Cricsheet | Actual archive parser audit: SA20 130/130 structural PASS; CSA T20 Challenge 314/314 REVIEW due 34 missing optional player_of_match values. | Historical completed matches only; not a fixture or market source. Rights attribution and independent semantic/result checks remain. | **HISTORICAL STRUCTURAL TEST COMPLETED / NOT PRODUCTION-APPROVED** |
+
+### Required proof status
+
+- Account/package entitlement: **BLOCKED** — no authorised keys or account exports.
+- Global catalogue pagination: **NOT TESTED** — no complete API catalogue/cursor capture.
+- Country/competition coverage: **PARTIAL** — public examples only, not exhaustive account coverage.
+- Upcoming/completed API samples: **NOT TESTED** — no raw API event payloads captured.
+- Historical samples: **PARTIAL** — Cricsheet parser audit is the only completed archive test.
+- Sport-specific fields/null rates: **PARTIAL** — documentation only, no payload inspection.
+- Event IDs, identity reconciliation and timestamp cutoffs: **NOT TESTED**.
+- Independent result verification: **NOT TESTED**.
+- Bookmaker/event/market/selection IDs and observed timestamps: **NOT TESTED**.
+- Data rights: **PARTIAL** — public terms reviewed; no full legal/account-specific sign-off.
+- Prediction eligibility: **BLOCKED** — no sport has passed all event, market, identity, evidence and rights gates.
+
+### Zero-cost controls
+
+Do not register for The Odds API until the free plan's payment-method requirement is confirmed as no-card. Do not create a rugbyAPI account or use a key without owner-authorised access. SportScore and tourdata.golf are public no-key candidates, but actual API samples still need to be captured through a permitted read-only test. Keep bookmaker odds strictly in the market-data class and never as sporting evidence or training features.
