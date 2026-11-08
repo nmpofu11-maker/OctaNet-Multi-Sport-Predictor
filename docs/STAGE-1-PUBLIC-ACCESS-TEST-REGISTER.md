@@ -204,3 +204,30 @@ This is stronger public evidence for a six-sport global market-feed candidate, b
 The Odds API free plan is now a concrete zero-price market-feed candidate, but its public region list does not include a South Africa-specific region, and its public sport examples do not establish broad Rugby Union or professional golf matchup markets. The free tier's actual book set and sport catalogue are not known until an authorised key is used. A fixture source such as SportScore, rugbyAPI, Football-Data.org or tourdata.golf never proves that a bookmaker has a market on that event.
 
 No provider/bookmaker is approved. All rows remain documentation-only until the specified samples are captured and independently checked.
+
+## 12. Additional no-card bookmaker API screening — 8 November 2026
+
+**Documentation only; no keys or API samples used.**
+
+| Test ID | Provider / plan | Publicly documented free access | Licence / coverage boundary | Status and next action |
+|---|---|---|---|---|
+| PUB-RUNDOWN-FREE-01 | TheRundown Free odds API | $0/no card; 20,000 data points/day and 200,000/month; one request/sec; five-minute-delayed pre-match moneyline/spread/total from DraftKings, FanDuel and BetMGM. | Internal/personal use only. Commercial end-user display starts at Pro ($149/month). Public catalogue lists soccer, tennis, basketball and cricket; rugby is not listed; golf futures are not a Free feature. No props, alternate markets, in-play or historical odds. | **DOCUMENTATION CHECKED / NO ACCOUNT OR SAMPLE**. Private evaluation only; not production/public display. |
+| PUB-PARLAY-FREE-01 | ParlayAPI Free odds API | $0/no card; 1,000 credits/month; 30+ sources and 90+ sport keys advertised. Sport/event catalogue endpoints are zero-credit; odds calls consume credits. Free historical lookback is 48 hours. | Free terms permit personal evaluation/non-commercial research only. Public/customer-facing use, commercial derived products, resale and redistribution require a separate signed agreement. Sandbox data is synthetic and excluded from evidence. | **DOCUMENTATION CHECKED / ACCOUNT AND SAMPLE NOT RUN**. Internal evaluation only after owner authorisation; not approved for OctaNet production. |
+| PUB-ODDSIO-PAUSE-01 | Odds-API.io free tier | Public plan advertises 100 requests/hour, 500/day, two recreational books and 34 sports, no card. | Official current pricing page says new free keys are paused indefinitely; existing keys only. Paid entry plan is £49/month. | **NOT AVAILABLE TO NEW ACCOUNTS**. Do not use as a zero-cost path. |
+| PUB-UNABATED-FREE-01 | Unabated/Gambly publisher API | Free publisher route advertises no-card access and US operator odds. | Requires tracked deeplinks and monthly partner traffic targets; not a neutral worldwide bookmaker feed. | **CONDITIONAL / NOT A GLOBAL CANDIDATE**. No partner arrangement or sample. |
+
+### Required-proof status after this review
+
+- Account/package entitlements: **BLOCKED** — no authorised keys/account exports.
+- Global catalogue pagination: **NOT TESTED** — no complete account-level catalogue export.
+- Country/competition coverage: **PARTIAL** — public sport/league examples only, not an exhaustive country/competition map.
+- Upcoming/completed API samples: **NOT TESTED** — no raw event response.
+- Historical samples: **PARTIAL** — Cricsheet structural audit only; ParlayAPI Free history is capped at 48 hours and was not queried.
+- Sport-specific fields: **PARTIAL** — schemas documented, but no payload/null-rate inspection.
+- Identity/timestamp reconciliation: **NOT TESTED** — documented ParlayAPI canonical IDs and event/book timestamps are not validation until sampled.
+- Independent result verification: **NOT TESTED**.
+- Bookmaker/event/market/selection IDs and observed timestamps: **NOT TESTED** — no actual market response.
+- Data rights: **PARTIAL** — public terms reveal material limits; no complete legal review or production licence.
+- Prediction eligibility: **BLOCKED**.
+
+Keep odds exclusively in the market-data layer. They are not evidence of form, strength, player/team statistics or prediction features.
