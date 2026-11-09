@@ -231,3 +231,37 @@ No provider/bookmaker is approved. All rows remain documentation-only until the 
 - Prediction eligibility: **BLOCKED**.
 
 Keep odds exclusively in the market-data layer. They are not evidence of form, strength, player/team statistics or prediction features.
+
+## 13. New public endpoint and statistics-evaluation checks — 9 November 2026
+
+**Review type:** official documentation review plus two public unauthenticated ParlayAPI monitoring endpoint reads. No account was created, no API key was used, and no event-market payload was captured.
+
+| Test ID | Source / scope | Status | Evidence captured | Remaining test |
+|---|---|---|---|---|
+| PUB-RUNDOWN-STATS-01 | TheRundown Free stats catalogue/sample and new-account evaluation | **DOCUMENTATION CHECKED** | Current pricing page documents a fixed complete-game schema sample and a no-card seven-day current-season stats evaluation for qualifying accounts created on/after 2026-09-07T18:00:00Z. | With owner-authorised qualifying account access, capture actual sport/competition catalogue, stats fields, IDs, event timestamps, null rates and one completed-game sample; verify rights and expiry. |
+| PUB-PARLAY-HEALTH-01 | ParlayAPI public `GET /v1/status` and `/v1/meta/source-quality` | **PARTIAL — PUBLIC METADATA RESPONSE RETRIEVED** | `/v1/status` returned source-level rows, sports-covered, age and SLA fields, as of 2026-11-08T16:15:24.554441Z. `/v1/meta/source-quality` returned 24-source quality counts, generated 2026-11-08T08:30:16.462Z. Both snapshots were stale at the 9 Nov review time. | Repeat at a fresh time; compare source-health and parser-coverage endpoints; do not infer event-market availability from health metadata. |
+| PUB-PARLAY-TRY-01 | ParlayAPI no-auth `/v1/try/{sport_key}/odds` preview | **NOT TESTED** | Public docs list only MLB, NBA, NFL, NHL, EPL and MMA, capped at five events and 60 requests/hour/IP. Direct JSON response was not captured. Of OctaNet sports, only soccer and basketball appear in the documented preview keys. | If publicly accessible, capture an actual real-data response for EPL and NBA and preserve bookmaker/event/market/selection IDs, prices, source/observed timestamps and commence time. Do not use sandbox endpoints. |
+
+### Updated cross-source status ledger
+
+| Required proof | Status | Reason |
+|---|---|---|
+| Package/account entitlements | **BLOCKED** | No authorised account keys, account export or package entitlement evidence. |
+| Global catalogue pagination | **NOT TESTED** | No complete account-level sports/bookmakers/competitions pagination capture. |
+| Country/competition coverage | **PARTIAL** | Public documentation and examples only; no exhaustive account-level six-sport catalogue. |
+| Upcoming/completed event API samples | **NOT TESTED** | No successful event/market response captured in this review. |
+| Historical samples | **PARTIAL** | Cricsheet structural audit only; provider historical endpoints not queried. |
+| Sport-specific evidence fields/null rates | **PARTIAL** | TheRundown stats evaluation documented, but no account payload/field inspection. |
+| Event identity/timezone/timestamp checks | **NOT TESTED** | No cross-source reconciliation or cutoff validation. |
+| Independent completed-result verification | **NOT TESTED** | No event result independently reconciled. |
+| Bookmaker/event/market/selection IDs and observed timestamps | **NOT TESTED** | Monitoring metadata contains no event-market tuple; no actual odds payload captured. |
+| Rights and permitted use | **PARTIAL** | Public terms reviewed; no complete legal/account-specific approval. ParlayAPI Free is non-commercial; TheRundown Free is internal/personal use. |
+| Prediction eligibility | **BLOCKED** | No sport has passed all required event, market, identity, evidence, timestamp and rights gates. |
+
+### Important separation
+
+- TheRundown's new-account stats evaluation is a sporting-data/evidence-field test path; its three-book delayed odds feed is a separate market-context path.
+- ParlayAPI's public health metadata is a provider-monitoring signal, not proof that any specific fixture has a currently open market.
+- ParlayAPI's no-auth try preview is documented for only two of OctaNet's six target sports; the other four remain uncovered by that public preview route.
+- Odds and implied probabilities remain market context only and never substitute for form, statistics, strength evidence or prediction features.
+- The global six-sport scope remains the objective; the documented free routes do not establish complete global coverage.
