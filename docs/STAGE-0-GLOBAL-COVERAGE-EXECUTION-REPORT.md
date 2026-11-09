@@ -1,9 +1,9 @@
 # Stage 0 — Global Coverage Execution Report
 
-**Checked:** 2026-11-07  
+**Checked:** 2026-11-09  
 **Repository branch:** `docs/six-sport-data-collection-blueprint`  
 **Scope:** Worldwide event and bookmaker-market discovery across soccer, tennis, basketball, golf, cricket and rugby.  
-**Execution type:** Independent public-documentation review; no authenticated provider or bookmaker API calls were made.  
+**Execution type:** Public-documentation review plus limited unauthenticated metadata endpoint reads; no authenticated provider or bookmaker API calls were made.  
 **Decision:** **PARTIAL — research shortlist established; account-level and live-sample proof remains blocked.**
 
 ## 1. Executive result
@@ -308,3 +308,49 @@ References: https://odds-api.io/pricing/free · https://unabated.com/odds-api/fr
 - Sportradar OC Core: global candidate remains unverified; no free entitlement established.
 
 **Evidence status remains unchanged:** no actual bookmaker/event/market/selection response has been captured for any provider. No provider has passed the global six-sport event-and-market protocol; no sport is prediction-eligible by this report.
+
+## 15. Public no-auth market-health checks and new stats-evaluation route — 9 November 2026
+
+**Execution type correction:** this Stage 0 review now includes a small number of public, unauthenticated metadata endpoint reads in addition to documentation review. No account was created, no key was used, no authenticated provider request was made, and no OctaNet event-market payload was captured.
+
+### TheRundown — new-account statistics evaluation
+
+The current official API pricing page now explicitly lists, for qualifying new accounts, a no-card seven-day current-season statistics evaluation. The Free plan exposes a catalogue and fixed complete-game sample for schema inspection; new accounts created on or after `2026-09-07T18:00:00Z` follow this new-access policy. The same Free plan provides 20,000 odds data points/day and 200,000/month, one request/second, five-minute-delayed pre-match main lines from three books (BetMGM, DraftKings and FanDuel), and internal/personal-use rights only. Commercial end-user display begins on Pro. The seven-day stats evaluation is a time-limited test route, not permanent free history or a production entitlement.
+
+This creates a useful **event/evidence-field evaluation candidate** as well as a separate narrow odds-market candidate. The docs do not establish which of OctaNet's six sports/competitions are included in the new-account stats evaluation or which fields are populated. No account or stats sample was accessed, so this remains documentation-only.
+
+References: https://therundown.io/pricing/api · https://therundown.io/free-sports-data-api · https://therundown.io/docs/quickstart
+
+### ParlayAPI — public health metadata response actually retrieved
+
+The public no-auth `GET /v1/status` endpoint returned a JSON payload with `as_of: 2026-11-08T16:15:24.554441Z`, a stated 15-minute window, and per-source fields including source name, rows, sports covered, latest age and SLA state. It named multiple odds/prop sources, including Superbet, FanDuel, Parx, BetRivers, RushBet, Unibet, Pinnacle, DraftKings and others. A separate `GET /v1/meta/source-quality` payload reported 24 sources and counts across OK/degraded/breach/stale states, with `generated_at_ms` corresponding to `2026-11-08T08:30:16.462Z`.
+
+At the review time (`2026-11-09T06:22:56Z`), those payloads were approximately 14h07m and 21h52m old respectively. They prove that public source-health metadata endpoints returned structured monitoring payloads at those timestamps; they do **not** prove current freshness, any specific upcoming event, an event/bookmaker/market/selection tuple, geographic completeness, or rights. Some sources were already classified degraded/breached in those stale snapshots. Treat this as **PARTIAL health-metadata evidence only**, not a bookmaker-market sample.
+
+References: https://parlay-api.com/v1/status · https://parlay-api.com/v1/meta/source-quality · https://parlay-api.com/v1/meta/parser-coverage
+
+### ParlayAPI — no-auth preview scope and free-tier gate
+
+Current public docs describe a no-auth `/v1/try/{sport_key}/odds` preview, capped at 60 requests/hour/IP and the first five events. Its documented keys are `baseball_mlb`, `basketball_nba`, `americanfootball_nfl`, `icehockey_nhl`, `soccer_epl` and `mma_mixed_martial_arts`. Of OctaNet's six target sports, that public preview list directly includes only **basketball and soccer**; it does not list tennis, golf, cricket or rugby. A direct preview JSON sample was not successfully captured in this review, so event-market sampling remains **NOT TESTED**.
+
+ParlayAPI's free tier is advertised as $0/no card, 1,000 monthly credits and real-time access, but its own FAQ elsewhere describes the allowance as 1,000 requests/month while its docs and pricing materials use credits. Record this unit discrepancy as unresolved; do not estimate capacity until clarified. Its Acceptable Use Policy/Terms last updated 14 October 2026 restrict Free to personal evaluation/non-commercial research. Customer-facing displays, commercial derived products, redistribution and sublicensing require a separate signed agreement; paid self-serve tiers do not automatically grant those rights either. Sandbox endpoints return synthetic data and are excluded from evidence.
+
+References: https://parlay-api.com/try · https://parlay-api.com/docs · https://parlay-api.com/limits · https://www.parlay-api.com/legal/acceptable-use · https://www.parlay-api.com/terms
+
+### Updated evidence ledger
+
+| Required proof | Status | Reason |
+|---|---|---|
+| Package/account entitlements | **BLOCKED** | No authorised account/package export; no account was created. |
+| Global catalogue pagination | **NOT TESTED** | No complete account-level sports/books/competition pagination export. |
+| Country/competition coverage | **PARTIAL** | Public catalogue claims/examples only; no exhaustive six-sport country/competition export. |
+| Upcoming/completed event API samples | **NOT TESTED** | No authenticated or successful public event-market payload captured. |
+| Historical samples | **PARTIAL** | Cricsheet archive structural audit remains the only completed historical parser test; provider histories not queried. |
+| Sport-specific evidence fields | **PARTIAL** | TheRundown documents a new-account stats sample/evaluation, but no account sample or field/null-rate inspection. |
+| Identity and timestamp reconciliation | **NOT TESTED** | No event identity or cutoff reconciliation run. |
+| Independent result verification | **NOT TESTED** | No completed API event was independently reconciled during this review. |
+| Bookmaker/event/market/selection IDs and timestamps | **NOT TESTED** | ParlayAPI health metadata is not an event-market record; no event-market tuple captured. |
+| Data rights | **PARTIAL** | Public terms reveal internal/non-commercial restrictions; no OctaNet-specific licence approval. |
+| Prediction eligibility | **BLOCKED** | No sport has passed the separate event, market, identity, sporting-evidence, timing and rights gates. |
+
+**Decision remains PARTIAL / NOT APPROVED.** The next zero-subscription test priority is a permitted, owner-authorised read-only stats evaluation on a qualifying TheRundown account if available, plus a fresh repeat of ParlayAPI's public metadata endpoints and an actual no-auth `/try` sample where the endpoint is accessible. Do not create accounts, accept new terms or use keys without owner authorisation. Do not treat odds as sporting evidence.
