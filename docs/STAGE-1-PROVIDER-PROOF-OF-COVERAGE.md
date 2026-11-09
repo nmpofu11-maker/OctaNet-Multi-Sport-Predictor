@@ -415,3 +415,32 @@ References: https://odds-api.io/pricing/free · https://unabated.com/odds-api/fr
 ### Decision
 
 TheRundown is the clearest no-card private odds-evaluation option, but only three US books and selected sports, and the free licence does not permit customer-facing commercial display. ParlayAPI offers broader advertised sport keys and useful event/freshness fields, but its Free licence also excludes customer-facing/commercial use without a separate signed agreement. Neither proves worldwide six-sport bookmaker coverage. No account was created, no key was requested, and no live API sample was captured.
+
+## 20. Public no-auth checks and TheRundown new-account stats evaluation — 9 November 2026
+
+### TheRundown Free: a separate statistics test path
+
+The current official pricing page documents a Free-plan statistics catalogue and fixed complete-game sample for schema inspection, plus a **no-card seven-day current-season statistics evaluation** for qualifying new accounts. The stated policy applies to accounts created on or after `2026-09-07T18:00:00Z`. This is separate from the Free odds entitlement: 20,000 odds data points/day, 200,000/month, one request/second, five-minute-delayed pre-match main lines from BetMGM, DraftKings and FanDuel. Free display rights are internal/personal only; commercial end-user display starts on Pro.
+
+This makes TheRundown a potentially useful limited **sporting-data field-evaluation** source as well as a separate market-context feed. However, the public page does not establish which of the six OctaNet sports and competitions are included in the seven-day stats evaluation, and no account/sample was accessed. Keep stats and odds tests separate; no stats payload is currently verified.
+
+Reference: https://therundown.io/pricing/api
+
+### ParlayAPI: unauthenticated monitoring evidence and limits
+
+A public `GET /v1/status` JSON response was retrieved with `as_of=2026-11-08T16:15:24.554441Z`, a 15-minute reporting window, and source-level rows/sports-covered/latest-age/SLA fields. A separate public `GET /v1/meta/source-quality` response reported 24 sources and source-quality classifications, generated at `2026-11-08T08:30:16.462Z`. Both were already stale at the 9 November review time (approximately 14h07m and 21h52m old respectively). They are actual public monitoring responses, but **not** current bookmaker event-market samples and not proof of geographic or competition coverage.
+
+The no-auth `/v1/try/{sport_key}/odds` route is documented for only six keys: MLB, NBA, NFL, NHL, EPL and MMA. For OctaNet, that gives a possible public-preview route for basketball and soccer only; tennis, golf, cricket and rugby are absent from the documented try list. The direct try JSON payload was not captured, so this route remains NOT TESTED. Sandbox responses are synthetic and must never count as evidence.
+
+The ParlayAPI Free tier is advertised at 1,000 credits/month, no card and real-time access. Its FAQ also uses the unit "requests/month" while the docs/pricing use "credits/month"; resolve this discrepancy before capacity planning. Free is personal evaluation/non-commercial research only. Customer-facing display, commercial derived products and redistribution require a separate signed agreement, and a paid self-serve tier alone does not grant those rights.
+
+References:
+- https://parlay-api.com/v1/status
+- https://parlay-api.com/v1/meta/source-quality
+- https://parlay-api.com/try
+- https://parlay-api.com/docs
+- https://parlay-api.com/limits
+- https://www.parlay-api.com/legal/acceptable-use
+- https://www.parlay-api.com/terms
+
+**Evidence status:** public health metadata response = PARTIAL; event-market sample = NOT TESTED; account entitlement = BLOCKED; rights = PARTIAL; prediction eligibility = BLOCKED.
