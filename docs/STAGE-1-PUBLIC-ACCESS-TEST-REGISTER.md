@@ -317,3 +317,24 @@ No sport has passed the event, bookmaker-market, independent sporting-evidence, 
 - **Rugby:** NRL Rugby League key visible; no Rugby Union/Sevens key or sample.
 
 No sport has passed event, market, independent sporting-evidence, identity, timestamp, rights and prediction-eligibility gates. Odds remain market context only.
+
+## 14. ParlayAPI public catalogue refresh — 10 November 2026
+
+| Test ID | Endpoint / scope | Status | Evidence captured | Limitation / next action |
+|---|---|---|---|---|
+| PUB-PARLAY-HEALTH-02 | Public `GET /v1/meta/source-quality` | **PASS — metadata only** | Generated 2026-11-10T06:55:47.963Z; 31 sources (25 OK, 4 degraded, 2 breach); price-write 28 OK, 3 degraded | Health telemetry includes non-bookmaker sources; not event-market coverage |
+| PUB-PARLAY-SPORTS-02 | Public `GET /v1/sports` | **PARTIAL** | Active keys returned for six broad sports; visible scope includes soccer, tennis, basketball, golf, cricket and NRL | No generated timestamp, pagination or exhaustive country/competition proof; no Rugby Union/Sevens key visible |
+| PUB-PARLAY-BOOKS-02 | Public `GET /v1/bookmakers` | **PARTIAL** | Registry returned book IDs, regions and endpoint/market metadata | Registry entries are scope-limited; no current target-sport bookmaker/event reconciliation |
+| PUB-PARLAY-TRY-02 | Public no-auth `GET /v1/try/{sport_key}/odds` for EPL/NBA | **NOT TESTED** | Documentation confirms preview keys; no current target-sport JSON response captured | Requires an accessible permitted response; preserve event/book/market/selection IDs and timestamps if obtained |
+
+### Interpretation
+
+The active-key catalogue is a useful public discovery signal, not an authenticated complete global catalogue. Soccer has the broadest visible competition list; basketball and tennis have several keys; golf shows PGA Championship; cricket shows IPL/Test; rugby shows NRL only. The bookmaker registry describes supported regions and endpoints but does not show that any bookmaker currently offers a particular OctaNet event. The source-quality response is a health snapshot, not sporting evidence.
+
+Package/account entitlements remain **BLOCKED**; catalogue pagination **NOT TESTED**; country/competition coverage **PARTIAL**; upcoming/completed target-sport event samples **NOT TESTED**; historical provider samples **NOT TESTED**; sport-specific evidence fields **PARTIAL** (documentation only); identity/timestamp reconciliation **NOT TESTED**; independent results **NOT TESTED**; actual bookmaker/event/market/selection tuple **NOT TESTED**; rights **PARTIAL**; prediction eligibility **BLOCKED**.
+
+Reference endpoints:
+- https://parlay-api.com/v1/meta/source-quality
+- https://parlay-api.com/v1/sports
+- https://parlay-api.com/v1/bookmakers
+- https://parlay-api.com/redoc
