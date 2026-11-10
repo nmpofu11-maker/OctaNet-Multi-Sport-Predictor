@@ -466,3 +466,17 @@ References:
 The public catalogue provides a concrete, but uneven, six-sport screening signal. Soccer has the broadest visible competition list; basketball and tennis show several keys; golf is limited to PGA Championship; cricket shows IPL and Test Matches; rugby shows NRL only, with no Union/Sevens key visible. This is a snapshot of active provider keys, not proof of worldwide bookmaker coverage. No country/competition completeness or bookmaker/event matching test has passed.
 
 The timestamped source-quality endpoint is **PASS for public metadata retrieval only**. The demo MLB tuple is **PARTIAL for response-schema inspection only**. All six target-sport current event-market tests remain **NOT TESTED**; account entitlements remain **BLOCKED**; prediction eligibility remains **BLOCKED**.
+
+
+## 16. ParlayAPI public endpoint observations — 10 November 2026
+
+Direct public retrieval added limited evidence beyond documentation:
+
+- `GET /v1/meta/source-quality` returned a JSON snapshot generated at **2026-11-10T06:55:47.963Z** (`generated_at_ms=1794293747963`). It reported 31 sources: 25 OK, 4 degraded, 2 breach, 0 stale/missing. Price-write counts were 28 OK, 3 degraded, 0 breach/stale/missing. This is provider-health telemetry only.
+- `GET /v1/sports` returned an active-key snapshot with broad soccer examples; basketball NBA/WNBA/NCAAB/EuroLeague; tennis ATP/WTA/French Open; golf PGA Championship; cricket IPL/Test Matches; and rugby NRL Rugby League. No Rugby Union or Sevens key was visible in this snapshot. The body had no generated-at timestamp; cache freshness and catalogue completeness are unverified.
+- `GET /v1/bookmakers` returned a public source registry. The `betway_mz` record is specifically scoped to Mozambique and TT Cup point handicaps; its `global` region label is not evidence of six-sport global coverage.
+- `GET /v1/try/baseball_mlb/odds` returned a provider-labelled demo payload containing an event ID/canonical ID, commence time, bookmaker, h2h market, outcomes/prices and last-update fields. Its event date was 2026-10-29 and bookmaker observations 2026-10-28, so it was stale on 10 November and outside OctaNet's six sports. Treat as schema-only, not current market evidence.
+
+References: https://parlay-api.com/v1/meta/source-quality ; https://parlay-api.com/v1/sports ; https://parlay-api.com/v1/bookmakers ; https://parlay-api.com/v1/try/baseball_mlb/odds
+
+**Assessment:** public health metadata retrieval = PASS (metadata only); public sport/bookmaker catalogue = PARTIAL; target-sport event-market samples = NOT TESTED; account entitlement = BLOCKED; identity and independent result verification = NOT TESTED; rights = PARTIAL; prediction eligibility = BLOCKED. Odds remain market context, never sporting evidence.
