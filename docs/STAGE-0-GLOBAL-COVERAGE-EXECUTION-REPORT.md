@@ -383,3 +383,38 @@ A provider-labelled no-auth `GET /v1/try/baseball_mlb/odds` demo response expose
 | Prediction eligibility | BLOCKED | No sport passed all event, market, identity, evidence, timing and rights gates |
 
 **Stage 0 remains PARTIAL / NOT APPROVED.** Odds remain market context only and never sporting evidence.
+
+## 11. Public ParlayAPI catalogue refresh and PR-head CI — 10 November 2026
+
+**Review time:** approximately 2026-11-10 07:04 UTC (09:04 Africa/Johannesburg).  
+**PR head reviewed:** `9aee2121d778039263683228373fad13b7bcb2f1`.
+
+### GitHub software validation
+
+GitHub Actions Quality Checks run **#101** (run ID `42772066003`) completed successfully on the reviewed PR head. Its `Test, typecheck, and production build` job passed dependency installation, patched gRPC lock verification, production dependency audit, unit tests, TypeScript check and production build. This is software validation only; it does not prove provider coverage, event/market availability, evidence quality or rights.
+
+### Fresh public endpoint reads
+
+- **Source health:** `GET /v1/meta/source-quality` returned a timestamped response generated at `2026-11-10T06:55:47.963Z`, about eight minutes before this review. It reported 31 sources: 25 OK, 4 degraded, 2 breach, 0 stale/missing; price-write classifications were 28 OK, 3 degraded, 0 breach/stale/missing. The response also exposed per-source observation ages and `archive_fetch_status=ok`. This is a useful, recent provider-pipeline health snapshot, but its source set includes non-sportsbook/DFS/exchange/prediction-market sources and is **not** proof of six-sport bookmaker market coverage. Reference: https://parlay-api.com/v1/meta/source-quality
+- **Active sport keys:** `GET /v1/sports` returned active-key entries for the six broad OctaNet sports. The visible catalogue includes many soccer competitions, NBA/WNBA/NCAAB/EuroLeague, ATP/WTA/French Open, PGA Championship, IPL/Test cricket and NRL Rugby League. No Rugby Union or Sevens key appeared in this returned snapshot. The response body has no generation timestamp, and pagination/account completeness were not established. Reference: https://parlay-api.com/v1/sports
+- **Bookmaker registry:** `GET /v1/bookmakers` returned bookmaker identifiers, regions, endpoint/market capabilities and example paths. The entries demonstrate why a bookmaker registry is not event coverage: Betway Mozambique is explicitly limited to TT Cup point handicaps; Bookmaker.eu is described for NFL/MLB moneylines; BetOnline examples concern NFL/college football/MLB; and bet365 lists several regions but its examples are NFL. No target-sport event was reconciled to any bookmaker from this registry. Reference: https://parlay-api.com/v1/bookmakers
+- **No-auth event preview:** current public documentation lists `GET /v1/try/{sport_key}/odds` for six demo keys, including EPL and NBA, but an actual response for either target sport was not retrieved in this review. The route therefore remains **NOT TESTED** for current target-sport event markets. Documentation: https://parlay-api.com/redoc
+
+### Updated evidence ledger
+
+| Required proof | Status | Reason |
+|---|---|---|
+| Public source-health metadata | **PASS — metadata only** | Timestamped response retrieved; 31-source health and price-write classifications inspected. |
+| Package/account entitlements | **BLOCKED** | No authorised account/package export. |
+| Global catalogue pagination/completeness | **NOT TESTED** | Public active-key list has no demonstrated pagination or account-completeness proof. |
+| Country/competition coverage | **PARTIAL** | Public active-key examples show breadth, especially soccer, but are not an exhaustive country/competition matrix. |
+| Upcoming/completed event API samples | **NOT TESTED** | No current target-sport event response captured. |
+| Historical provider samples | **PARTIAL** | Cricsheet structural audit remains separate; ParlayAPI historical odds were not queried. |
+| Sport-specific evidence fields/null rates | **PARTIAL** | No sporting-evidence payload or field-quality/null-rate audit. |
+| Event identity and timestamp reconciliation | **NOT TESTED** | No cross-source matching or cutoff test. |
+| Independent result verification | **NOT TESTED** | No completed target-sport event independently reconciled. |
+| Bookmaker/event/market/selection IDs and observed timestamps | **NOT TESTED** | Registry examples and preview documentation do not constitute a current event-market tuple. |
+| Data rights | **PARTIAL** | Public self-serve terms reviewed; no OctaNet-specific rights approval. |
+| Prediction eligibility | **BLOCKED** | No sport has passed all separate event, market, identity, sporting-evidence, timestamp and rights gates. |
+
+**Decision remains PARTIAL / NOT APPROVED.** The refreshed public catalogue and health reads improve discovery intelligence, but do not change the six-sport live event-market proof status. Odds remain market context only, never sporting evidence.
