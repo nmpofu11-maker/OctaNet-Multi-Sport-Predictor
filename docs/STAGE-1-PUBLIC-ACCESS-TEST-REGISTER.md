@@ -249,12 +249,12 @@ Keep odds exclusively in the market-data layer. They are not evidence of form, s
 | Package/account entitlements | **BLOCKED** | No authorised account keys, account export or package entitlement evidence. |
 | Global catalogue pagination | **NOT TESTED** | No complete account-level sports/bookmakers/competitions pagination capture. |
 | Country/competition coverage | **PARTIAL** | Public documentation and examples only; no exhaustive account-level six-sport catalogue. |
-| Upcoming/completed event API samples | **NOT TESTED** | No successful event/market response captured in this review. |
+| Upcoming/completed event API samples | **NOT TESTED** | One provider-labelled MLB no-auth demo response was captured, but it is stale and outside OctaNet's six sports; no current target-sport event/market response was captured. |
 | Historical samples | **PARTIAL** | Cricsheet structural audit only; provider historical endpoints not queried. |
 | Sport-specific evidence fields/null rates | **PARTIAL** | TheRundown stats evaluation documented, but no account payload/field inspection. |
 | Event identity/timezone/timestamp checks | **NOT TESTED** | No cross-source reconciliation or cutoff validation. |
 | Independent completed-result verification | **NOT TESTED** | No event result independently reconciled. |
-| Bookmaker/event/market/selection IDs and observed timestamps | **NOT TESTED** | Monitoring metadata contains no event-market tuple; no actual odds payload captured. |
+| Bookmaker/event/market/selection IDs and observed timestamps | **NOT TESTED** | Only the stale MLB demo supplied a bookmaker/event/market/outcome tuple; no current six-sport event-market tuple was captured. |
 | Rights and permitted use | **PARTIAL** | Public terms reviewed; no complete legal/account-specific approval. ParlayAPI Free is non-commercial; TheRundown Free is internal/personal use. |
 | Prediction eligibility | **BLOCKED** | No sport has passed all required event, market, identity, evidence, timestamp and rights gates. |
 
@@ -265,3 +265,31 @@ Keep odds exclusively in the market-data layer. They are not evidence of form, s
 - ParlayAPI's no-auth try preview is documented for only two of OctaNet's six target sports; the other four remain uncovered by that public preview route.
 - Odds and implied probabilities remain market context only and never substitute for form, statistics, strength evidence or prediction features.
 - The global six-sport scope remains the objective; the documented free routes do not establish complete global coverage.
+
+
+## 10. Public ParlayAPI endpoint test register — 10 November 2026
+
+| Test ID | Endpoint / scope | Status | Evidence captured | Limitation / next action |
+|---|---|---|---|---|
+| PUB-PARLAY-HEALTH-01 | Public `GET /v1/meta/source-quality` | **PASS — metadata retrieval only** | JSON generated 2026-11-10T06:55:47.963Z; 31 sources; SLA 25 OK / 4 degraded / 2 breach; price-write 28 OK / 3 degraded | Operational telemetry only; not an event or bookmaker-market sample |
+| PUB-PARLAY-SPORTS-01 | Public `GET /v1/sports` active sport-key catalogue | **PARTIAL** | Snapshot includes examples for all six broad sport categories; soccer broadest, rugby only NRL visible | Body has no generated-at timestamp; cache age not controlled; no pagination or account-completeness proof |
+| PUB-PARLAY-BOOKS-01 | Public `GET /v1/bookmakers` registry | **PARTIAL** | Registry includes bookmaker/source keys, regions and supported endpoint/market metadata; Betway Mozambique entry is explicitly TT Cup-only | Registry status is not a current event offer; no complete book-to-event market reconciliation |
+| PUB-PARLAY-DEMO-01 | Public `GET /v1/try/baseball_mlb/odds` | **PARTIAL — schema only** | One provider-labelled demo event includes event ID, canonical ID, commence time, bookmaker, h2h market, outcomes/prices and last-update fields | MLB is outside OctaNet's six sports; event/observations dated 28–29 Oct and stale on 10 Nov; not a live market test |
+| PUB-PARLAY-EVENTS-6S-01 | Current upcoming events and market payloads for soccer, tennis, basketball, golf, cricket and rugby | **NOT TESTED** | No target-sport event-market response captured | Requires authorised access or a working permitted no-auth target-sport sample |
+| PUB-PARLAY-IDENTITY-01 | Event/bookmaker/market/selection identity and timestamp reconciliation | **NOT TESTED** | Demo schema shows fields but no independent identity match was run | Reconcile against an independent sports event source and preserve exact observation times |
+| PUB-PARLAY-RIGHTS-01 | Permitted use / commercial rights | **PARTIAL** | Public self-serve terms and tier limits reviewed | Obtain written scope for OctaNet before storage, display, redistribution or production use |
+
+### Status correction
+
+The prior register stated that no actual odds payload had been captured. That is corrected: a provider-labelled MLB demo payload was captured, but it is stale and outside OctaNet's six sports. It is not counted as a live or current event-market test. No current six-sport bookmaker/event/market/selection tuple has been captured.
+
+### Six-sport interpretation
+
+- **Soccer:** broadest active-key catalogue examples; no current event/market payload or exhaustive country matrix.
+- **Tennis:** ATP/WTA and French Open keys visible; no draw/player event sample.
+- **Basketball:** NBA, WNBA, NCAAB and EuroLeague keys visible; no game sample.
+- **Golf:** PGA Championship key visible; no round/matchup/field market sample.
+- **Cricket:** IPL and Test Match keys visible; no match/innings/market sample.
+- **Rugby:** NRL Rugby League key visible; no Rugby Union/Sevens key or sample.
+
+No sport has passed the event, bookmaker-market, independent sporting-evidence, identity, timestamp, rights and prediction-eligibility gates. Odds remain market context only.
