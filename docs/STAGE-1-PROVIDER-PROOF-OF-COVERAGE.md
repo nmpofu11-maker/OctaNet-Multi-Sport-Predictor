@@ -480,3 +480,17 @@ Direct public retrieval added limited evidence beyond documentation:
 References: https://parlay-api.com/v1/meta/source-quality ; https://parlay-api.com/v1/sports ; https://parlay-api.com/v1/bookmakers ; https://parlay-api.com/v1/try/baseball_mlb/odds
 
 **Assessment:** public health metadata retrieval = PASS (metadata only); public sport/bookmaker catalogue = PARTIAL; target-sport event-market samples = NOT TESTED; account entitlement = BLOCKED; identity and independent result verification = NOT TESTED; rights = PARTIAL; prediction eligibility = BLOCKED. Odds remain market context, never sporting evidence.
+
+## 17. ParlayAPI public catalogue refresh — 10 November 2026
+
+A direct public retrieval on 10 November refreshed three metadata surfaces:
+
+1. `GET /v1/meta/source-quality` returned `generated_at=2026-11-10T06:55:47.963Z`: 31 sources (25 OK, 4 degraded, 2 breach, 0 stale/missing) and price-write classifications 28 OK, 3 degraded, 0 breach/stale/missing. This is a recent provider-health snapshot only. The source set includes DFS, exchanges and prediction-market sources, so its counts are not bookmaker coverage counts. Reference: https://parlay-api.com/v1/meta/source-quality
+2. `GET /v1/sports` returned active-key examples for soccer, tennis, basketball, golf, cricket and rugby. Soccer has the broadest visible competition set; basketball includes NBA/WNBA/NCAAB/EuroLeague; tennis includes ATP/WTA/French Open; golf shows PGA Championship; cricket shows IPL/Test; rugby shows NRL. No Rugby Union or Sevens key was visible. The response has no generated-at timestamp and no pagination/completeness evidence. Reference: https://parlay-api.com/v1/sports
+3. `GET /v1/bookmakers` returned a bookmaker registry with regions and endpoint/market metadata. Examples are tightly scoped: Betway Mozambique is TT Cup point-handicap only; Bookmaker.eu is NFL/MLB moneylines; BetOnline examples are NFL/college football/MLB; bet365 lists multiple regions but its sample paths are NFL. This registry is not proof of a current target-sport event offer. Reference: https://parlay-api.com/v1/bookmakers
+
+The public docs describe no-auth `GET /v1/try/{sport_key}/odds` for EPL and NBA among six demo keys, but no actual EPL or NBA response was captured in this review. Current target-sport event-market sampling remains **NOT TESTED**.
+
+GitHub Actions Quality Checks run **#101** (run ID `42772066003`) passed on PR head `9aee2121d778039263683228373fad13b7bcb2f1`: dependency installation, patched gRPC lock verification, dependency audit, unit tests, TypeScript and production build. This validates software only, not provider coverage.
+
+**Assessment:** public health metadata = PASS (metadata only); public sports/bookmaker catalogues = PARTIAL; account entitlements = BLOCKED; catalogue pagination/completeness = NOT TESTED; six-sport event-market samples = NOT TESTED; identity/result verification = NOT TESTED; rights = PARTIAL; prediction eligibility = BLOCKED. Odds remain market context, never sporting evidence.
