@@ -430,7 +430,7 @@ Reference: https://therundown.io/pricing/api
 
 A public `GET /v1/status` JSON response was retrieved with `as_of=2026-11-08T16:15:24.554441Z`, a 15-minute reporting window, and source-level rows/sports-covered/latest-age/SLA fields. A separate public `GET /v1/meta/source-quality` response reported 24 sources and source-quality classifications, generated at `2026-11-08T08:30:16.462Z`. Both were already stale at the 9 November review time (approximately 14h07m and 21h52m old respectively). They are actual public monitoring responses, but **not** current bookmaker event-market samples and not proof of geographic or competition coverage.
 
-The no-auth `/v1/try/{sport_key}/odds` route is documented for only six keys: MLB, NBA, NFL, NHL, EPL and MMA. For OctaNet, that gives a possible public-preview route for basketball and soccer only; tennis, golf, cricket and rugby are absent from the documented try list. The direct try JSON payload was not captured, so this route remains NOT TESTED. Sandbox responses are synthetic and must never count as evidence.
+The no-auth `/v1/try/{sport_key}/odds` route is documented for only six keys: MLB, NBA, NFL, NHL, EPL and MMA. For OctaNet, that gives a possible public-preview route for basketball and soccer only; tennis, golf, cricket and rugby are absent from the documented try list. A direct provider-labelled MLB demo JSON payload was captured, but its event commencement (2026-10-29) and bookmaker observations (2026-10-28) are stale as of this review and outside OctaNet's six sports; it is schema-only evidence, not a current market test. No target-sport try payload was captured. Sandbox responses are synthetic and must never count as evidence.
 
 The ParlayAPI Free tier is advertised at 1,000 credits/month, no card and real-time access. Its FAQ also uses the unit "requests/month" while the docs/pricing use "credits/month"; resolve this discrepancy before capacity planning. Free is personal evaluation/non-commercial research only. Customer-facing display, commercial derived products and redistribution require a separate signed agreement, and a paid self-serve tier alone does not grant those rights.
 
@@ -444,3 +444,25 @@ References:
 - https://www.parlay-api.com/terms
 
 **Evidence status:** public health metadata response = PARTIAL; event-market sample = NOT TESTED; account entitlement = BLOCKED; rights = PARTIAL; prediction eligibility = BLOCKED.
+
+
+## 16. ParlayAPI public endpoint observations — 10 November 2026
+
+Direct public endpoint retrieval adds limited, auditable evidence beyond documentation:
+
+1. `GET /v1/meta/source-quality` returned a timestamped JSON snapshot generated at **2026-11-10T06:55:47.963Z**. It reported 31 sources (25 OK, 4 degraded, 2 breach, 0 stale/missing) and price-write classifications of 28 OK, 3 degraded, 0 breach/stale/missing. This is provider health telemetry only, not event-market coverage or sporting evidence.
+2. `GET /v1/sports` returned an active-key catalogue snapshot. Visible target-sport entries included multiple soccer competitions across several countries, NBA/WNBA/NCAAB/EuroLeague, ATP/WTA/French Open, PGA Championship, IPL/Test cricket and NRL Rugby League. No Rugby Union or Sevens key was visible in this snapshot. The body did not include a generation timestamp, and pagination/account completeness were not established.
+3. `GET /v1/bookmakers` returned a public registry with source/region/endpoint metadata. The `betway_mz` record was specifically scoped to Mozambique and TT Cup point-handicap markets; its `global` region label must not be interpreted as broad global coverage for OctaNet sports.
+4. `GET /v1/try/baseball_mlb/odds` returned a provider-labelled demo payload with one MLB event, bookmaker, market, outcome and timestamp fields. The event commenced 2026-10-29 and its displayed bookmaker observations were 2026-10-28, so this was stale on 10 November and outside OctaNet's six sports. It is schema-only, not a current event-market test.
+
+References:
+- https://parlay-api.com/v1/meta/source-quality
+- https://parlay-api.com/v1/sports
+- https://parlay-api.com/v1/bookmakers
+- https://parlay-api.com/v1/try/baseball_mlb/odds
+
+### Assessment
+
+The public catalogue provides a concrete, but uneven, six-sport screening signal. Soccer has the broadest visible competition list; basketball and tennis show several keys; golf is limited to PGA Championship; cricket shows IPL and Test Matches; rugby shows NRL only, with no Union/Sevens key visible. This is a snapshot of active provider keys, not proof of worldwide bookmaker coverage. No country/competition completeness or bookmaker/event matching test has passed.
+
+The timestamped source-quality endpoint is **PASS for public metadata retrieval only**. The demo MLB tuple is **PARTIAL for response-schema inspection only**. All six target-sport current event-market tests remain **NOT TESTED**; account entitlements remain **BLOCKED**; prediction eligibility remains **BLOCKED**.
