@@ -293,3 +293,27 @@ The prior register stated that no actual odds payload had been captured. That is
 - **Rugby:** NRL Rugby League key visible; no Rugby Union/Sevens key or sample.
 
 No sport has passed the event, bookmaker-market, independent sporting-evidence, identity, timestamp, rights and prediction-eligibility gates. Odds remain market context only.
+
+
+## 10. Public ParlayAPI endpoint test register — 10 November 2026
+
+| Test ID | Endpoint / scope | Status | Evidence captured | Limitation / next action |
+|---|---|---|---|---|
+| PUB-PARLAY-HEALTH-01 | Public `GET /v1/meta/source-quality` | **PASS — metadata retrieval only** | Generated 2026-11-10T06:55:47.963Z; 31 sources; SLA 25 OK / 4 degraded / 2 breach; price-write 28 OK / 3 degraded | Health telemetry only; not event or market coverage |
+| PUB-PARLAY-SPORTS-01 | Public `GET /v1/sports` active-key catalogue | **PARTIAL** | Visible examples for all six broad categories; soccer broadest, rugby only NRL visible | No generated-at timestamp; cache freshness, pagination and account completeness unverified |
+| PUB-PARLAY-BOOKS-01 | Public `GET /v1/bookmakers` registry | **PARTIAL** | Source/region/endpoint metadata; Betway Mozambique entry explicitly TT Cup-only | Registry is not a current event offer; no bookmaker-to-event reconciliation |
+| PUB-PARLAY-DEMO-01 | Public `GET /v1/try/baseball_mlb/odds` | **PARTIAL — schema only** | One provider-labelled demo event includes event ID/canonical ID, commence time, bookmaker, h2h market, outcomes/prices and last-update fields | MLB outside OctaNet's six; event 2026-10-29 and observations 2026-10-28, stale on 10 Nov |
+| PUB-PARLAY-EVENTS-6S-01 | Current upcoming event-market payloads for soccer, tennis, basketball, golf, cricket and rugby | **NOT TESTED** | No current target-sport event-market response captured | Requires authorised access or permitted current target-sport sample |
+| PUB-PARLAY-IDENTITY-01 | Event/bookmaker/market/selection identity and timestamp reconciliation | **NOT TESTED** | Demo schema shows fields, but no independent matching run | Reconcile to an independent sports-event source and validate cutoff times |
+| PUB-PARLAY-RIGHTS-01 | Permitted use / commercial rights | **PARTIAL** | Public self-serve restrictions reviewed | Written OctaNet-specific scope still required |
+
+### Six-sport snapshot interpretation
+
+- **Soccer:** broadest visible active-key examples across multiple countries; no exhaustive country matrix or current event market.
+- **Tennis:** ATP/WTA and French Open keys visible; no draw/player event sample.
+- **Basketball:** NBA, WNBA, NCAAB and EuroLeague keys visible; no game sample.
+- **Golf:** PGA Championship key visible; no round/matchup/field sample.
+- **Cricket:** IPL and Test Match keys visible; no match/innings sample.
+- **Rugby:** NRL Rugby League key visible; no Rugby Union/Sevens key or sample.
+
+No sport has passed event, market, independent sporting-evidence, identity, timestamp, rights and prediction-eligibility gates. Odds remain market context only.
