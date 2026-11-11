@@ -494,3 +494,11 @@ The public docs describe no-auth `GET /v1/try/{sport_key}/odds` for EPL and NBA 
 GitHub Actions Quality Checks run **#101** (run ID `42772066003`) passed on PR head `9aee2121d778039263683228373fad13b7bcb2f1`: dependency installation, patched gRPC lock verification, dependency audit, unit tests, TypeScript and production build. This validates software only, not provider coverage.
 
 **Assessment:** public health metadata = PASS (metadata only); public sports/bookmaker catalogues = PARTIAL; account entitlements = BLOCKED; catalogue pagination/completeness = NOT TESTED; six-sport event-market samples = NOT TESTED; identity/result verification = NOT TESTED; rights = PARTIAL; prediction eligibility = BLOCKED. Odds remain market context, never sporting evidence.
+
+## 18. GitHub Actions verification update — 11 November 2026
+
+Quality Checks run **#103** (run ID `42772921684`) completed successfully on the current PR head `e7b5a9a46bb0090853d14f03045ab1e12b06871f` on 10 November 2026 at 07:06:50 UTC. Its single job, `Test, typecheck, and production build`, passed all steps: setup, checkout, Node setup, dependency installation, patched gRPC lock verification, production dependency audit, unit tests, TypeScript check and production build.
+
+This supersedes the earlier #101 software-validation reference for the current PR head. It is repository CI evidence only. It does not prove provider/package entitlement, global event or bookmaker coverage, six-sport event-market samples, identity/timestamp reconciliation, independent results, sporting-evidence quality or data rights. All such statuses remain as separately recorded; no production or training gate is changed.
+
+Run: https://github.com/nmpofu11-maker/OctaNet-Multi-Sport-Predictor/actions/runs/42772921684
