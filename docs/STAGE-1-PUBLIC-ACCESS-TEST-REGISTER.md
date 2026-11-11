@@ -338,3 +338,13 @@ Reference endpoints:
 - https://parlay-api.com/v1/sports
 - https://parlay-api.com/v1/bookmakers
 - https://parlay-api.com/redoc
+
+## 15. GitHub Actions verification update — 11 November 2026
+
+| Test ID | Scope | Status | Evidence | Limitation |
+|---|---|---|---|---|
+| CI-PR11-103 | GitHub Actions Quality Checks on PR #11 head `e7b5a9a46bb0090853d14f03045ab1e12b06871f` | **PASS — software only** | Run `42772921684` / #103 completed 2026-11-10T07:06:50Z; its single job passed dependency installation, patched gRPC lock verification, production dependency audit, unit tests, TypeScript check and production build | Does not test provider entitlements, global catalogues, event-market payloads, sporting evidence, identity/results or rights |
+
+Run: https://github.com/nmpofu11-maker/OctaNet-Multi-Sport-Predictor/actions/runs/42772921684
+
+The latest PR-head CI result supersedes the earlier #101 reference for software validation. It does not alter any provider or bookmaker verification status. Stage 0 remains **PARTIAL / NOT APPROVED**; account-level checks remain BLOCKED without authorised access.
