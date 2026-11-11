@@ -240,7 +240,7 @@ Keep odds exclusively in the market-data layer. They are not evidence of form, s
 |---|---|---|---|---|
 | PUB-RUNDOWN-STATS-01 | TheRundown Free stats catalogue/sample and new-account evaluation | **DOCUMENTATION CHECKED** | Current pricing page documents a fixed complete-game schema sample and a no-card seven-day current-season stats evaluation for qualifying accounts created on/after 2026-09-07T18:00:00Z. | With owner-authorised qualifying account access, capture actual sport/competition catalogue, stats fields, IDs, event timestamps, null rates and one completed-game sample; verify rights and expiry. |
 | PUB-PARLAY-HEALTH-01 | ParlayAPI public `GET /v1/status` and `/v1/meta/source-quality` | **PARTIAL — PUBLIC METADATA RESPONSE RETRIEVED** | `/v1/status` returned source-level rows, sports-covered, age and SLA fields, as of 2026-11-08T16:15:24.554441Z. `/v1/meta/source-quality` returned `source_count_total=24` (9 OK, 9 degraded, 5 breach, 1 stale; price-write counts 14 OK, 7 degraded, 3 breach, 0 stale/missing), generated 2026-11-08T08:30:16.462Z. Both snapshots were stale at the 9 Nov review time. | Repeat at a fresh time; compare source-health and parser-coverage endpoints; do not infer event-market availability from health metadata. |
-| PUB-PARLAY-TRY-01 | ParlayAPI no-auth `/v1/try/{sport_key}/odds` preview | **NOT TESTED** | Public docs list only MLB, NBA, NFL, NHL, EPL and MMA, capped at five events and 60 requests/hour/IP. Direct JSON response was not captured. Of OctaNet sports, only soccer and basketball appear in the documented preview keys. | If publicly accessible, capture an actual real-data response for EPL and NBA and preserve bookmaker/event/market/selection IDs, prices, source/observed timestamps and commence time. Do not use sandbox endpoints. |
+| PUB-PARLAY-TRY-01 | Alleged ParlayAPI no-auth `/v1/try/{sport_key}/odds` preview | **NOT TESTED** | Current official docs do not document this route; no current target-sport response was captured. A previous stale MLB provider-labelled payload is schema-only. | Do not rely on this route as a supported live preview. Obtain an authorised API-key response or fresh official documentation for a real-data public endpoint. |
 
 ### Updated cross-source status ledger
 
@@ -325,7 +325,7 @@ No sport has passed event, market, independent sporting-evidence, identity, time
 | PUB-PARLAY-HEALTH-02 | Public `GET /v1/meta/source-quality` | **PASS — metadata only** | Generated 2026-11-10T06:55:47.963Z; 31 sources (25 OK, 4 degraded, 2 breach); price-write 28 OK, 3 degraded | Health telemetry includes non-bookmaker sources; not event-market coverage |
 | PUB-PARLAY-SPORTS-02 | Public `GET /v1/sports` | **PARTIAL** | Active keys returned for six broad sports; visible scope includes soccer, tennis, basketball, golf, cricket and NRL | No generated timestamp, pagination or exhaustive country/competition proof; no Rugby Union/Sevens key visible |
 | PUB-PARLAY-BOOKS-02 | Public `GET /v1/bookmakers` | **PARTIAL** | Registry returned book IDs, regions and endpoint/market metadata | Registry entries are scope-limited; no current target-sport bookmaker/event reconciliation |
-| PUB-PARLAY-TRY-02 | Public no-auth `GET /v1/try/{sport_key}/odds` for EPL/NBA | **NOT TESTED** | Documentation confirms preview keys; no current target-sport JSON response captured | Requires an accessible permitted response; preserve event/book/market/selection IDs and timestamps if obtained |
+| PUB-PARLAY-TRY-02 | Current official-doc verification of alleged no-auth `GET /v1/try/{sport_key}/odds` | **NOT TESTED** | Current docs do not document this route; no current target-sport response captured | Do not treat the route as supported until freshly documented and a real-data response is verified |
 
 ### Interpretation
 
@@ -348,3 +348,19 @@ Reference endpoints:
 Run: https://github.com/nmpofu11-maker/OctaNet-Multi-Sport-Predictor/actions/runs/42772921684
 
 The latest PR-head CI result supersedes the earlier #101 reference for software validation. It does not alter any provider or bookmaker verification status. Stage 0 remains **PARTIAL / NOT APPROVED**; account-level checks remain BLOCKED without authorised access.
+
+## 16. ParlayAPI source-health and access-semantics correction — 11 November 2026
+
+| Test ID | Endpoint / scope | Status | Evidence captured | Limitation / next action |
+|---|---|---|---|---|
+| PUB-PARLAY-HEALTH-03 | Public `GET /v1/meta/source-quality` | **PARTIAL — reachability metadata only; price-write evidence FAIL for this window** | Generated `2026-11-11T00:40:58.452Z`; 45 total / 40 returned; 45 pulse-only; 44 OK pulses, 1 degraded; archive/latest-state source counts 0; price writes 0 OK and 45 missing | Ten-minute health snapshot has no positive current price-write evidence; do not equate pulse OK with bookmaker prices |
+| PUB-PARLAY-SPORTS-03 | Public `GET /v1/sports` plus current API docs | **PARTIAL** | Active keys visible for soccer, tennis, basketball, golf, cricket and NRL Rugby League; docs say keys require at least one event in the last 24 hours | Not a global competition master; no pagination/exhaustive country matrix; no Rugby Union/Sevens key visible in this snapshot |
+| PUB-PARLAY-BOOKS-03 | Public `GET /v1/bookmakers` | **PARTIAL** | Registry exposes bookmaker/source IDs, regions, endpoint/market capabilities and examples | Mixes sportsbooks, DFS, exchanges and prediction markets; examples are sport/market-limited; no target-sport event reconciliation |
+| PUB-PARLAY-TRY-CORRECTION-01 | Current official docs for alleged no-auth `/v1/try/{sport_key}/odds` | **NOT TESTED** | Current docs do not document this route; a previous stale MLB provider-labelled payload remains schema-only | Do not rely on the route as a supported current real-data preview without fresh documentation and a verifiable response |
+| PUB-PARLAY-SANDBOX-01 | Documented no-auth `/v1/sandbox/...` endpoints | **NOT TESTED — EXCLUDED FROM EVIDENCE** | Official docs explicitly describe deterministic synthetic data | Never use sandbox responses as live fixture, bookmaker, market, selection, coverage or sporting evidence |
+
+The current API docs show the regular `/v1/sports/{key}/events` and `/odds` examples using an API key. A no-auth synthetic sandbox is not a substitute for an authorised live sample. No current target-sport event-market response was captured. References: https://parlay-api.com/docs ; https://parlay-api.com/v1/meta/source-quality ; https://parlay-api.com/v1/sports ; https://parlay-api.com/v1/bookmakers
+
+The 11 November source-health response is **not** evidence of a 44-bookmaker live feed: all 45 listed sources were pulse-only and all 45 had missing price-write classifications in that observation window. Keep actual bookmaker/event/market/selection IDs and observed timestamps **NOT TESTED** until a real event-market payload is obtained.
+
+Quality Checks #103 passed on PR head `e7b5a9a46bb0090853d14f03045ab1e12b06871f`. The subsequent documentation-only commits have no returned CI run yet; this does not change any provider evidence status.
