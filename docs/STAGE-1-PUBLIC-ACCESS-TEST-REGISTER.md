@@ -364,3 +364,26 @@ The current API docs show the regular `/v1/sports/{key}/events` and `/odds` exam
 The 11 November source-health response is **not** evidence of a 44-bookmaker live feed: all 45 listed sources were pulse-only and all 45 had missing price-write classifications in that observation window. Keep actual bookmaker/event/market/selection IDs and observed timestamps **NOT TESTED** until a real event-market payload is obtained.
 
 Quality Checks runs **#104–#107** all completed successfully on the successive documentation heads. Latest run **#107** (`42973819394`) passed on the PR head `a5fa01a15853c3727348b0033fd4d286bf8d6a0d`. Its single `Test, typecheck, and production build` job passed dependency installation, patched gRPC lock verification, production dependency audit, unit tests, TypeScript check and production build. Runs #104, #105 and #106 also passed the same job/steps on their respective preceding documentation commits. This is software validation only; none of these runs tested provider entitlements, event/market availability, sporting evidence, identity/results or rights. Run #107: https://github.com/nmpofu11-maker/OctaNet-Multi-Sport-Predictor/actions/runs/42973819394
+
+## 17. ParlayAPI public snapshot and endpoint-contract register — 12 November 2026
+
+| Test ID | Source / scope | Status | Actual evidence / limitation |
+|---|---|---|---|
+| PUB-PARLAY-HEALTH-2026-11-12 | Public `/v1/meta/source-quality` | **PARTIAL** | Timestamped 10-minute snapshot at 2026-11-12 03:30:03.532 UTC: 46 total, 40 returned, 46 pulse-only; reachability 41 OK / 2 degraded / 2 breach / 1 stale; price writes 46 missing. Count discrepancy retained. Metadata only; no market proof. |
+| PUB-PARLAY-SIXSPORT-CATALOGUE-2026-11-12 | Public `/v1/sports` | **PARTIAL** | Active-key response retrieved. Six broad sport categories visible, but rugby is NRL only; no Rugby Union/Sevens. Docs define active as at least one event in prior 24 hours; no catalogue pagination or response timestamp documented. |
+| PUB-PARLAY-BOOKMAKER-REGISTRY-2026-11-12 | Public `/v1/bookmakers` | **PARTIAL** | Registry exposes configured source keys, regions and endpoint examples; includes DFS/exchanges/prediction markets and explicit `no_data` examples. `status=active` is not current market availability; no target event reconciled. |
+| PUB-PARLAY-EVENT-API-2026-11-12 | Documented `/v1/sports/{key}/events` | **NOT TESTED** | Docs describe a zero-credit canonical-event-deduplicated event list. Direct endpoint retrieval was inaccessible through the review web layer and yielded no HTTP status/body; no event sample claimed. |
+| PUB-PARLAY-ODDS-API-2026-11-12 | Regular `/v1/sports/{key}/odds` | **BLOCKED** | Requires API key and metered market/region request. No authorised key available; no chargeable request made. |
+| PUB-PARLAY-CATALOGUE-PAGINATION-2026-11-12 | `/v1/sports`, `/events`, and `/props` pagination/completeness | **NOT TESTED** | No pagination documented for `/sports` or `/events`; `/props` documents offset and completeness headers, but no page sequence or headers were retrieved. |
+| PUB-PARLAY-IDENTITY-TIMING-CONTRACT-2026-11-12 | Event and odds schema documentation | **PARTIAL** | Docs describe `canonical_event_id`, nullable `commence_time`, `commence_time_reported`, `last_update_ms`, `stale_seconds` and `topped_up`; no actual event/market payload was reconciled or independently checked. |
+| PUB-PARLAY-RIGHTS-2026-11-12 | Public terms/documentation | **PARTIAL** | Public documentation reviewed only; no written OctaNet-specific permission for display, redistribution, retention or commercial use. |
+
+### Interpretation
+
+- Do not count pulse/reachability health as price delivery or a bookmaker market.
+- Do not count registry status, region allowlists or example paths as current event-level offers.
+- Do not count synthetic sandbox data as production evidence.
+- No current bookmaker/event/market/selection tuple with observed timestamps was captured for any of the six target sports.
+- Fixture discovery, market availability, verified sporting evidence and prediction eligibility remain separate gates. Odds are market context only.
+
+Quality Checks **#108** (`42974026424`) passed on the previous PR head `023de00b8aca91b49736d035c6eb26852edd6193`; the single job passed dependency install, gRPC lock verification, dependency audit, unit tests, TypeScript and production build. This documentation update is newer; verify CI separately. Run: https://github.com/nmpofu11-maker/OctaNet-Multi-Sport-Predictor/actions/runs/42974026424
