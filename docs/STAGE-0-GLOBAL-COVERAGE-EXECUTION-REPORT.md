@@ -452,3 +452,56 @@ The current public bookmaker registry includes conventional sportsbooks alongsid
 - Account entitlement: **BLOCKED**; rights and prediction eligibility remain unchanged.
 
 Quality Checks runs **#104–#107** all completed successfully on the successive documentation heads. Latest run **#107** (`42973819394`) passed on the PR head `a5fa01a15853c3727348b0033fd4d286bf8d6a0d`. Its single `Test, typecheck, and production build` job passed dependency installation, patched gRPC lock verification, production dependency audit, unit tests, TypeScript check and production build. Runs #104, #105 and #106 also passed the same job/steps on their respective preceding documentation commits. This is software validation only; none of these runs tested provider entitlements, event/market availability, sporting evidence, identity/results or rights. Run #107: https://github.com/nmpofu11-maker/OctaNet-Multi-Sport-Predictor/actions/runs/42973819394
+
+## Verification refresh — 12 November 2026 (public ParlayAPI snapshot and CI #108)
+
+### Timestamped public source-health response
+
+A fresh unauthenticated read of `https://parlay-api.com/v1/meta/source-quality` returned `generated_at_ms=1794454203532` (**2026-11-12 03:30:03.532 UTC**) for a ten-minute observation window. The response reported:
+
+- `source_count_total=46`, `source_count_returned=40`;
+- `pulse_only_source_count=46`, `archive_source_count=0`, `latest_state_source_count=0`;
+- reachability classifications: 41 OK, 2 degraded, 2 breach, 1 stale, 0 missing;
+- `price_write_counts`: 46 missing, 0 OK, 0 degraded, 0 breach and 0 stale.
+
+The response's 40 returned count and 46 pulse-only count/list are not identical; preserve this as a response-level count discrepancy rather than assuming 46 detailed source records were returned. The health response is **PASS for timestamped reachability metadata only**. Price-write evidence is **FAIL for this ten-minute observation window (46 missing)**. This is not proof that every upstream bookmaker has no markets; it means this snapshot provides no recent price-write evidence for any listed source. It must not be counted as bookmaker availability.
+
+Reference: https://parlay-api.com/v1/meta/source-quality
+
+### Current active sport-key catalogue and bookmaker registry
+
+The public `GET /v1/sports` response retrieved on 12 November lists active keys, while the current documentation defines this endpoint as keys with at least one event in the preceding 24 hours. Visible OctaNet examples remain uneven: soccer has many country/league keys; tennis includes ATP/WTA and French Open; basketball includes NBA/WNBA/NCAAB/EuroLeague; golf shows PGA Championship; cricket shows IPL and Test Matches; rugby shows NRL Rugby League only. No Rugby Union or Sevens key appeared in this snapshot. The response body carries no generation timestamp, and the endpoint documentation describes no pagination controls. It is an active-key snapshot, not a complete global competition master. Documentation advertises 90+ keys overall, but that does not prove all are active or available to an account today.
+
+The current public bookmaker registry includes sportsbook, DFS, exchange and prediction-market integrations. Its `status: active` and `endpoints` describe configuration, not current data. Explicit `data_status: no_data` examples include Betway Mozambique and Bookmaker.eu; their registry presence is not a live offer. No registry row was reconciled to a current target-sport event and market.
+
+References: https://parlay-api.com/v1/sports ; https://parlay-api.com/v1/bookmakers ; https://parlay-api.com/docs
+
+### Event, market, pagination and identity contract review
+
+The current documentation describes `/v1/sports/{sport_key}/events` as a zero-credit event-list endpoint deduped by `canonical_event_id`, with event ID, sport key, commencement time and home/away names. It does not document pagination parameters for `/v1/sports` or `/events`. The event endpoint was not successfully retrieved in this review; the web retrieval layer could not access the direct endpoint URL, and no HTTP status/body was obtained. Therefore actual upcoming-event samples remain **NOT TESTED**, not FAIL.
+
+The regular odds endpoint is API-key authenticated and metered by markets and regions/bookmaker selection. No authorised key was available in this run, and no chargeable odds request was made. Documentation says `commence_time` can be null and carries `commence_time_reported`; bookmaker blocks expose `stale_seconds` and `last_update_ms` for the oldest price in that block, and a retained older price can be re-served for up to one hour with `topped_up=true`. These are useful parser/validation requirements, not verified observations from a live OctaNet market sample.
+
+The props endpoint documents `limit`/`offset`, `x-next-offset`, `x-result-has-more`, `x-result-truncated` and `x-result-degraded`; none of those pagination paths or completeness headers was exercised. A completed page sequence would still not prove every upstream offer was captured. Global catalogue pagination remains **NOT TESTED**.
+
+References: https://parlay-api.com/docs
+
+### Verification status after this refresh
+
+- Public source reachability metadata: **PASS — metadata only**.
+- Price-write evidence in the 12 November ten-minute snapshot: **FAIL — 46 missing**; not a claim of universal upstream market absence.
+- Active six-sport catalogue visibility: **PARTIAL**; rugby visible as NRL only; no exhaustive global catalogue.
+- Bookmaker registry: **PARTIAL**; configured sources and explicit no-data rows visible, but no event-market reconciliation.
+- Package/account entitlements: **BLOCKED**.
+- Global catalogue pagination: **NOT TESTED**.
+- Upcoming/completed event samples: **NOT TESTED**.
+- Sport-specific evidence payloads, identity/timestamp reconciliation and independent results: **NOT TESTED**.
+- Bookmaker/event/market/selection IDs and timestamps from a current target-sport offer: **NOT TESTED**.
+- Data rights: **PARTIAL**; public documentation only, no OctaNet-specific written approval.
+- Prediction eligibility: **BLOCKED**; odds remain market context only.
+
+### GitHub software validation — 12 November 2026
+
+Quality Checks **#108** (`42974026424`) completed successfully on the then-current PR head `023de00b8aca91b49736d035c6eb26852edd6193`. Its single `Test, typecheck, and production build` job passed setup, checkout, Node setup, dependency installation, patched gRPC lock verification, production dependency audit, unit tests, TypeScript check and production build. This is software validation only. This report update is being committed after that run; CI for the resulting new documentation head must be checked separately.
+
+Run: https://github.com/nmpofu11-maker/OctaNet-Multi-Sport-Predictor/actions/runs/42974026424
