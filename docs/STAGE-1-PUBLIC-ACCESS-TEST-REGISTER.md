@@ -387,3 +387,38 @@ Quality Checks runs **#104–#107** all completed successfully on the successive
 - Fixture discovery, market availability, verified sporting evidence and prediction eligibility remain separate gates. Odds are market context only.
 
 Quality Checks **#108** (`42974026424`) passed on the previous PR head `023de00b8aca91b49736d035c6eb26852edd6193`; the single job passed dependency install, gRPC lock verification, dependency audit, unit tests, TypeScript and production build. This documentation update is newer; verify CI separately. Run: https://github.com/nmpofu11-maker/OctaNet-Multi-Sport-Predictor/actions/runs/42974026424
+
+## 18. Public no-card sporting-data checks — 13 November 2026
+
+| Test ID | Source / scope | Status | Actual evidence and limitation |
+|---|---|---|---|
+| PUB-SPORTSAPI-PLAN-2026-11-13 | SportsAPI.app Free plan and coverage | DOCUMENTATION CHECKED | $0/no-card advertised; 1,000 requests/day during beta then 100/day; API key required; seven-day history; five OctaNet sports listed (football, tennis, basketball, rugby, cricket), golf absent; free odds excluded. No account created. |
+| PUB-SPORTSAPI-CATALOGUE-CONTRACT-2026-11-13 | SportsAPI.app sports/coverage/categories/leagues/fixture-counts/fixtures endpoints | PARTIAL — contract only | Docs describe country/category discovery, a complete flag, and whole-sport fixture pagination of ten leagues/page with hasNextPage; no endpoint or page sequence executed. |
+| PUB-RUGBYAPI-COVERAGE-2026-11-13 | rugbyAPI public coverage dashboard | PARTIAL — public catalogue only | Dashboard reports 42 club/international/Sevens competitions, 31,376 matches and 859 upcoming; visible URC, Rugby Championship, Six Nations, Top 14, Currie Cup, Major League Rugby and Sevens examples. No authenticated API sample; NRL/Rugby League not identified in visible list. |
+| PUB-RUGBYAPI-FREE-AND-RIGHTS-2026-11-13 | rugbyAPI Free plan and terms | DOCUMENTATION CHECKED | 50 successful lookups/day, 11/31 endpoints, current-season fixtures/results/competitions/standings; terms permit commercial product display but prohibit bulk redistribution and warn against sole-source reliance for betting. No account/key created. |
+| PUB-SPORTSCORE-FOOTBALL-SAMPLE-2026-11-13 | Public no-key SportScore widget matches endpoint | PARTIAL — one historical sample | Ten completed football rows returned; response updated=2026-11-08T21:17:57.686660Z; fields include teams, score, status, ISO time, competition and page slug. No canonical event ID, bookmaker or market tuple; sample is stale for current discovery. |
+| PUB-SPORTSCORE-RESULT-CROSSCHECK-2026-11-13 | Austin FC 0–2 Portland Timbers, MLS, 2026-11-08 | PASS — one score only | SportScore row agrees with theScore and an AP match report. This confirms one displayed result; independent upstream provenance between publishers is not established. |
+| PUB-SPORTSCORE-OTHER-SPORTS-2026-11-13 | SportScore basketball, cricket and tennis current samples | NOT TESTED | Direct/date-filtered retrieval was inaccessible through the review layer; no HTTP failure inferred and no sample claimed. SportScore does not document golf or rugby. |
+| PUB-SIXSPORT-MARKETS-2026-11-13 | Actual bookmaker markets for all six sports | NOT TESTED / BLOCKED | None of these sporting-data candidates supplies a verified free bookmaker-market sample. SportsAPI.app Free excludes odds; SportScore and rugbyAPI are not bookmaker feeds. |
+
+### Interpretation and gate
+
+- SportsAPI.app is an event/evidence candidate for five target sports, not golf; its account/API and rights checks remain outstanding.
+- rugbyAPI adds a useful Union/Sevens-oriented public catalogue, but Rugby League is not established and its free API has not been exercised.
+- SportScore contributes one historical completed-football response and a one-match score cross-check only.
+- No upcoming target-sport event payload, cross-provider identity match, event-level bookmaker offer, market/selection identifier, or observed bookmaker price timestamp was captured.
+- Fixture discovery, actual market availability, verified sporting evidence and prediction eligibility remain separate. Odds remain market context only.
+
+References:
+- https://sportsapi.app/sports
+- https://sportsapi.app/pricing
+- https://sportsapi.app/docs/fixtures/list
+- https://sportsapi.app/docs/discovery/leagues-list
+- https://rugbyapi.com/coverage
+- https://rugbyapi.com/pricing
+- https://rugbyapi.com/legal/terms
+- https://sportscore.com/developers/
+- https://sportscore.com/developers/terms/
+- https://sportscore.com/api/widget/matches/?sport=football&limit=10
+- https://www.thescore.com/mls/event/93401
+- https://newsespn.pages.dev/soccer/report/_/gameId/761942
