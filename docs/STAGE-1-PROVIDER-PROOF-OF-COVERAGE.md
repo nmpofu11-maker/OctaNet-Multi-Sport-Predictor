@@ -530,3 +530,49 @@ The docs describe `/events` as a free, canonical-event-deduplicated event list, 
 Status: source reachability metadata **PASS — metadata only**; price-write evidence **FAIL for the observed ten-minute window (46 missing)**; active six-sport catalogue **PARTIAL**; complete global catalogue/pagination **NOT TESTED**; event/market samples **NOT TESTED**; account entitlement **BLOCKED**; data rights **PARTIAL**; prediction eligibility **BLOCKED**. Odds remain market context only.
 
 Quality Checks **#108** (`42974026424`) passed on the prior PR head `023de00b8aca91b49736d035c6eb26852edd6193`; all nine job steps passed through production build. The documentation update below is newer and requires its own CI check. Run: https://github.com/nmpofu11-maker/OctaNet-Multi-Sport-Predictor/actions/runs/42974026424
+
+## 21. Zero-cost event/evidence candidates — 13 November 2026
+
+Three additional candidates were screened separately from bookmaker-market feeds.
+
+### SportsAPI.app
+
+Public documentation lists 24 sports, including football, tennis, basketball, rugby and cricket, but not golf. Its Free tier is advertised at $0/no card with 1,000 requests/day during beta (100/day after beta), seven days of history and a required API key. Core fixtures, results, match events, lineups and statistics are included; odds are excluded from Free and appear only on paid Pro/Business/Enterprise plans.
+
+Its documented global discovery route is stronger than a simple active-sport list: /v2/coverage, /v2/categories, /v2/leagues, /v2/fixtures/counts and /v2/fixtures. For whole-sport day queries, /v2/fixtures pages ten leagues at a time (page 0–99) and exposes hasNextPage; country/category queries can return a complete scoped day in one call. The country/league directory includes a complete indicator. None of these endpoints was called because v2 requires an API key; catalogue pagination and payload completeness remain untested.
+
+Statistics are documented across the five relevant sports, but depth is graded; lower-tier fixtures may have only a subset of fields. No public OctaNet-specific redistribution/retention permission was established. Candidate classification: sporting event/evidence candidate, not a free odds source.
+
+### rugbyAPI
+
+Public coverage reports 42 club, international and Sevens competitions, 31,376 matches and 859 upcoming. The Free key advertises 50 successful lookups/day without a card, with current-season matches, fixtures, results, competitions, standings, teams and search. All-season archive/history is a paid feature.
+
+Its public terms permit use in the user's own apps/products, including commercial display, but prohibit bulk resale/redistribution and warn against relying on the service alone where errors could cause loss. The visible competition list includes URC, Rugby Championship, Six Nations, Top 14, Currie Cup, Major League Rugby and Sevens World Series. It does not show NRL/Rugby League; do not treat it as proof of League coverage. No API key or sample request was used.
+
+### SportScore
+
+The no-key free API documents football, basketball, cricket and tennis; approximately 10,000 requests/day/IP; live scores, historical fixtures, standings and player stats. The free licence allows monetised apps if a visible dofollow Powered by SportScore link is retained; bulk raw-data redistribution is prohibited.
+
+One public widget response contained ten completed football matches and was updated at 2026-11-08T21:17:57.686660Z. Austin FC 0–2 Portland Timbers (8 November 2026) matched a theScore result page and an AP match report. This is one historical completed-match score cross-check, not current fixture coverage, full independent upstream verification or a six-sport validation. The response had no canonical event ID or market tuple. No other sport's actual sample was obtained.
+
+### Stage 1 disposition
+
+These candidates improve the free sporting-event/evidence shortlist but do not close global proof:
+- SportsAPI.app: five target sports at the product level, golf absent; account/API sample and rights blocked.
+- rugbyAPI: substantial club/international/Sevens catalogue; Rugby League not established; raw API sample not run.
+- SportScore: four target sports; one stale completed-football sample and one score cross-check only; no golf/rugby.
+- No candidate above establishes bookmaker-market availability.
+
+Required next tests, if authorised free access becomes available: export complete sport/country/competition catalogues; preserve page/cursor and completeness flags; retrieve upcoming and completed events by sport; validate IDs, kickoff timestamps, timezone, participant identity, score/stat nulls and update freshness; independently reconcile results; document retention/display rights. Keep event/evidence tests separate from bookmaker-market tests and prediction eligibility.
+
+References:
+- https://sportsapi.app/sports
+- https://sportsapi.app/pricing
+- https://sportsapi.app/docs/fixtures/list
+- https://sportsapi.app/docs/discovery/leagues-list
+- https://rugbyapi.com/coverage
+- https://rugbyapi.com/pricing
+- https://rugbyapi.com/legal/terms
+- https://sportscore.com/developers/
+- https://sportscore.com/developers/terms/
+- https://sportscore.com/api/widget/matches/?sport=football&limit=10
