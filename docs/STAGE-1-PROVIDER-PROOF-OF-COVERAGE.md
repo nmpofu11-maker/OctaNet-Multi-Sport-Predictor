@@ -576,3 +576,42 @@ References:
 - https://sportscore.com/developers/
 - https://sportscore.com/developers/terms/
 - https://sportscore.com/api/widget/matches/?sport=football&limit=10
+## 22. Market-provider refresh — ParlayAPI live catalogue, OddsLink and Fast Odds API (14 November 2026)
+
+### ParlayAPI public endpoint evidence
+
+Two public no-key JSON endpoints were retrieved on 14 November:
+
+1. GET /v1/sports returned an active sport-key catalogue with visible keys across all six OctaNet categories: soccer, tennis, basketball, golf, cricket and rugby. Examples included EPL/MLS/UEFA Champions League, ATP/WTA/French Open, NBA/WNBA/NCAAB/EuroLeague, PGA Championship, IPL/Test Matches and NRL Rugby League. The contract defines this as keys with at least one event in the prior 24 hours. It is an actual active-catalogue snapshot, not a complete competition inventory; no pagination or exhaustive country coverage was demonstrated.
+2. GET /v1/bookmakers returned bookmaker keys, regions, endpoint families and example paths. Some entries show status: active but data_status: no_data; registry/configuration status therefore cannot be treated as live price availability. No event was reconciled to a current book/market.
+
+The official /try page and documentation now explicitly identify GET /v1/try/{sport_key}/odds as a no-auth, no-credit live real-price preview, capped at five events and 60 requests/hour/IP. This is distinct from /v1/sandbox/..., which is synthetic deterministic data. Correction to earlier assessment: a documented no-auth real-price preview route does exist. However, a raw preview payload could not be retrieved through the available review interface; event-level market status remains NOT TESTED. The regular odds endpoint still requires a key and credits. No key/account was created.
+
+### OddsLink free market tier
+
+Public pricing advertises $0, no payment details, 1,000 odds requests/month, 2 requests/second, real-time pre-match odds, no in-play/props/history/push. The 46-source catalogue mixes sportsbooks, exchanges and prediction markets. Its documented sport catalogue includes soccer, tennis and basketball, but not golf, cricket or rugby. Free guest try-it is limited to five reads/day.
+
+Terms last updated 28 October 2026 allow use in own products/apps/research, including display to own users, but prohibit resale or redistribution as a raw data feed/API and prohibit sharing keys with other organisations. The provider disclaims guaranteed accuracy/completeness and notes that a bookmaker may show different prices by customer or region. No guest request or account/API sample was completed.
+
+### Fast Odds API / SockOdds
+
+The 5 November 2026 pricing page advertises a no-card/no-expiry free plan with 2,500 objects/month and 10 requests/minute, limited to AFL, NRL, NFL, MLB and Rugby League World Cups with Sportsbet, TAB and Ladbrokes. This is a narrow Australian Rugby League/AFL sub-coverage candidate, not a six-sport solution. Sample JSON in the documentation is illustrative; no live API request was made.
+
+### Disposition
+
+| Provider | Documentation / public catalogue | Actual event-market payload | Entitlement / rights |
+|---|---|---|---|
+| ParlayAPI | PARTIAL / PASS for public active catalogue snapshot | NOT TESTED; no-auth route documented, raw payload unavailable | Account key BLOCKED; no-key preview terms documented, no OctaNet agreement |
+| OddsLink | PARTIAL; supported list includes soccer/tennis/basketball only | NOT TESTED | Free terms reviewed; no account/sample |
+| Fast Odds API | PARTIAL; Australian limited Rugby League/AFL free catalogue | NOT TESTED | No-card free tier documented; no account/sample |
+
+References:
+- https://parlay-api.com/v1/sports
+- https://parlay-api.com/v1/bookmakers
+- https://parlay-api.com/try
+- https://parlay-api.com/docs
+- https://oddslink.app/pricing/
+- https://oddslink.app/coverage/
+- https://oddslink.app/terms/
+- https://fastoddsapi.com/pricing/
+- https://fastoddsapi.com/faq/
