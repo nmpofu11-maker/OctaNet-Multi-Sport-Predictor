@@ -653,7 +653,7 @@ The current pricing page, updated 5 November 2026, advertises a no-card, no-expi
 - OddsLink and Fast Odds API: DOCUMENTATION CHECKED; no account, key or live market response.
 - Actual current bookmaker/event/market/selection tuple across the six sports: NOT TESTED.
 - Package/account entitlements: BLOCKED pending authorised account access.
-- Rights: PARTIAL; public terms reviewed for OddsLink and Fast Odds API, but no OctaNet-specific legal review or provider agreement.
+- Rights: PARTIAL; OddsLink public terms reviewed, but no OctaNet-specific legal review or provider agreement. Fast Odds API pricing/FAQ were reviewed; its data-use terms were not reviewed in this run.
 - Prediction eligibility: BLOCKED.
 
 No candidate is approved for production. A public active sport key or configured bookmaker is not proof of a current offer. Odds remain market context only and never sporting evidence. No purchase, account creation, chargeable call, production integration, model/training change, data import or deployment occurred.
