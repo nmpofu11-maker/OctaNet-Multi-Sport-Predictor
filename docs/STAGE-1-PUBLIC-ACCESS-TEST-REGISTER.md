@@ -422,3 +422,23 @@ References:
 - https://sportscore.com/api/widget/matches/?sport=football&limit=10
 - https://www.thescore.com/mls/event/93401
 - https://newsespn.pages.dev/soccer/report/_/gameId/761942
+## 19. Public market-provider tests and corrections — 14 November 2026
+
+| Test ID | Source / scope | Status | Actual evidence and limitation |
+|---|---|---|---|
+| PUB-PARLAY-LIVE-SPORTS-2026-11-14 | Public GET /v1/sports | PASS — public snapshot only / PARTIAL for global coverage | Actual no-key JSON response retrieved 14 Nov. Active entries visibly include soccer, tennis, basketball, golf, cricket and rugby: e.g. EPL/MLS/UEFA; ATP/WTA/French Open; NBA/WNBA/NCAAB/EuroLeague; PGA Championship; IPL/Test Matches; NRL Rugby League. Contract says keys have at least one event in previous 24 hours. No pagination or exhaustive country/competition proof. |
+| PUB-PARLAY-BOOKMAKER-REGISTRY-2026-11-14 | Public GET /v1/bookmakers | PASS — registry response only | Actual no-key JSON registry retrieved. Contains keys, regions, configured endpoint families and examples. Rows such as Betway Mozambique and Bookmaker.eu show status=active with data_status=no_data; registry status is not current offer availability. No target event/market tuple reconciled. |
+| PUB-PARLAY-TRY-DOCS-2026-11-14 | GET /v1/try/{sport_key}/odds | DOCUMENTATION CHECKED / NOT TESTED | Official /try page/docs describe real live prices without auth or credits, first five events, 60 requests/hour/IP. Raw preview response could not be retrieved through review interface. This is distinct from /v1/sandbox/..., which is synthetic. Corrects earlier note that no real no-auth preview route was documented. |
+| PUB-PARLAY-REGULAR-ODDS-2026-11-14 | GET /v1/sports/{sport_key}/odds | BLOCKED | Requires API key and metered credits; no authorised key/account available; no chargeable request made. |
+| PUB-ODDSLINK-FREE-TIER-2026-11-14 | OddsLink pricing, sport keys, book coverage and terms | PARTIAL — documentation only | Free tier advertises $0/no card, 1,000 odds requests/month, 2 req/sec, real-time pre-match, no in-play/props/history/push. 46 sources include sportsbooks, exchanges and prediction markets. Supported sport list includes soccer, tennis and basketball but not golf, cricket or rugby. Terms allow own-product display but prohibit raw-feed resale/redistribution and sharing keys; no account or sample. |
+| PUB-ODDSLINK-GUEST-TRY-2026-11-14 | GET /v1/tryit/run | NOT TESTED | Docs say five guest public reads per UTC day. Endpoint could not be executed through review interface; no live event-market payload claimed. |
+| PUB-FASTODDS-FREE-2026-11-14 | Fast Odds API / SockOdds Developer tier | PARTIAL — documentation only | Pricing updated 5 Nov 2026: no card/no expiry, 2,500 objects/month, 10 req/min, Sportsbet/TAB/Ladbrokes for AFL, NRL, NFL, MLB and Rugby League World Cups. Narrow Australian Rugby League/AFL sub-coverage, not global six-sport coverage. No account or API request. |
+
+### Interpretation
+
+- ParlayAPI now has an actually retrieved public active-key catalogue showing examples across all six categories, but only narrow golf, cricket and Rugby League examples. Its public bookmaker registry is not a price board.
+- The newly documented ParlayAPI no-auth /try route is a real-price preview, not the synthetic sandbox. Do not claim it was executed: no raw payload was obtained.
+- OddsLink is a promising no-card pre-match market candidate for soccer, tennis and basketball only; its 46-source count includes exchanges and prediction markets.
+- Fast Odds API may fill selected Australian Rugby League/AFL markets but is not a Rugby Union or six-sport source.
+- No current event-level bookmaker/market/selection tuple and observed timestamp was captured from any of these new candidates.
+- Fixture discovery, actual market availability, sporting evidence and prediction eligibility remain separate. Odds remain market context only.
