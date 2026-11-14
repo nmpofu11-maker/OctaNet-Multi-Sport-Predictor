@@ -594,3 +594,80 @@ References:
 No new candidate supplies a verified free bookmaker-market feed across six sports. SportsAPI.app Free excludes odds; SportScore is a sporting-data API; rugbyAPI is rugby sporting data. ParlayAPI's authenticated odds route remains unavailable without an authorised key. Odds remain market context only and cannot be used as sporting evidence.
 
 Stage 0 decision remains PARTIAL / NOT APPROVED. No account, purchase, production integration, model/training change, data import or deployment was performed.
+## 22. Fresh no-cost bookmaker-feed documentation and live catalogue checks — 14 November 2026
+
+This review found two materially useful public bookmaker-market candidates and corrected an earlier ParlayAPI assessment. Documentation, actual public catalogue responses and event-level market samples are kept distinct.
+
+### ParlayAPI — public active catalogue and bookmaker registry actually retrieved
+
+On 14 November 2026, the public no-key GET /v1/sports endpoint returned a JSON active-key catalogue. The returned snapshot contained active entries across all six OctaNet sport categories, with visible examples:
+
+- Soccer: multiple country/competition keys, including EPL, MLS, UEFA Champions League and leagues in South America and Europe.
+- Tennis: aggregate tennis, ATP, WTA and French Open keys.
+- Basketball: NBA, WNBA, NCAAB and EuroLeague.
+- Golf: PGA Championship.
+- Cricket: IPL and Test Matches.
+- Rugby: NRL, explicitly Rugby League.
+
+This is an actual public endpoint response, stronger than a marketing-only list. The endpoint contract says the active list contains sport keys with at least one event in the preceding 24 hours. It is therefore a time-bounded active catalogue, not an exhaustive global master list; the response did not demonstrate pagination or complete country/competition coverage. Golf, cricket and rugby are visibly narrow; no Rugby Union key appeared in the returned sample.
+
+The public no-key GET /v1/bookmakers registry was also retrieved. It exposes bookmaker keys, regions, configured endpoint families and example paths. Crucially, some rows are status=active while simultaneously carrying data_status=no_data (including Betway Mozambique and Bookmaker.eu). This directly confirms that registry/configuration status must not be treated as current market availability. No registry entry was reconciled to a current six-sport event/market tuple.
+
+### Correction: ParlayAPI has a documented real-data no-auth preview route
+
+The current official /try page and API documentation explicitly describe GET /v1/try/{sport_key}/odds as a live real-price preview, without signup, API key or credits, limited to the first five events and 60 requests/hour/IP. This is distinct from /v1/sandbox/..., which the API documentation explicitly labels deterministic synthetic data.
+
+This corrects the earlier 12 November note that no real no-auth preview route was documented. The regular /v1/sports/{sport_key}/odds endpoint remains API-key authenticated and metered; the preview route is the no-auth exception.
+
+A raw response from /v1/try/{sport_key}/odds could not be retrieved through the available public review interface during this run. Therefore, the route is DOCUMENTATION CHECKED; actual event-market payload NOT TESTED. No real bookmaker/event/market/selection tuple is claimed from this route.
+
+The free key is advertised as 1,000 credits/month with no payment card. No account or key was created.
+
+### OddsLink — promising free market candidate for a subset of OctaNet sports
+
+Current public pricing documentation advertises a $0 Free plan with 1,000 odds requests/month, 2 requests/second, real-time pre-match prices, no payment details, and no in-play odds, player props, historical odds or push feed. The provider lists 46 sources across sportsbooks, exchanges and prediction markets; do not describe all 46 as conventional bookmakers.
+
+The documented sport list includes soccer, tennis, NBA/NCAAB/WNBA basketball and several other sports, but does not list cricket, golf or rugby. Its published per-book coverage matrix also presents supported sport/market combinations, but these are provider coverage claims, not a current event-level offer sample.
+
+The guest /v1/tryit/run route is documented for five public reads per UTC day. The API exposes free sports, bookmaker, market and upcoming-fixture discovery endpoints. The try endpoint could not be executed through the available review interface, so no actual OddsLink event/market payload is recorded.
+
+Terms last updated 28 October 2026 state that the Free plan needs no payment details and permit use of returned data in the user's own products, apps, research and analysis, including display to their own users. They prohibit reselling or redistributing the data as a feed/API, sharing keys with other organisations, or making calls on behalf of other organisations. The user remains responsible for local legality; the provider does not guarantee price completeness, correctness or continued availability and says a bookmaker may show a different offer to a particular customer or region. This is a candidate licence review, not legal approval for OctaNet.
+
+### Fast Odds API — narrow no-cost Rugby League candidate
+
+The current pricing page, updated 5 November 2026, advertises a no-card, no-expiry Developer plan with 2,500 objects/month and a 10-request/minute ceiling. Free coverage is restricted to AFL, NRL, NFL, MLB and the men's/women's Rugby League World Cups, with Sportsbet, TAB and Ladbrokes. It is an Australian-market candidate for selected Rugby League competitions only; it does not close Rugby Union or the other five OctaNet sport categories. Its documented event schema has event, market and outcome IDs plus per-quote observed_at, but the displayed JSON is explicitly illustrative. No API key or live response was obtained.
+
+### Updated market-feed shortlist
+
+| Candidate | Free public/account route | Six-sport relevance | Current disposition |
+|---|---|---|---|
+| ParlayAPI | No-auth real-price preview (5 events, 60 req/hour/IP); optional 1,000-credit/month no-card key | Active public catalogue snapshot showed all six categories, but only narrow golf/cricket/Rugby League examples; preview payload not obtained | First no-auth preview test candidate, not approved |
+| OddsLink | 5 guest reads/day; optional 1,000 odds requests/month, no card | Soccer, tennis and basketball; no documented golf, cricket or rugby | Subset market-feed candidate, not approved |
+| Fast Odds API / SockOdds | No-card free key; 2,500 objects/month | Australian AFL/NRL and selected Rugby League World Cups; no six-sport breadth | Rugby League sub-coverage candidate, not approved |
+
+### Evidence status after this review
+
+- Public ParlayAPI active catalogue retrieval: PASS — current public snapshot only; exhaustive global coverage/pagination remains NOT TESTED.
+- Public ParlayAPI bookmaker-registry retrieval: PASS — registry response only; actual event-level price availability remains NOT TESTED.
+- ParlayAPI no-auth preview: DOCUMENTATION CHECKED; actual raw preview response NOT TESTED.
+- OddsLink and Fast Odds API: DOCUMENTATION CHECKED; no account, key or live market response.
+- Actual current bookmaker/event/market/selection tuple across the six sports: NOT TESTED.
+- Package/account entitlements: BLOCKED pending authorised account access.
+- Rights: PARTIAL; public terms reviewed for OddsLink and Fast Odds API, but no OctaNet-specific legal review or provider agreement.
+- Prediction eligibility: BLOCKED.
+
+No candidate is approved for production. A public active sport key or configured bookmaker is not proof of a current offer. Odds remain market context only and never sporting evidence. No purchase, account creation, chargeable call, production integration, model/training change, data import or deployment occurred.
+
+References:
+- https://parlay-api.com/v1/sports
+- https://parlay-api.com/v1/bookmakers
+- https://parlay-api.com/try
+- https://parlay-api.com/docs
+- https://oddslink.app/
+- https://oddslink.app/pricing/
+- https://oddslink.app/coverage/
+- https://oddslink.app/terms/
+- https://oddslink.app/try/
+- https://fastoddsapi.com/
+- https://fastoddsapi.com/pricing/
+- https://fastoddsapi.com/faq/
