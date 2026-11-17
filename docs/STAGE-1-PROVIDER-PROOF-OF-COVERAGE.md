@@ -615,3 +615,48 @@ References:
 - https://oddslink.app/terms/
 - https://fastoddsapi.com/pricing/
 - https://fastoddsapi.com/faq/
+
+
+## ParlayAPI public catalogue refresh and endpoint-contract correction — 17 November 2026
+
+### Public active-sport catalogue refresh
+
+The public no-key `GET https://parlay-api.com/v1/sports` endpoint was retrieved again on 17 November 2026. The returned JSON visibly contained active entries in all six broad OctaNet sport categories:
+
+- Soccer: multiple country/competition keys, including Argentina, Australia, Austria, Belgium, Brazil, Chile, China, Colombia, Costa Rica, Croatia, Czechia, Denmark, Ecuador, England, France, Germany, MLS and UEFA examples.
+- Tennis: umbrella Tennis, ATP, WTA and French Open keys.
+- Basketball: NBA, WNBA, NCAAB and EuroLeague.
+- Golf: PGA Championship.
+- Cricket: IPL and Test Matches.
+- Rugby: NRL, explicitly Rugby League.
+
+This is a fresh, actual public catalogue response, not an account-level export. The API documentation defines `/v1/sports` as listing keys with at least one event in the preceding 24 hours. It is therefore a time-bounded active-key snapshot, not an exhaustive worldwide competition master. No pagination, complete country/competition matrix, historical inventory or account entitlement was demonstrated. Rugby Union and Sevens were not visible in this response.
+
+### Correction to the 14 November no-auth preview-route statement
+
+The current official API reference reviewed on 17 November documents `/v1/sandbox/...` endpoints as unauthenticated deterministic synthetic data. It does not document `/v1/try/{sport_key}/odds` in the current reference. The earlier 14 November statement that this route was documented as a real-price preview is therefore **not currently substantiated and must not be relied upon** unless current official documentation or a verifiable raw response is obtained.
+
+The current reference separately documents `GET /v1/widget/odds?sport={sport_key}` as a keyless, live, h2h-only widget feed, cached for about one minute, with a 60-requests/hour/IP limit and a visible attribution link requirement. This is a narrow display widget, not the full bookmaker/event/market API or proof of six-sport market coverage. The raw widget endpoint could not be retrieved through the available review interface on this run; its event-level output is **NOT TESTED**.
+
+The regular `GET /v1/sports/{sport_key}/odds` endpoint remains API-key authenticated and metered. No key was created, no paid service was purchased, and no chargeable request was made.
+
+### Updated evidence disposition
+
+| Test | Status | Evidence / limitation |
+|---|---|---|
+| Public active sport-key catalogue, 17 Nov | **PASS — snapshot only** | Actual no-key JSON response visibly lists all six broad sport categories; no exhaustive pagination or global coverage proof |
+| Country/competition coverage | **PARTIAL** | Multiple soccer countries and selected tennis/basketball competitions visible; golf, cricket and Rugby League remain narrow; no complete matrix |
+| ParlayAPI `/v1/try/{sport_key}/odds` | **NOT TESTED / PRIOR DOCUMENTATION CLAIM UNVERIFIED** | Route absent from the current API reference reviewed; no raw response |
+| ParlayAPI keyless widget odds endpoint | **PARTIAL — documentation only** | Current docs describe keyless live h2h widget; raw payload not retrieved |
+| Synthetic sandbox | **EXCLUDED FROM EVIDENCE** | Official docs explicitly identify sandbox data as deterministic synthetic data |
+| Current bookmaker/event/market/selection tuple with observed timestamps | **NOT TESTED** | No raw target-sport widget or odds payload captured |
+| Package/account entitlements | **BLOCKED** | No authorised account-level entitlement export |
+| Data rights | **PARTIAL** | Widget attribution requirement documented; complete OctaNet-specific rights approval not established |
+| Prediction eligibility | **BLOCKED** | No sport passed the separate sporting-evidence, identity, timestamp and rights gates |
+
+References reviewed:
+- https://api.parlay-api.com/docs
+- https://parlay-api.com/v1/sports
+- https://parlay-api.com/v1/widget/odds?sport=soccer_epl
+
+The public catalogue refresh improves evidence that the provider currently advertises active keys in six categories. It does not establish a live bookmaker market for any OctaNet event. Fixture discovery, actual market availability, verified sporting evidence and prediction eligibility remain separate gates. Odds remain market context only and never sporting evidence.

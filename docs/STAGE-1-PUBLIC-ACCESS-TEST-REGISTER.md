@@ -442,3 +442,24 @@ References:
 - Fast Odds API may fill selected Australian Rugby League/AFL markets but is not a Rugby Union or six-sport source.
 - No current event-level bookmaker/market/selection tuple and observed timestamp was captured from any of these new candidates.
 - Fixture discovery, actual market availability, sporting evidence and prediction eligibility remain separate. Odds remain market context only.
+
+
+## ParlayAPI catalogue refresh and preview-route correction — 17 November 2026
+
+| Test ID | Source / scope | Status | Actual evidence and limitation |
+|---|---|---|---|
+| PUB-PARLAY-SIXSPORT-CATALOGUE-2026-11-17 | Public no-key `GET /v1/sports` | **PASS — snapshot only / PARTIAL for global coverage** | Actual JSON response retrieved 17 Nov; active keys visible for soccer, tennis, basketball, golf, cricket and NRL Rugby League. Multiple soccer country/competition keys; ATP/WTA/French Open; NBA/WNBA/NCAAB/EuroLeague; PGA Championship; IPL/Test. Active means at least one event in preceding 24 hours. No pagination or exhaustive country/competition proof. |
+| PUB-PARLAY-TRY-RECHECK-2026-11-17 | Current official API reference for `/v1/try/{sport_key}/odds` | **NOT TESTED / PRIOR DOCUMENTATION CLAIM UNVERIFIED** | The current API reference reviewed 17 Nov does not document this route. No raw response was obtained. Do not rely on the 14 Nov route claim absent current official documentation or verifiable response. |
+| PUB-PARLAY-WIDGET-DOCS-2026-11-17 | Documented keyless `GET /v1/widget/odds?sport={sport_key}` | **PARTIAL — documentation only** | Current docs describe a live h2h-only widget feed, cached about one minute, 60 requests/hour/IP, with visible attribution. Raw endpoint response was inaccessible through the review interface; no event-market tuple claimed. |
+| PUB-PARLAY-SANDBOX-2026-11-17 | `/v1/sandbox/...` | **EXCLUDED FROM EVIDENCE** | Official docs explicitly describe deterministic synthetic data; never count it as live fixture, bookmaker, market, selection or sporting evidence. |
+
+### Interpretation
+
+The fresh public catalogue response supports active-key discovery across six broad categories, not complete global event coverage. Rugby is NRL Rugby League only in the returned snapshot; Rugby Union and Sevens remain unestablished. The keyless widget is a narrow market-display route, not the full authenticated odds feed. No actual current bookmaker/event/market/selection payload or observation timestamp was captured. Package/account entitlements remain BLOCKED; global pagination NOT TESTED; country/competition coverage PARTIAL; event-market availability NOT TESTED; rights PARTIAL; prediction eligibility BLOCKED.
+
+Current references:
+- https://api.parlay-api.com/docs
+- https://parlay-api.com/v1/sports
+- https://parlay-api.com/v1/widget/odds?sport=soccer_epl
+
+Odds remain market context only, never sporting evidence.
