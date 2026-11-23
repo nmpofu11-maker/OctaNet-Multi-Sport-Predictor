@@ -463,3 +463,26 @@ Current references:
 - https://parlay-api.com/v1/widget/odds?sport=soccer_epl
 
 Odds remain market context only, never sporting evidence.
+
+
+## ParlayAPI public catalogue, registry and source-health refresh — 22–23 November 2026
+
+| Test ID | Source / scope | Status | Actual evidence and limitation |
+|---|---|---|---|
+| PUB-PARLAY-SIXSPORT-CATALOGUE-2026-11-23 | Public no-key `GET /v1/sports` | **PASS — snapshot only / PARTIAL for global coverage** | Actual public JSON retrieved 23 Nov; active entries visible for soccer, tennis, basketball, golf, cricket and NRL Rugby League. Examples include soccer competitions/FIFA World Cup, ATP/WTA/French Open, NBA/WNBA/NCAAB/EuroLeague, PGA Championship, IPL/Test and NRL. No complete country/competition export or pagination; no Rugby Union/Sevens key established. |
+| PUB-PARLAY-BOOKMAKER-REGISTRY-2026-11-23 | Public no-key `GET /v1/bookmakers` | **PARTIAL — registry only** | Actual registry response exposes source keys, regions and endpoint capabilities. Returned examples include `data_status=no_data` for Betway Mozambique and Bookmaker.eu. Registry `status=active` is not a current event offer; no event reconciliation. |
+| PUB-PARLAY-HEALTH-2026-11-22 | Public no-key `GET /v1/meta/source-quality` | **PARTIAL — health metadata only; price-write visibility FAIL for this window** | 10-minute snapshot generated 2026-11-22T18:19:26.726Z: total 46, returned 40, pulse-only 46; pulses 43 OK / 2 degraded / 1 breach; archive/latest-state counts 0; price writes 0 OK / 0 degraded / 0 breach / 0 stale / 46 missing. Returned-count discrepancy retained. Pulses do not prove prices or bookmaker markets. |
+| PUB-PARLAY-WIDGET-SIXSPORT-2026-11-23 | Keyless `GET /v1/widget/odds?sport={sport_key}`, representative keys across six sports | **NOT TESTED** | Six URLs attempted through the review retrieval layer; all inaccessible with no HTTP status or response body. This is not a provider HTTP failure and no live market sample is claimed. |
+| PUB-PARLAY-SANDBOX-2026-11-23 | Documented `/v1/sandbox/...` | **EXCLUDED FROM EVIDENCE** | Official docs explicitly label sandbox responses deterministic synthetic data. |
+
+### Interpretation
+
+The catalogue is a current active-key snapshot only. The bookmaker registry is configuration metadata, not event-level market availability. The source-health response is a material negative observation for its 10-minute window because every price-write classification was missing, while pulse reachability remained mostly OK; do not count pulse health as a price. No bookmaker/event/market/selection tuple with an observed timestamp was obtained. Package/account entitlements remain BLOCKED, global pagination NOT TESTED, country/competition completeness PARTIAL, actual event-market availability NOT TESTED, rights PARTIAL and prediction eligibility BLOCKED.
+
+References:
+- https://parlay-api.com/v1/sports
+- https://parlay-api.com/v1/bookmakers
+- https://parlay-api.com/v1/meta/source-quality
+- https://api.parlay-api.com/docs
+
+Odds remain market context only, never sporting evidence.
