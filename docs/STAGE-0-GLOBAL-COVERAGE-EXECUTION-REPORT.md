@@ -766,3 +766,45 @@ References:
 - https://api.parlay-api.com/docs (Embeddable Widget and Sandbox sections)
 
 Fixture discovery, actual bookmaker-market availability, verified sporting evidence and prediction eligibility remain separate gates. Odds remain market context only and never sporting evidence or model features.
+
+
+## ParlayAPI source-health and public endpoint recheck — 24 November 2026
+
+Execution: unauthenticated public GETs only. No account or API key was created or used; no metered odds request, purchase, production integration or paid action occurred.
+
+### Source-health snapshot — 24 November 2026
+
+The public `GET /v1/meta/source-quality` response was retrieved on 24 Nov. Its `generated_at_ms` converts to **2026-11-24T06:21:32.570Z** and describes a 10-minute window:
+
+- Sources: 46 total, 40 returned, 32 archive sources, 0 latest-state sources and 14 pulse-only sources.
+- Reachability classifications: 41 OK, 4 degraded, 1 breach, 0 stale and 0 missing.
+- Price-write classifications: **29 OK, 3 degraded, 0 breach, 0 stale and 14 missing**.
+- The 14 page-worthy missing-price-write sources are betonline, betway_mz, kalshi-crypto and the listed Unibet regional sources (AU, DE, DK, EE, FI, FR, IE, IT, NO, RO and SE).
+
+The endpoint defines price-write classification using the latest priced row written to its archive, with a 60-second minimum tight threshold because unchanged archive rows are re-emitted on a slower cadence than reachability pulses. This is materially different from the 22 Nov snapshot, which reported all 46 price-write classifications missing. It is evidence of aggregator-level archived price-write visibility for this 10-minute observation window; it does **not** identify a target OctaNet event, prove a current bookmaker offer for any particular fixture, or establish six-sport coverage. The endpoint reports 40 returned sources while archive plus pulse-only counts total 46; this discrepancy is retained, not normalised.
+
+### Public catalogue and registry — 24 November
+
+The public no-key `GET /v1/sports` response was retrieved again and visibly listed active keys in all six broad OctaNet categories. Examples included NBA/WNBA/NCAAB/EuroLeague, ATP/WTA and French Open, PGA Championship, IPL/Test, NRL Rugby League and multiple soccer competitions. This remains an active-key snapshot, not an exhaustive worldwide country/competition export; no pagination or completeness sequence was demonstrated, and Rugby Union/Sevens remain unestablished in this catalogue response.
+
+The public no-key `GET /v1/bookmakers` registry was also retrieved. It continues to expose configured source keys/regions and includes examples such as Betway Mozambique and Bookmaker.eu with `data_status=no_data`. Registry status and endpoint examples are not proof of a current event-level offer.
+
+### Keyless widget attempts — 24 November
+
+The documented keyless h2h widget was attempted for representative soccer, tennis, basketball, golf, cricket and NRL keys. All six URLs were inaccessible through the review retrieval interface; no HTTP status or response body was returned. These attempts remain **NOT TESTED**, not provider HTTP failures. No live bookmaker/event/market/selection payload or observed price timestamp is claimed.
+
+### Updated gate
+
+- Aggregator source-health price-write visibility: **PARTIAL** — 29 OK, 3 degraded and 14 missing in this specific 10-minute snapshot.
+- Public six-category active-key catalogue: **PASS — snapshot only**; global coverage/pagination remains NOT TESTED/PARTIAL.
+- Public bookmaker registry: **PARTIAL — registry only**.
+- Actual target-event bookmaker-market availability and bookmaker/event/market/selection IDs with observed timestamps: **NOT TESTED**.
+- Package/account entitlements: **BLOCKED**; data rights: **PARTIAL**; prediction eligibility: **BLOCKED**.
+
+Fixture discovery, actual market availability, verified sporting evidence and prediction eligibility remain separate gates. Odds remain market context only and never sporting evidence or model features.
+
+References:
+- https://parlay-api.com/v1/meta/source-quality
+- https://parlay-api.com/v1/sports
+- https://parlay-api.com/v1/bookmakers
+- https://api.parlay-api.com/docs

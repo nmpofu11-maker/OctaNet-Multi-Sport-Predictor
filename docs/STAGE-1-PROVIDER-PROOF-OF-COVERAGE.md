@@ -681,3 +681,18 @@ References:
 - https://api.parlay-api.com/docs
 
 Odds remain market context only, never sporting evidence or model features. Fixture discovery, market availability, sporting evidence and prediction eligibility remain separate.
+
+
+## ParlayAPI source-health recheck — 24 November 2026
+
+An unauthenticated public `GET /v1/meta/source-quality` response retrieved 24 Nov was generated at **2026-11-24T06:21:32.570Z** for a 10-minute window. It reported 46 total sources, 40 returned, 32 archive sources, 14 pulse-only sources and no latest-state sources. Reachability was 41 OK / 4 degraded / 1 breach. Price-write classifications were **29 OK / 3 degraded / 0 breach / 0 stale / 14 missing**.
+
+This improves on the 22 Nov observation, which reported all 46 price-write classifications missing. The endpoint defines this classification from the latest priced row written to its archive, with a 60-second minimum tight threshold. It is aggregator-level source-health evidence only: it does not identify which OctaNet event was priced, establish bookmaker/event/market/selection IDs, or prove market availability for each of the six sports. The reported 40 returned sources do not reconcile with 32 archive plus 14 pulse-only sources; the discrepancy is preserved.
+
+The public active-key catalogue and bookmaker registry were retrieved again on 24 Nov. The catalogue still showed examples across all six broad categories but remains time-bounded and non-exhaustive; Rugby Union/Sevens are not established by the returned Rugby League key. The registry remains configuration metadata, with explicit `data_status=no_data` examples; it is not a live event offer.
+
+Six representative keyless h2h widget URLs (soccer, tennis, basketball, golf, cricket and NRL) were attempted on 24 Nov. All were inaccessible through the review retrieval interface without an HTTP status or response body. Mark **NOT TESTED**, not provider failure. No event-market payload was captured.
+
+Disposition: public source-health **PARTIAL**; public six-category catalogue **PASS — snapshot only**; global pagination **NOT TESTED**; account entitlements **BLOCKED**; actual event-market tuple **NOT TESTED**; rights **PARTIAL**; prediction eligibility **BLOCKED**. Odds remain market context only, never sporting evidence.
+
+References: https://parlay-api.com/v1/meta/source-quality ; https://parlay-api.com/v1/sports ; https://parlay-api.com/v1/bookmakers ; https://api.parlay-api.com/docs
