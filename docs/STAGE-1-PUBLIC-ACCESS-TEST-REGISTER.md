@@ -508,3 +508,24 @@ References:
 - https://api.parlay-api.com/docs
 
 Odds remain market context only, never sporting evidence or model features. Fixture discovery, market availability, verified sporting evidence and prediction eligibility remain separate gates.
+
+
+## ParlayAPI public recheck — 25 November 2026
+
+| Test ID | Source / scope | Status | Actual evidence and limitation |
+|---|---|---|---|
+| PUB-PARLAY-HEALTH-2026-11-25 | Public no-key `GET /v1/meta/source-quality` | **PARTIAL — aggregator health metadata** | Response generated 2026-11-25T06:54:25.057Z for a 10-minute window: 46 total, 40 returned, 32 archive, 0 latest-state, 14 pulse-only; reachability 42 OK / 1 degraded / 3 breach; price-write 30 OK / 1 degraded / 1 breach / 0 stale / 14 missing. Compared with 24 Nov 06:21:32.570Z: 29 OK / 3 degraded / 0 breach / 0 stale / 14 missing. Price-write classification is based on latest priced archive row and 60s minimum tight threshold. Not linked to an OctaNet event or six-sport market tuple. Returned-count discrepancy (40 vs 32+14=46) retained. |
+| PUB-PARLAY-SIXSPORT-CATALOGUE-2026-11-25 | Public no-key `GET /v1/sports` | **PASS — snapshot only / PARTIAL for global coverage** | Actual response retrieved 25 Nov; active keys visible in soccer, tennis, basketball, golf, cricket and NRL Rugby League. Examples include FIFA World Cup/country soccer keys, ATP/WTA/French Open, NBA/WNBA/NCAAB/EuroLeague, PGA Championship, IPL/Test and NRL. No exhaustive country/competition export or pagination sequence; Rugby Union/Sevens not established. |
+| PUB-PARLAY-BOOKMAKER-REGISTRY-2026-11-25 | Public no-key `GET /v1/bookmakers` | **PARTIAL — registry only** | Actual response retrieved 25 Nov; configured source keys/regions/endpoints only. Betway Mozambique and Bookmaker.eu include `data_status=no_data`; registry status is not a current target-event offer. |
+
+### Interpretation
+
+The 25 Nov source-health response is a later observation than the 24 Nov morning snapshot. It reports 30 OK, 1 degraded, 1 breach and 14 missing price-write classifications. This supports aggregator-level archived price-write visibility for the stated 10-minute window only. It does not prove an OctaNet fixture has a current market, nor provide bookmaker/event/market/selection identifiers or an observed price timestamp. The 40 returned-source count remains inconsistent with the 32 archive plus 14 pulse-only count; no correction is inferred. The active catalogue remains a time-bounded snapshot and the registry remains configuration metadata. Package/account entitlements remain BLOCKED, global pagination NOT TESTED, country/competition completeness PARTIAL, actual event-market availability NOT TESTED, rights PARTIAL and prediction eligibility BLOCKED.
+
+References:
+- https://parlay-api.com/v1/meta/source-quality
+- https://parlay-api.com/v1/sports
+- https://parlay-api.com/v1/bookmakers
+- https://api.parlay-api.com/docs
+
+Odds remain market context only, never sporting evidence or model features. Fixture discovery, market availability, verified sporting evidence and prediction eligibility remain separate gates.

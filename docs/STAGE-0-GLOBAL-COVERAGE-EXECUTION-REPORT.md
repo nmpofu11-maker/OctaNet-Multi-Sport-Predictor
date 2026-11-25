@@ -808,3 +808,46 @@ References:
 - https://parlay-api.com/v1/sports
 - https://parlay-api.com/v1/bookmakers
 - https://api.parlay-api.com/docs
+
+
+## ParlayAPI public source-health and catalogue recheck — 25 November 2026
+
+Execution: unauthenticated public GETs only. No account or API key was created or used; no metered odds request, purchase, production integration or paid action occurred.
+
+### Source-health snapshot
+
+The public `GET /v1/meta/source-quality` response was retrieved on 25 Nov. Its `generated_at_ms` converts to **2026-11-25T06:54:25.057Z** and describes a 10-minute window:
+
+- Sources: 46 total, 40 returned, 32 archive sources, 0 latest-state sources and 14 pulse-only sources.
+- Reachability classifications: 42 OK, 1 degraded, 3 breach, 0 stale and 0 missing.
+- Price-write classifications: **30 OK, 1 degraded, 1 breach, 0 stale and 14 missing**.
+- The price-write page-worthy list includes the 14 missing sources and the breached source; it is not a count of additional sources.
+
+The endpoint defines price-write classification using the latest priced row written to the archive, with a 60-second minimum tight threshold. Compared with the 24 Nov 06:21:32.570Z snapshot (29 OK, 3 degraded, 0 breach and 14 missing), this observation has one more OK, two fewer degraded, one breach and the same 14 missing. It is a later aggregator-level health observation only; it does not identify a target OctaNet event or establish a current bookmaker offer for any particular fixture or sport.
+
+The endpoint reports 40 returned sources while archive plus pulse-only counts total 46 (32 + 14). This discrepancy is retained and not normalised. Reachability pulses must not be treated as price delivery.
+
+### Public catalogue and bookmaker registry
+
+The public no-key `GET /v1/sports` response was retrieved again on 25 Nov and still visibly included active keys in soccer, tennis, basketball, golf, cricket and NRL Rugby League. Examples include FIFA World Cup and country soccer competitions, ATP/WTA/French Open, NBA/WNBA/NCAAB/EuroLeague, PGA Championship, IPL/Test and NRL. This is a time-bounded active-key snapshot, not an exhaustive global competition export. No complete pagination sequence or country/competition completeness proof was obtained; Rugby Union and Sevens remain unestablished in this response.
+
+The public no-key `GET /v1/bookmakers` registry was also retrieved. It continues to expose configured source keys, regions and endpoint capabilities, and includes explicit `data_status=no_data` rows such as Betway Mozambique and Bookmaker.eu. Registry status is not proof of a current target-event offer.
+
+No new raw upcoming-event or event-level bookmaker-market payload was obtained in this recheck. The previously attempted six-sport keyless widget responses remain NOT TESTED because the review retrieval layer returned no HTTP status or body. No provider HTTP failure is inferred.
+
+### Updated disposition
+
+- Public six-category active-key catalogue: **PASS — snapshot only**; global catalogue completeness/pagination **NOT TESTED**.
+- Public bookmaker registry: **PARTIAL — registry metadata only**.
+- Aggregator price-write health: **PARTIAL — 30 OK, 1 degraded, 1 breach and 14 missing in this 10-minute snapshot**; not event-level market proof.
+- Upcoming/completed target-event payloads across six sports: **NOT TESTED / PARTIAL** based on previously recorded bounded samples only.
+- Actual bookmaker/event/market/selection tuple and observed price timestamp: **NOT TESTED**.
+- Package/account entitlements: **BLOCKED**; data rights **PARTIAL**; prediction eligibility **BLOCKED**.
+
+Fixture discovery, actual bookmaker-market availability, verified sporting evidence and prediction eligibility remain separate gates. Odds remain market context only and never sporting evidence or model features.
+
+References:
+- https://parlay-api.com/v1/meta/source-quality
+- https://parlay-api.com/v1/sports
+- https://parlay-api.com/v1/bookmakers
+- https://api.parlay-api.com/docs
