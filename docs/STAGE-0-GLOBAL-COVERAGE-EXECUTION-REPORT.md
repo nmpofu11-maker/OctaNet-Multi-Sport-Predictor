@@ -851,3 +851,54 @@ References:
 - https://parlay-api.com/v1/sports
 - https://parlay-api.com/v1/bookmakers
 - https://api.parlay-api.com/docs
+
+
+## ParlayAPI public source-health and market-access recheck — 26 November 2026
+
+Execution: public unauthenticated GETs and current official documentation only. No account was created, no API key was used, no metered odds request was made, and no purchase or integration occurred.
+
+### Source-health snapshot
+
+The public `GET /v1/meta/source-quality` response was retrieved on 26 Nov. Its `generated_at_ms` converts to **2026-11-26T06:43:52.393Z** and describes a 10-minute window:
+
+- Sources: 46 total, 40 returned, 0 archive sources, 0 latest-state sources and 46 pulse-only sources.
+- Reachability classifications: **42 OK, 3 degraded, 1 breach**, 0 stale and 0 missing.
+- Price-write classifications: **0 OK, 0 degraded, 0 breach, 0 stale and 46 missing**.
+
+The immediately preceding accessible snapshot generated 2026-11-25T13:25:33.150Z reported 28 OK, 4 degraded, 0 breach and 14 missing price-write classifications, with the same 46 pulse-only / 0 archive / 0 latest-state profile. The 26 Nov observation therefore shows a material deterioration in archived price-write visibility for this 10-minute window, while reachability pulses remain mostly OK. Reachability is not price delivery.
+
+The response again reports 40 returned sources while 46 are classified as pulse-only. This six-source discrepancy is retained and not normalised. The endpoint's price-write classification is based on the latest priced row written to its archive; the current response reports no archive sources and all 46 price-write classifications missing. This is aggregator-level health metadata only. It does not prove that no bookmaker anywhere has an offer, and it does not identify any OctaNet event, bookmaker/event/market/selection tuple or target-event price timestamp.
+
+### Public catalogue and bookmaker registry
+
+The public no-key `GET /v1/sports` catalogue was retrieved again. It visibly includes active examples in soccer, tennis, basketball, golf, cricket and Rugby League. Examples include soccer country competitions/FIFA World Cup, ATP/WTA/French Open, NBA/WNBA/NCAAB/EuroLeague, PGA Championship, IPL/Test and NRL. The list is a time-bounded active-key snapshot (the documentation defines active keys by events in the preceding 24 hours), not a complete worldwide country/competition export. No pagination or completeness sequence was demonstrated. The returned rugby example is NRL Rugby League; Rugby Union and Sevens remain unestablished.
+
+The public no-key `GET /v1/bookmakers` registry was retrieved again. It exposes configured source keys, regions and endpoint capabilities, but includes explicit `data_status=no_data` rows such as Betway Mozambique. Registry status is not proof of a current offer for a target event.
+
+### Widget and account-access documentation
+
+The current official documentation states that the embeddable odds widget is keyless and free, h2h-only, displays next games and up to four major US books, is cached server-side for about one minute per sport, and requires the visible “Live odds by ParlayAPI” footer link as its widget licence. The documented backing route is `GET /v1/widget/odds?sport={sport_key}`.
+
+Six representative widget URLs (soccer EPL, ATP, NBA, PGA Championship, IPL and NRL) were attempted on 26 Nov through the review retrieval interface. All were inaccessible there; no HTTP status or response body was returned. These remain **NOT TESTED**, not provider HTTP failures. No event-market sample is claimed.
+
+The same official documentation advertises a Free tier of $0 with 1,000 credits/month and no card; `/v1/sports` and `/v1/sports/{key}/events` are listed as zero-credit endpoints, while full odds requests are metered and the quick-start requires an API key. This is public plan documentation, not an OctaNet account entitlement. No account/key was used. The widget footer attribution is a narrow documented permission; the documentation directs customer-facing display beyond the widget, resale/redistribution, commercial derived products and SLA to a separate signed agreement. OctaNet-specific rights therefore remain unapproved.
+
+### Updated disposition
+
+- Public six-category active-key catalogue: **PASS — snapshot only**; global completeness/pagination **NOT TESTED**.
+- Public bookmaker registry: **PARTIAL — configuration metadata only**.
+- Aggregator price-write health: **FAIL for price-write visibility in this 10-minute window; PARTIAL for reachability metadata** (42 OK / 3 degraded / 1 breach, but 46 price-write classifications missing).
+- Six-sport keyless widget: **NOT TESTED** — review retrieval interface returned no status/body for all six attempts.
+- Upcoming target-event samples: **NOT TESTED**; previous bounded completed/historical samples remain partial and do not establish six-sport live coverage.
+- Actual bookmaker/event/market/selection tuple and observed price timestamp: **NOT TESTED**.
+- Package/account entitlements: **BLOCKED**; public free-tier documentation is not account proof.
+- Data rights: **PARTIAL**; widget attribution documented, broader product rights require separate written terms.
+- Verified sporting evidence and prediction eligibility: **BLOCKED** pending independent sport-specific evidence, identity, timestamp and rights proof.
+
+Fixture discovery, actual bookmaker-market availability, verified sporting evidence and prediction eligibility remain separate gates. Odds remain market context only and never sporting evidence or model features.
+
+References:
+- https://parlay-api.com/v1/meta/source-quality
+- https://parlay-api.com/v1/sports
+- https://parlay-api.com/v1/bookmakers
+- https://api.parlay-api.com/docs
