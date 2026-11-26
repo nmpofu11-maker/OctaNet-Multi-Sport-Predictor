@@ -529,3 +529,28 @@ References:
 - https://api.parlay-api.com/docs
 
 Odds remain market context only, never sporting evidence or model features. Fixture discovery, market availability, verified sporting evidence and prediction eligibility remain separate gates.
+
+
+## ParlayAPI public recheck — 26 November 2026
+
+| Test ID | Source / scope | Status | Actual evidence and limitation |
+|---|---|---|---|
+| PUB-PARLAY-HEALTH-2026-11-26 | Public no-key `GET /v1/meta/source-quality` | **FAIL — price-write visibility for this window; PARTIAL for reachability** | Response generated 2026-11-26T06:43:52.393Z for a 10-minute window: 46 total, 40 returned, 0 archive, 0 latest-state, 46 pulse-only; reachability 42 OK / 3 degraded / 1 breach / 0 stale / 0 missing; price-write 0 OK / 0 degraded / 0 breach / 0 stale / 46 missing. Immediately preceding accessible 25 Nov 13:25:33.150Z snapshot had 28 OK / 4 degraded / 0 breach / 14 missing price-write, with 46 pulse-only. Returned count (40) remains inconsistent with 46 pulse-only sources. Aggregator-level health only; no target event or market tuple. |
+| PUB-PARLAY-SIXSPORT-CATALOGUE-2026-11-26 | Public no-key `GET /v1/sports` | **PASS — snapshot only / PARTIAL for global coverage** | Actual public JSON retrieved 26 Nov; active examples remain visible for soccer, tennis, basketball, golf, cricket and NRL Rugby League. No exhaustive country/competition export or pagination sequence; Rugby Union/Sevens not established. |
+| PUB-PARLAY-BOOKMAKER-REGISTRY-2026-11-26 | Public no-key `GET /v1/bookmakers` | **PARTIAL — registry only** | Actual public registry retrieved 26 Nov; configured source keys/regions/endpoints only. Betway Mozambique continues to show `data_status=no_data`; registry status does not prove a target-event offer. |
+| PUB-PARLAY-WIDGET-SIXSPORT-2026-11-26 | Official keyless h2h widget route; representative keys for soccer, tennis, basketball, golf, cricket and NRL | **NOT TESTED** | Six documented widget URLs attempted through the review retrieval interface; no HTTP status or response body was accessible. This is not a provider HTTP failure and no live market tuple is claimed. |
+| PUB-PARLAY-DOCS-ACCESS-RIGHTS-2026-11-26 | Current official pricing, endpoint and embeddable-widget documentation | **PARTIAL — documentation only** | Docs advertise $0/no-card Free tier with 1,000 monthly credits; sports/events catalogue endpoints are listed as zero-credit, while full odds are metered and quick-start requires an API key. Embeddable widget is documented as keyless/free, h2h-only, up to four major US books, ~1-minute cache, with visible footer attribution as the widget licence. Broader customer-facing display, resale/redistribution, commercial derived products and SLA require separate signed terms. No account entitlement or OctaNet-specific rights verified. |
+
+### Interpretation
+
+The 26 Nov health snapshot is materially worse for archived price-write visibility than the immediately preceding accessible snapshot: 46 price-write classifications are missing, despite 42 reachability pulses OK. This is not evidence that no bookmaker anywhere has a market; it means this source-health response supplies no archived price-write evidence in its stated window. The 40 returned-source count versus 46 pulse-only sources remains unresolved.
+
+The active-key catalogue and registry remain discovery/configuration evidence only. The keyless widget is documented, but the six live widget responses could not be retrieved by the review interface; retain **NOT TESTED**. No upcoming event sample, bookmaker/event/market/selection tuple, observed price timestamp or cross-provider identity match was captured.
+
+Package/account entitlement remains **BLOCKED** despite public free-tier documentation. Global pagination remains **NOT TESTED**; country/competition completeness **PARTIAL**; actual event-market availability **NOT TESTED**; rights **PARTIAL**; sporting evidence and prediction eligibility **BLOCKED**. Odds remain market context only and never sporting evidence or model features. Fixture discovery, actual market availability, verified sporting evidence and prediction eligibility remain separate gates.
+
+References:
+- https://parlay-api.com/v1/meta/source-quality
+- https://parlay-api.com/v1/sports
+- https://parlay-api.com/v1/bookmakers
+- https://api.parlay-api.com/docs
