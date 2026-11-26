@@ -709,3 +709,24 @@ The public no-key active-key catalogue and bookmaker registry were also rechecke
 Disposition: public source-health **PARTIAL**; public six-category catalogue **PASS — snapshot only**; global pagination **NOT TESTED**; account entitlements **BLOCKED**; actual event-market tuple **NOT TESTED**; rights **PARTIAL**; prediction eligibility **BLOCKED**. Odds remain market context only, never sporting evidence.
 
 References: https://parlay-api.com/v1/meta/source-quality ; https://parlay-api.com/v1/sports ; https://parlay-api.com/v1/bookmakers ; https://api.parlay-api.com/docs
+
+
+## ParlayAPI source-health and access-documentation recheck — 26 November 2026
+
+A public no-key `GET /v1/meta/source-quality` response retrieved 26 Nov was generated at **2026-11-26T06:43:52.393Z** for a 10-minute window. It reports 46 total sources, 40 returned, 0 archive, 0 latest-state and 46 pulse-only; reachability 42 OK / 3 degraded / 1 breach; price-write classifications **0 OK / 0 degraded / 0 breach / 0 stale / 46 missing**. The 40 returned count does not reconcile with 46 pulse-only sources and remains an explicit discrepancy.
+
+Compared with the immediately preceding accessible 25 Nov 13:25:33.150Z snapshot (28 OK / 4 degraded / 0 breach / 14 missing price-write; 46 pulse-only and no archive/latest-state sources), price-write visibility has deteriorated for this observation window. This is aggregator health metadata, not a target-event market sample and not proof of universal market absence. Reachability pulses are not price delivery.
+
+The public active-key catalogue and bookmaker registry were retrieved again on 26 Nov. The catalogue still shows active examples in soccer, tennis, basketball, golf, cricket and NRL Rugby League, but is not a complete country/competition export and no pagination sequence was demonstrated. Rugby Union and Sevens remain unestablished. The registry remains configuration metadata and includes `data_status=no_data` examples; it is not an event-level offer.
+
+Current official ParlayAPI documentation describes a keyless/free h2h embeddable widget, next games and up to four major US books, approximately one-minute server cache, and visible footer attribution as the widget licence. Six representative sport-key widget URLs were attempted through the review retrieval interface but returned no accessible status/body; mark **NOT TESTED**, not provider failure. Documentation advertises a $0/no-card Free tier with 1,000 monthly credits and lists sports/events catalogue endpoints as zero-credit, while full odds are metered and the quick-start requires an API key. This is not account-level entitlement proof. Customer-facing display beyond the widget, resale/redistribution, commercial derived products and SLA require separate signed terms in the documentation; OctaNet-specific rights remain unapproved.
+
+Disposition: catalogue **PASS — snapshot only**; global pagination **NOT TESTED**; registry **PARTIAL**; source-health **FAIL for price-write visibility in this window / PARTIAL for reachability**; live six-sport event and market samples **NOT TESTED**; account entitlement **BLOCKED**; rights **PARTIAL**; verified sporting evidence and prediction eligibility **BLOCKED**. No account, key, metered request, purchase or integration was used.
+
+References:
+- https://parlay-api.com/v1/meta/source-quality
+- https://parlay-api.com/v1/sports
+- https://parlay-api.com/v1/bookmakers
+- https://api.parlay-api.com/docs
+
+Odds remain market context only, never sporting evidence or model features. Fixture discovery, market availability, sporting evidence and prediction eligibility remain separate.
