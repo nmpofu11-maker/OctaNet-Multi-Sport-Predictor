@@ -554,3 +554,28 @@ References:
 - https://parlay-api.com/v1/sports
 - https://parlay-api.com/v1/bookmakers
 - https://api.parlay-api.com/docs
+
+## ParlayAPI public source-health, catalogue and market-access recheck — 27 November 2026
+
+| Test ID | Source / scope | Status | Actual evidence and limitation |
+|---|---|---|---|
+| PUB-PARLAY-HEALTH-2026-11-27 | Public no-key `GET /v1/meta/source-quality` | **PARTIAL — aggregator health metadata** | Two 10-minute responses retrieved. 02:30:13.760Z: 45 total, 40 returned, 32 archive, 13 pulse-only; reachability 41/2/2; price-write 29/2/1/13 (OK/degraded/breach/missing). Later 06:09:59.353Z: 46 total, 40 returned, 32 archive, 14 pulse-only; reachability 41/3/2; price-write 28/4/0/14. Returned-source counts do not reconcile with archive plus pulse-only totals. Latest price-write counts are aggregator-level only, not linked to a target event or market tuple. |
+| PUB-PARLAY-SIXSPORT-CATALOGUE-2026-11-27 | Public no-key `GET /v1/sports` | **PASS — snapshot only / PARTIAL for global coverage** | Actual JSON retrieved 27 Nov. Active entries include soccer, tennis, basketball, golf, cricket and NRL Rugby League. Soccer examples include Brazil, Bulgaria, Chile, China, Colombia, Costa Rica, Croatia, Czech Republic, Denmark, Ecuador, England, Finland, France, Germany, MLS and UEFA CL; tennis ATP/WTA/French Open; basketball NBA/WNBA/NCAAB/EuroLeague; PGA Championship; IPL/Test; NRL. Not an exhaustive export. Exact South Africa Premier League key and a Rugby Union key were not found in this snapshot; alternate/inactive keys are not excluded. |
+| PUB-PARLAY-BOOKMAKER-REGISTRY-2026-11-27 | Public no-key `GET /v1/bookmakers` | **PARTIAL — registry only** | Actual registry retrieved 27 Nov. Configured source keys/regions/endpoints only. Betway Mozambique remains marked `status=active` but `data_status=no_data`; no target-event offer was established. |
+| PUB-PARLAY-EVENT-CONTRACT-DOCS-2026-11-27 | Current official ParlayAPI events/odds documentation | **PARTIAL — schema documentation only** | Docs describe zero-credit `/v1/sports/{key}/events`, `canonical_event_id`, event `id`, `sport_key`, teams and nullable `commence_time` with `commence_time_reported`; bookmaker blocks expose freshness fields including `stale_seconds` and `last_update_ms`. No actual six-sport event or odds payload was obtained. Pagination/completeness headers found in the current reference are in the Player Props section, not proof of global catalogue/event pagination. |
+| PUB-PARLAY-WIDGET-SIXSPORT-2026-11-27 | Keyless h2h widget, EPL/ATP/NBA/PGA/IPL/NRL | **NOT TESTED** | Six URLs attempted; review retrieval interface reported each inaccessible and returned no HTTP status or response body. Not classified as provider HTTP failures; no live offer claimed. |
+| PUB-PARLAY-DOCS-ACCESS-RIGHTS-2026-11-27 | Current official pricing, endpoint and widget documentation | **PARTIAL — documentation only** | Advertised Free tier is $0, 1,000 credits/month, no card; sports/events catalogue endpoints are zero-credit and full odds are metered. Widget is keyless/h2h-only with visible footer attribution; broader customer-facing display, redistribution, sublicensing, derived products and SLA require separate signed terms. No OctaNet account entitlement or product-specific rights verified. |
+
+### Interpretation
+
+The latest 27 Nov source-health observation shows 28 OK, 4 degraded and 14 missing price-write classifications, a change from the earlier same-day observation (29/2/1/13). Source inventory also changes from 45 to 46 while returned remains 40. These are aggregator-level observations only. The current public catalogue provides broad category examples but not global completeness, and the bookmaker registry remains configuration metadata. No live event payload, target-event market, bookmaker/event/market/selection tuple or observed price timestamp was captured.
+
+Package/account entitlements remain **BLOCKED**; global catalogue pagination **NOT TESTED**; country/competition completeness **PARTIAL**; upcoming six-sport events **NOT TESTED**; completed/historical samples **PARTIAL** from previously bounded work; actual bookmaker-market availability **NOT TESTED**; sport-field and identity/timestamp validation **PARTIAL — documentation only**; independent results **PARTIAL**; data rights **PARTIAL**; prediction eligibility **BLOCKED**.
+
+Odds remain market context only, never sporting evidence or model features. Fixture discovery, actual bookmaker-market availability, verified sporting evidence and prediction eligibility remain separate gates.
+
+References:
+- https://parlay-api.com/v1/meta/source-quality
+- https://parlay-api.com/v1/sports
+- https://parlay-api.com/v1/bookmakers
+- https://api.parlay-api.com/docs

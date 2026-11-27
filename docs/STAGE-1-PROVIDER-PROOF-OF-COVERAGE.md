@@ -730,3 +730,20 @@ References:
 - https://api.parlay-api.com/docs
 
 Odds remain market context only, never sporting evidence or model features. Fixture discovery, market availability, sporting evidence and prediction eligibility remain separate.
+
+## ParlayAPI public source-health, catalogue and market-access recheck — 27 November 2026
+
+Public unauthenticated review on 27 Nov found a newer ParlayAPI health snapshot and refreshed catalogue/registry evidence. No account/key, metered odds request, purchase or integration was used.
+
+- Latest source-health response generated **2026-11-27T06:09:59.353Z** (10-minute window): 46 total, 40 returned, 32 archive, 0 latest-state, 14 pulse-only; reachability 41 OK / 3 degraded / 2 breach; price-write **28 OK / 4 degraded / 0 breach / 14 missing**. A second same-day response at 02:30:13.760Z reported 45 total, 40 returned, 32 archive, 13 pulse-only; reachability 41 / 2 / 2; price-write 29 / 2 / 1 / 13. The returned-source count does not reconcile with archive plus pulse-only counts in either snapshot. This is aggregator health only, not a target-event market observation.
+- The public sports catalogue again returned active examples across all six broad categories, but not a complete worldwide country/competition export. Soccer examples span multiple countries; golf is represented by PGA Championship, cricket by IPL/Test, and rugby by NRL. No Rugby Union/Sevens key was established. The exact South Africa Premier League key searched was absent from this snapshot, without proving no alternate/inactive key exists.
+- The public bookmaker registry remains configuration metadata; Betway Mozambique is marked active but `data_status=no_data`.
+- Current docs describe free-tier catalogue/events endpoints, canonical event identity and nullable reported kickoff, plus bookmaker freshness timestamps. These are schema/plan claims, not actual six-sport payload tests. Pagination headers found in the reference belong to Player Props; no global catalogue/event pagination test was run.
+- Six keyless h2h widget URLs (EPL, ATP, NBA, PGA, IPL, NRL) were inaccessible through the review interface with no HTTP status/body; all remain **NOT TESTED**, not provider failures.
+- Docs advertise a $0/no-card Free tier with 1,000 credits/month, but no OctaNet account entitlement was checked. Widget attribution is a narrow documented permission; broader customer-facing display, redistribution, sublicensing, derived products and SLA require separate signed terms.
+
+Disposition: catalogue **PASS — snapshot only**; worldwide completeness **PARTIAL**; global pagination **NOT TESTED**; account entitlement **BLOCKED**; actual event-market availability and complete bookmaker/event/market/selection tuples **NOT TESTED**; rights **PARTIAL**; sporting evidence and prediction eligibility **BLOCKED**.
+
+Fixture discovery, bookmaker-market availability, sporting evidence and prediction eligibility remain separate. Odds remain market context only, never sporting evidence or model features.
+
+References: https://parlay-api.com/v1/meta/source-quality ; https://parlay-api.com/v1/sports ; https://parlay-api.com/v1/bookmakers ; https://api.parlay-api.com/docs
